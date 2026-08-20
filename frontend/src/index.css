@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans text-neutral-dark bg-white;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-brand-navy text-white rounded-[12px] font-semibold hover:bg-opacity-90 transition;
+  }
+  .btn-secondary {
+    @apply px-4 py-2 bg-brand-teal text-white rounded-[12px] font-semibold hover:bg-opacity-90 transition;
+  }
+  .card {
+    @apply bg-white border border-neutral-light rounded-[12px] shadow-sm p-4;
+  }
+}
