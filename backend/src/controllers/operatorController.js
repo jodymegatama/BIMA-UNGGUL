@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma.js';
 import { resolveAktifPeriode } from '../services/periodService.js';
 import * as submissionService from '../services/submissionService.js';
-
-const prisma = new PrismaClient();
 
 /**
  * GET /api/operator/madrasah

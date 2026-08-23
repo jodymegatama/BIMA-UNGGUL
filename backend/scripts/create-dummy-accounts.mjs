@@ -1,4 +1,4 @@
-import { prisma } from './src/db/prisma.js';
+import { prisma } from '../src/db/prisma.js';
 import bcrypt from 'bcryptjs';
 
 const adminNip = '199012312345678901';

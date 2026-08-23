@@ -1,4 +1,4 @@
-import { prisma } from './src/db/prisma.js';
+import { prisma } from '../src/db/prisma.js';
 
 await prisma.auditLog.deleteMany({});
 console.log('AuditLog purged');

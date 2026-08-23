@@ -1,4 +1,4 @@
-import { prisma } from './src/db/prisma.js';
+import { prisma } from '../src/db/prisma.js';
 
 // Hapus user Test Operator yang tersisa + madrasah sisa + notification/audit terkait
 const nip = '197812345678900002';

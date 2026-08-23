@@ -10,15 +10,15 @@
  *    - Level 3: Waktu pencapaian (asc) — MAX(Validation.createdAt)
  *    - Level 4: BMU ID (asc)
  * 
- * Run: node src/testScoring.js
+ * Run: node tests/testScoring.js
  */
 
-import { prisma } from './db/prisma.js';
+import { prisma } from '../src/db/prisma.js';
 import {
   calculateSkorMadrasah,
   calculateRanking,
   recalculateAfterAction,
-} from './services/scoringService.js';
+} from '../src/services/scoringService.js';
 
 // ============================================================================
 // HELPER — Cleanup & Setup Dummy Data

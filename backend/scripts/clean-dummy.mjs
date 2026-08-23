@@ -4,7 +4,7 @@
  * PURGES: User dummy lain, Madrasah BMU-TEST / BMU-999001 / BMU-E2E-VAL / BMU-PUBADM,
  *         PeriodePenilaian TEST/2026 | E2E-VAL/2026 | PUBADM/2026, + cascade children
  */
-import { prisma } from './src/db/prisma.js';
+import { prisma } from '../src/db/prisma.js';
 
 const KEEP_ADMIN_NIP = '199012312345678901';
 const DUMMY_USER_NIPS = [

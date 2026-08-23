@@ -50,3 +50,47 @@ export async function recordAuditLog(entry, client = prisma) {
 }
 
 export default recordAuditLog;
+
+/**
+ * List AuditLog dengan filter + paginasi (untuk halaman Admin → Audit Log).
+ * @param {object} [opts]
+ * @param {number} [opts.userId]
+ * @param {string} [opts.action]
+ * @param {string} [opts.entity]
+ * @param {Date}   [opts.from]
+ * @param {Date}   [opts.to]
+ * @param {number} [opts.page=1]
+ * @param {number} [opts.limit=20]
+ */
+export async function listAuditLogs({
+  userId,
+  action,
+  entity,
+  from,
+  to,
+  page = 1,
+  limit = 20,
+} = {}) {
+  const where = {};
+  if (userId) where.userId = userId;
+  if (action) where.action = action;
+  if (entity) where.entity = entity;
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = from;
+    if (to) where.createdAt.lte = to;
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where,
+      include: { user: { select: { id: true, nip: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.auditLog.count({ where }),
+  ]);
+
+  return { data, total, page, limit };
+}

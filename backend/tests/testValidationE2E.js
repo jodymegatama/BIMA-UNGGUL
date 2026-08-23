@@ -2,11 +2,11 @@
  * Test E2E Validasi Admin — BIMA UNGGUL Phase 3
  * Alur: Operator submit (menunggu) -> Admin approve/reject/revoke -> cek skor & AuditLog atomic
  * Juga: DeleteRequest approve/reject + atomicity/rollback + pagination
- * Run: node src/testValidationE2E.js
+ * Run: node tests/testValidationE2E.js
  */
-import { prisma } from './db/prisma.js';
-import * as validationService from './services/validationService.js';
-import { calculateSkorMadrasah } from './services/scoringService.js';
+import { prisma } from '../src/db/prisma.js';
+import * as validationService from '../src/services/validationService.js';
+import { calculateSkorMadrasah } from '../src/services/scoringService.js';
 
 const NS = 'E2E-VAL';
 

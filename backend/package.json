@@ -10,7 +10,13 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:scoring": "node tests/testScoring.js",
+    "test:validation": "node tests/testValidationE2E.js",
+    "test:e2e": "node tests/testPublicAndAdminE2E.js",
+    "smoke:dynamic-form": "node scripts/smoke-dynamic-form.mjs",
+    "dummy:create": "node scripts/create-dummy-accounts.mjs",
+    "dummy:clean": "node scripts/clean-dummy.mjs",
+    "test": "npm run test:scoring"
   },
   "keywords": [],
   "author": "",

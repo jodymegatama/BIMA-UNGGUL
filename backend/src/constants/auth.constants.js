@@ -6,12 +6,17 @@
 
 export const AUTH_CONFIG = {
   // JWT Secrets — WAJIB set di .env production!
+  // CATATAN: nama variabel di .env adalah JWT_REFRESH_SECRET (bukan REFRESH_SECRET);
+  // keduanya didukung agar kompatibel dengan deployment lama.
   JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-key-min-32-chars-change-in-prod',
-  REFRESH_SECRET: process.env.REFRESH_SECRET || 'your-refresh-secret-key-min-32-chars-change-in-prod',
+  REFRESH_SECRET:
+    process.env.JWT_REFRESH_SECRET ||
+    process.env.REFRESH_SECRET ||
+    'your-refresh-secret-key-min-32-chars-change-in-prod',
 
-  // JWT Expiry times
-  ACCESS_TOKEN_EXPIRY: '15m',   // 15 minutes
-  REFRESH_TOKEN_EXPIRY: '7d',   // 7 days
+  // JWT Expiry times (dapat dioverride via .env: JWT_EXPIRY / JWT_REFRESH_EXPIRY)
+  ACCESS_TOKEN_EXPIRY: process.env.JWT_EXPIRY || '15m',        // 15 minutes
+  REFRESH_TOKEN_EXPIRY: process.env.JWT_REFRESH_EXPIRY || '7d', // 7 days
 
   // Cookie settings (PRD compliance)
   COOKIE_OPTIONS: {

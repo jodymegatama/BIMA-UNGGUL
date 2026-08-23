@@ -2,13 +2,13 @@
  * E2E Test — Publik + Admin sisa endpoint (Phase 3 Final)
  * Verifikasi: linkBukti isolasi, finalisasi lock, bobot lock, PDF/Excel buffer, periode, akun, audit-log
  */
-import { prisma } from './db/prisma.js';
-import * as publicController from './controllers/publicController.js';
-import * as periodService from './services/periodService.js';
-import * as bobotService from './services/bobotService.js';
-import * as accountService from './services/accountService.js';
-import * as exportService from './services/exportService.js';
-import { calculateSkorMadrasah } from './services/scoringService.js';
+import { prisma } from '../src/db/prisma.js';
+import * as publicController from '../src/controllers/publicController.js';
+import * as periodService from '../src/services/periodService.js';
+import * as bobotService from '../src/services/bobotService.js';
+import * as accountService from '../src/services/accountService.js';
+import * as exportService from '../src/services/exportService.js';
+import { calculateSkorMadrasah } from '../src/services/scoringService.js';
 
 const NS = 'PUBADM';
 const ip = '127.0.0.1-e2e-final';
