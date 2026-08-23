@@ -1,0 +1,204 @@
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap, Info } from 'phosphor-react';
+import { apiFetch } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+
+const tabs = ['Semua', 'Menunggu', 'Aktif', 'Nonaktif'];
+
+const statusBadge = {
+  Menunggu: 'bg-amber-100 border-amber-200 text-amber-900',
+  Aktif: 'bg-eager text-white border-eager-dark shadow-sticker',
+  Nonaktif: 'bg-white border-zinc-200 text-faded',
+};
+
+function mapStatus(s) {
+  const m = { menunggu: 'Menunggu', aktif: 'Aktif', nonaktif: 'Nonaktif' };
+  return m[s] || s;
+}
+
+export default function ManajemenAkun() {
+  const { token } = useAuth();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Semua');
+  const [q, setQ] = useState('');
+  const [toast, setToast] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const fetchRows = useCallback(async () => {
+    if (!token) { setLoading(false); return; }
+    setLoading(true);
+    try {
+      const p = new URLSearchParams();
+      if (activeTab !== 'Semua') p.set('status', activeTab.toLowerCase());
+      if (q.trim()) p.set('q', q.trim());
+      p.set('page', String(page));
+      p.set('limit', '20');
+      const res = await apiFetch(`/api/admin/akun?${p.toString()}`, { auth: true });
+      const data = Array.isArray(res) ? res : (res.data || []);
+      const mapped = data.map((r) => ({
+        id: r.id,
+        nip: r.nip,
+        nama: r.name || r.nama || '-',
+        madrasah: r.madrasah?.namaMadrasah || r.madrasah || '-',
+        madrasahId: r.madrasahId,
+        jenjang: r.madrasah?.jenjang || r.jenjang || '-',
+        statusKepemilikan: r.madrasah?.statusKepemilikan || r.statusKepemilikan || '-',
+        status: mapStatus(r.status),
+        bmuId: r.madrasah?.nomorMadrasah || r.bmuId || null,
+        _raw: r,
+      }));
+      setRows(mapped);
+      setTotal(res.total ?? mapped.length);
+    } catch (e) {
+      // keep empty
+    } finally { setLoading(false); }
+  }, [token, activeTab, q, page]);
+
+  useEffect(() => { fetchRows(); }, [fetchRows]);
+  useEffect(() => { setPage(1); }, [activeTab, q]);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+  const handleApprove = async (id) => {
+    try {
+      const res = await apiFetch(`/api/admin/akun/${id}/approve`, { method: 'POST', auth: true });
+      const bmu = res.madrasah?.nomorMadrasah || res.bmuId || 'BMU-XXXXXX';
+      showToast(`Akun disetujui — Madrasah ${bmu}`);
+      fetchRows();
+    } catch (e) { showToast(e.message || 'Gagal approve'); }
+  };
+  const handleDeactivate = async (id) => {
+    try {
+      await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'nonaktif' }, auth: true });
+      showToast('Akun dinonaktifkan');
+      fetchRows();
+    } catch (e) { showToast(e.message || 'Gagal'); }
+  };
+  const handleActivate = async (id) => {
+    try {
+      await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'aktif' }, auth: true });
+      showToast('Akun diaktifkan kembali');
+      fetchRows();
+    } catch (e) { showToast(e.message || 'Gagal'); }
+  };
+
+  const filtered = rows; // already filtered server-side
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun Operator</h1>
+        <p className="text-[12px] font-medium text-pencil mt-1">Kelola pendaftaran operator — approve otomatis generate <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> jika madrasah belum ada.</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            onClick={() => setActiveTab(t)}
+            className={`h-8 px-4 rounded-full border-2 text-[12px] font-black ${activeTab === t ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+          >
+            {t}
+          </button>
+        ))}
+        <div className="relative flex-1 min-w-[200px] max-w-[320px] ml-auto">
+          <MagnifyingGlass size={16} weight="regular" color="#afafaf" className="absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            id="akun-search"
+            name="akun-search"
+            type="search"
+            autoComplete="off"
+            aria-label="Cari NIP, nama, atau madrasah"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Cari NIP / nama / madrasah..."
+            className="w-full h-9 pl-9 pr-3 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:border-ink"
+          />
+        </div>
+      </div>
+
+      {toast && <div className="rounded-[12px] bg-emerald-50 border-2 border-emerald-200 text-emerald-900 px-4 py-3 flex gap-2 text-[13px] font-bold"><CheckCircle size={18} weight="fill" color="#059669" className="shrink-0 mt-0.5" /><span>{toast}</span></div>}
+      {!token && <div className="rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 text-[12px] font-bold text-amber-900">Login sebagai Admin untuk memuat akun.</div>}
+
+      {loading ? <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-8 text-center text-[13px] font-bold text-faded flex items-center justify-center gap-2"><SpinnerGap size={16} weight="bold" className="animate-spin" /> Memuat akun...</div> : (
+      <div className="rounded-[16px] border-2 border-zinc-200 bg-white overflow-hidden shadow-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-50 border-b-2 border-zinc-100">
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">NIP / Nama</th>
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Madrasah</th>
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Status</th>
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">BMU</th>
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {filtered.map((r) => (
+                <tr key={r.id} className="hover:bg-zinc-50/70">
+                  <td className="px-4 py-3">
+                    <div className="text-[12px] font-mono font-black text-charcoal">{r.nip}</div>
+                    <div className="text-[12px] font-bold text-charcoal">{r.nama}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-[12px] font-black text-charcoal flex items-center gap-1"><Buildings size={12} weight="regular" /> {r.madrasah}</div>
+                    <div className="text-[11px] font-bold text-pencil">{r.jenjang} • {r.statusKepemilikan}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center gap-1 h-6 px-2.5 rounded-full border-2 text-[11px] font-black ${statusBadge[r.status]}`}>
+                      {r.status === 'Menunggu' ? <Clock size={12} weight="fill" color="#92400e" /> : r.status === 'Aktif' ? <CheckCircle size={12} weight="fill" color="white" /> : <XCircle size={12} weight="regular" color="#afafaf" />}
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {r.bmuId ? (
+                      <span className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-mono font-black text-charcoal"><Hash size={12} weight="bold" /> {r.bmuId}</span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-faded">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <div className="flex justify-end gap-1.5">
+                      {r.status === 'Menunggu' && (
+                        <button onClick={() => handleApprove(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker">
+                          <CheckCircle size={12} weight="fill" color="white" /> Approve
+                        </button>
+                      )}
+                      {r.status === 'Aktif' && (
+                        <button onClick={() => handleDeactivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                          Nonaktifkan
+                        </button>
+                      )}
+                      {r.status === 'Nonaktif' && (
+                        <button onClick={() => handleActivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                          Aktifkan
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filtered.length === 0 && <div className="p-8 text-center text-[13px] font-bold text-faded">Tidak ada akun sesuai filter {total ? `(${total} total)` : ''}</div>}
+        <div className="px-4 py-3 flex items-center justify-between text-[11px] font-bold text-faded border-t-2 border-zinc-100">
+          <span>Total {total} • Hal {page}</span>
+          <div className="flex gap-2">
+            <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Prev</button>
+            <button onClick={()=>setPage(p=>p+1)} disabled={filtered.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Next</button>
+          </div>
+        </div>
+      </div>
+      )}
+
+      <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 flex gap-2">
+        <ShieldCheck size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
+        <p className="text-[11px] leading-5 font-medium text-pencil">Approve otomatis generate <b>BMU-XXXXXX</b> berurutan & permanen jika madrasah belum ada — sinkron US1.</p>
+      </div>
+    </div>
+  );
+}
+

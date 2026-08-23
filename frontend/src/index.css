@@ -1,26 +1,115 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Design tokens — sinkron dengan _backup/index.html :root */
+:root {
+  --eager: #58cc02;
+  --story: #d7ffb8;
+  --spark: #1cb0f6;
+  --fresh: #a5ed6e;
+  --ink: #000437;
+  --charcoal: #4b4b4b;
+  --pencil: #777777;
+  --faded: #afafaf;
+}
 
-@layer base {
-  body {
-    @apply font-sans text-neutral-dark bg-white;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-bold;
+* {
+  font-variant-ligatures: common-ligatures;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  background: #fff;
+  color: #4b4b4b;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: #d7ffb8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-brand-navy text-white rounded-[12px] font-semibold hover:bg-opacity-90 transition;
-  }
-  .btn-secondary {
-    @apply px-4 py-2 bg-brand-teal text-white rounded-[12px] font-semibold hover:bg-opacity-90 transition;
-  }
-  .card {
-    @apply bg-white border border-neutral-light rounded-[12px] shadow-sm p-4;
-  }
+/* Custom scrollbar — persis dari index.html */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #afafaf;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+/* Keyframes — persis dari _backup/index.html <style> */
+@keyframes floatA { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-10px) rotate(1deg)} }
+@keyframes floatB { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-14px) rotate(-1deg)} }
+@keyframes floatC { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes pulse-live { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.7; transform:scale(0.92)} }
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+@keyframes drift { 0%{transform:translate(0,0)} 50%{transform:translate(12px,-8px)} 100%{transform:translate(0,0)} }
+@keyframes barGrow { from{width:0} to{width:var(--w)} }
+@keyframes trophyBounce { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-6px) rotate(3deg)} }
+.hero-blob { filter: blur(40px); opacity: 0.55; }
+.magnet { transition: transform 0.2s cubic-bezier(0.16,1,0.3,1); }
+
+/* Reveal-on-scroll utilities — dipindahkan dari <style> inline agar reusable via hook/IO */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.stagger > * {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.stagger.in > * {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Legacy utilities — plain CSS agar tidak perlu @apply (Tailwind v4 kompat) */
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #58cc02;
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: filter 0.2s;
+}
+.btn-primary:hover { filter: brightness(0.95); }
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background: #1cb0f6;
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: filter 0.2s;
+}
+.btn-secondary:hover { filter: brightness(0.95); }
+.card {
+  background: #fff;
+  border: 2px solid #e4e4e7; /* zinc-200 */
+  border-radius: 12px;
+  padding: 1rem;
 }

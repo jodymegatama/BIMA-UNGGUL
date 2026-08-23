@@ -1,0 +1,92 @@
+import { useState, useEffect } from 'react';
+import { List, Bell, CaretRight } from 'phosphor-react';
+import { Link, useLocation } from 'react-router-dom';
+import NotificationDropdown from '../shared/NotificationDropdown';
+import { apiFetch } from '../../lib/api';
+
+const titleMap = {
+  '/admin': 'Dashboard',
+  '/admin/validasi': 'Antrian Validasi',
+  '/admin/periode': 'Manajemen Periode',
+  '/admin/bobot': 'Konfigurasi Bobot',
+  '/admin/akun': 'Manajemen Akun Operator',
+  '/admin/laporan': 'Laporan / Export',
+};
+
+export default function TopBar({ periode = '2026/2027', onMenu }) {
+  const { pathname } = useLocation();
+  // handle detail pages like /admin/validasi/:id
+  const title = titleMap[pathname] || (pathname.startsWith('/admin/validasi') ? 'Antrian Validasi' : 'Admin');
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([]);
+  const notifCount = items.filter((i) => !i.read).length;
+
+  // Real notifications from backend
+  useEffect(() => {
+    let ignore = false;
+    apiFetch('/api/notifications', { auth: true })
+      .then((data) => {
+        if (ignore) return;
+        const arr = Array.isArray(data) ? data : (data.data || []);
+        setItems(arr.map((n) => ({
+          id: n.id,
+          judul: n.tipe || 'Notifikasi',
+          desc: n.pesan || '',
+          time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
+          status: /tolak/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
+          read: n.statusBaca === 'sudah_dibaca',
+        })));
+      })
+      .catch(() => {});
+    return () => { ignore = true; };
+  }, []);
+
+  const handleRead = async (id) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, read: true } : i)));
+    try { await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH', auth: true }); } catch {}
+  };
+  const handleReadAll = () => setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+
+  return (
+    <div className="h-[64px] flex items-center justify-between gap-4 px-4 lg:px-6 border-b-2 border-zinc-100 bg-white shrink-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <button onClick={onMenu} className="lg:hidden w-9 h-9 rounded-[12px] border-2 border-zinc-200 bg-white flex items-center justify-center hover:bg-zinc-50" aria-label="Buka menu">
+          <List size={18} weight="regular" />
+        </button>
+        <div className="min-w-0">
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-bold text-faded">
+            <Link to="/" className="hover:text-charcoal">Beranda</Link>
+            <CaretRight size={10} weight="bold" />
+            <span className="text-charcoal">Admin</span>
+            {pathname !== '/admin' && (
+              <>
+                <CaretRight size={10} weight="bold" />
+                <span className="text-charcoal truncate">{title}</span>
+              </>
+            )}
+          </div>
+          <h1 className="font-display font-black text-[18px] lg:text-[20px] leading-none text-charcoal truncate">{title}</h1>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
+          <span className="w-2 h-2 rounded-full bg-eager animate-pulse" style={{ animation: 'pulse-live 1.6s ease infinite' }} />
+          Periode {periode}
+        </span>
+        <div className="relative">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="relative w-9 h-9 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50"
+            aria-label="Notifikasi"
+            aria-haspopup="true"
+            aria-expanded={open}
+          >
+            <Bell size={18} weight={open ? 'fill' : 'regular'} color="#4b4b4b" />
+            {notifCount > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-eager text-white border-2 border-white flex items-center justify-center text-[10px] font-black leading-none">{notifCount}</span>}
+          </button>
+          {open && <NotificationDropdown items={items} onRead={handleRead} onReadAll={handleReadAll} onClose={() => setOpen(false)} />}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -10,15 +10,314 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int     @id @default(autoincrement())
-  nip       String  @unique
-  password  String
-  name      String
-  email     String  @unique
-  role      String  @default("operator") // operator, admin
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ==================== ENUM ====================
+
+enum StatusPeriode {
+  belum_dimulai
+  aktif
+  cutoff
+  penyelesaian_validasi
+  finalisasi
+  arsip
 }
 
-// Phase 3: Skema madrasah, penilaian, dan scoring akan ditambahkan di sini
+enum TipeFormula {
+  per_capaian
+  per_tingkat_wilayah
+  per_jenjang
+  persentase
+}
+
+enum StatusSubmission {
+  draft
+  menunggu
+  disetujui
+  ditolak
+}
+
+enum AksiValidasi {
+  approve
+  reject
+  revoke
+}
+
+enum StatusDeleteRequest {
+  menunggu
+  disetujui
+  ditolak
+}
+
+enum TingkatWilayah {
+  kabupaten
+  provinsi
+  nasional
+  internasional
+}
+
+enum JenjangPendidikan {
+  s1
+  s2
+  s3
+}
+
+enum StatusPegawai {
+  asn
+  non_asn
+}
+
+enum Jenjang {
+  MI
+  MTs
+  MA
+}
+
+enum StatusKepemilikan {
+  Negeri
+  Swasta
+}
+
+enum StatusUser {
+  menunggu
+  aktif
+  nonaktif
+}
+
+// ==================== FASE 1-2 (DENGAN RELASI BARU PHASE 3) ====================
+
+model User {
+  id                   Int                @id @default(autoincrement())
+  nip                  String             @unique
+  password             String
+  name                 String
+  email                String             @unique
+  telepon              String?            // No. Telepon/WhatsApp operator (dari form daftar)
+  role                 String             @default("operator") // operator, admin
+  status               StatusUser         @default(menunggu)
+  madrasahId           Int?
+  madrasah             Madrasah?          @relation(fields: [madrasahId], references: [id])
+  
+  // Temporary storage untuk madrasah data saat registrasi (pending approval)
+  // akan dihapus setelah Admin approve & Madrasah dibuat
+  madrasahData         Json?              // { nama, jenjang, statusKepemilikan, alamat, jumlahSiswa }
+  
+  // Relasi baru untuk Phase 3
+  createdSubmissions   SubmissionItem[]   @relation("SubmissionCreatedBy")
+  validations          Validation[]
+  deleteRequestsCreated DeleteRequest[]   @relation("DeleteRequestRequestedBy")
+  deleteRequestsReviewed DeleteRequest[]  @relation("DeleteRequestReviewedBy")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([madrasahId])
+  @@index([status])
+}
+
+model Madrasah {
+  id                Int               @id @default(autoincrement())
+  nomorMadrasah     String            @unique // BMU-000001 permanen & unik — immutable
+  namaMadrasah      String            // editable by operator (langsung)
+  jenjang           Jenjang           // MI/MTs/MA — immutable
+  statusKepemilikan StatusKepemilikan // Negeri/Swasta — immutable
+  jumlahSiswa       Int               // editable by operator (langsung, >0)
+  alamat            String            @db.Text // editable by operator (langsung)
+  slug              String            @unique // tidak regenerate saat nama berubah
+  kelompok          String            // MI Negeri etc — derived, immutable
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  // Relasi
+  users             User[]
+  submissions       SubmissionItem[]
+  scores            MadrasahScore[]
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipe       String // submission_approved, submission_rejected, account_approved, etc.
+  pesan      String   @db.Text
+  statusBaca String   @default("belum_dibaca") // belum_dibaca | sudah_dibaca
+  createdAt  DateTime @default(now())
+
+  @@index([userId, statusBaca])
+  @@index([userId, createdAt])
+}
+
+// ==================== FASE 3: PENILAIAN & SCORING ====================
+
+model PeriodePenilaian {
+  id            Int              @id @default(autoincrement())
+  namaPeriode   String           @unique // contoh: "2026/2027"
+  tahunCapaian  Int // otomatis mengikuti periode
+  tanggalMulai  DateTime
+  tanggalCutoff DateTime
+  status        StatusPeriode    @default(belum_dimulai)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  bobots        BobotIndikator[]
+  submissions   SubmissionItem[]
+  scores        MadrasahScore[]
+
+  @@index([status])
+}
+
+model Indikator {
+  id          Int              @id @default(autoincrement())
+  kode        String           @unique // "1".."9" sesuai PRD Section 8
+  slug        String           @unique // "diklat", "penghargaan_individu", ... (indikatorKode PRD Section 11)
+  nama        String
+  tipeFormula TipeFormula
+  bobots      BobotIndikator[]
+  submissions SubmissionItem[]
+}
+
+model BobotIndikator {
+  id                  Int              @id @default(autoincrement())
+  indikatorId         Int
+  indikator           Indikator        @relation(fields: [indikatorId], references: [id], onDelete: Cascade)
+  periodeId           Int
+  periode             PeriodePenilaian @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  nilaiBobot          Float?           // tipe per_capaian / persentase
+  bobotTingkatWilayah Json?            // { kabupaten, provinsi, nasional, internasional } — penghargaan_institusi & prestasi_siswa
+  bobotJenjang        Json?            // { s1, s2, s3 } — lulus_jenjang_lanjutan
+  terkunci            Boolean          @default(false) // true setelah periode finalisasi
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([indikatorId, periodeId]) // histori bobot: satu baris per indikator per periode
+  @@index([periodeId])
+  @@index([terkunci])
+}
+
+// Satu baris capaian = satu unit submission (header Submission PRD diflat-kan ke sini,
+// sesuai implementasi frontend Phase 2 & API validasi per-baris /api/admin/validasi/:id/*)
+model SubmissionItem {
+  id                Int               @id @default(autoincrement())
+  madrasahId        Int
+  madrasah          Madrasah          @relation(fields: [madrasahId], references: [id], onDelete: Cascade)
+  indikatorId       Int
+  indikator         Indikator         @relation(fields: [indikatorId], references: [id], onDelete: Cascade)
+  periodeId         Int
+  periode           PeriodePenilaian  @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  createdById       Int
+  createdBy         User              @relation("SubmissionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  
+  // ========== FIELD DINAMIS PER INDIKATOR (Section 11 PRD) ==========
+  // Umum (semua indikator)
+  namaKegiatan      String?            // Diklat, Penghargaan, Giat Inovatif, Universitas Unggulan — wajib untuk beberapa indikator
+  institusi         String?            // Institusi Penerbit/Penyelenggara — wajib untuk beberapa indikator
+  namaPeserta       String?            // ASN/non-ASN/Siswa — wajib untuk beberapa indikator
+  
+  // Spesifik per indikator
+  statusPegawai     StatusPegawai?     // Diklat, Penghargaan Individu
+  tingkatWilayah    TingkatWilayah?    // Penghargaan Institusi, Prestasi Siswa
+  jenjangPendidikan JenjangPendidikan? // Lulus Jenjang Lanjutan
+  jumlah            Int?               // Jumlah ASN (Lulus Jenjang), atau pembilang "X dari Y"
+  pembilang         Int?               // X dalam "X dari Y = Z%" (Rapor >85, Rasio Penerimaan)
+  penyebut          Int?               // Y dalam "X dari Y = Z%" (Rapor >85, Rasio Penerimaan)
+  tahun             Int?               // Tahun capaian/perolehan
+  
+  linkBukti         String             // URL bukti fisik — WAJIB
+  catatan           String?            @db.Text // Catatan tambahan (opsional)
+  
+  // Status & Scoring
+  skorBaris         Float?             // Dihitung setelah disetujui
+  status            StatusSubmission   @default(draft)
+  alasanPenolakan   String?            @db.Text // Wajib jika status = ditolak
+  
+  // Soft Delete (untuk DeleteRequest approval)
+  deletedAt         DateTime?          // Null = aktif, IsNotNull = soft-deleted
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  // Relasi
+  validations       Validation[]
+  deleteRequests    DeleteRequest[]
+
+  @@index([status])
+  @@index([periodeId, status])
+  @@index([madrasahId, periodeId])
+  @@index([madrasahId, status])
+  @@index([indikatorId, periodeId])
+  @@index([createdById])
+  @@index([deletedAt]) // untuk filter aktif vs soft-deleted
+}
+
+model Validation {
+  id               Int            @id @default(autoincrement())
+  submissionItemId Int
+  submissionItem   SubmissionItem @relation(fields: [submissionItemId], references: [id], onDelete: Cascade)
+  validatorId      Int
+  validator        User           @relation(fields: [validatorId], references: [id])
+  aksi             AksiValidasi
+  alasan           String?        @db.Text // wajib untuk reject & revoke
+  createdAt        DateTime       @default(now())
+
+  @@index([submissionItemId])
+  @@index([validatorId])
+}
+
+model DeleteRequest {
+  id               Int                 @id @default(autoincrement())
+  submissionItemId Int
+  submissionItem   SubmissionItem      @relation(fields: [submissionItemId], references: [id], onDelete: Cascade)
+  requestedById    Int
+  requestedBy      User                @relation("DeleteRequestRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+  status           StatusDeleteRequest @default(menunggu)
+  alasan           String              @db.Text // Alasan pengajuan Operator — WAJIB
+  alasanAdmin      String?             @db.Text // Alasan penolakan/persetujuan Admin — wajib saat reject
+  reviewedById     Int?
+  reviewedBy       User?               @relation("DeleteRequestReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?           // Null saat masih menunggu
+  createdAt        DateTime            @default(now())
+
+  @@index([status])
+  @@index([submissionItemId])
+  @@index([reviewedAt])
+}
+
+// AuditLog: trail lengkap semua aksi penting
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  action      String   // approve_submission, reject_submission, revoke_submission, approve_delete_request, reject_delete_request, reopen_period, finalize_period, etc.
+  entity      String   // SubmissionItem, DeleteRequest, PeriodePenilaian, BobotIndikator, User, etc.
+  entityId    String   // ID dari entity yang di-act upon
+  
+  dataSebelum Json?    // Snapshot data sebelum aksi
+  dataSesudah Json?    // Snapshot data sesudah aksi
+  alasan      String?  @db.Text // Alasan untuk revoke/reject/reopen
+  ipAddress   String   // IP address si Admin yang melakukan aksi
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([userId, createdAt]) // untuk audit trail per user
+}
+
+// Cache table untuk skor per madrasah per periode
+// Digunakan untuk performa leaderboard (avoid recalculate setiap request)
+model MadrasahScore {
+  id           Int      @id @default(autoincrement())
+  madrasahId   Int
+  periodeId    Int
+  totalScore   Float    // Total skor per periode
+  lastRecalc   DateTime @default(now())
+  
+  madrasah     Madrasah @relation(fields: [madrasahId], references: [id], onDelete: Cascade)
+  periode      PeriodePenilaian @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  
+  @@unique([madrasahId, periodeId]) // satu score per madrasah per periode
+  @@index([periodeId, totalScore])
+  @@index([madrasahId])
+}
