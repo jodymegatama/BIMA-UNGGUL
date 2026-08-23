@@ -1,8 +1,8 @@
 # PRD — BIMA UNGGUL (Bina Madrasah Unggul)
 
-**Versi:** 3.0 (migrasi stack ke React + Vite / Express / MySQL aaPanel)
+**Versi:** 3.1 (revisi struktur project & stack mengikuti implementasi aktual)
 **Target Platform:** Web Fullstack (SPA React di frontend, REST API JSON di backend)
-**Stack:** React 18 + Vite (frontend), Express.js + Node.js (backend REST API), MySQL (aaPanel), Nginx (web server & reverse proxy), PM2 (process manager backend), Tailwind CSS 4 (styling), Chart.js / ApexCharts (visualisasi data)
+**Stack:** React 19 + Vite 8 + React Router 7 (frontend), Express 5 + Node.js ESM (backend REST API), Prisma ORM + MySQL (aaPanel/Laragon), Nginx (web server & reverse proxy), PM2 (process manager backend), Tailwind CSS 4 (styling), ApexCharts (visualisasi data), npm workspaces (monorepo)
 **Bahasa Sistem:** Indonesia
 **Periode Contoh:** 2026/2027
 
@@ -22,7 +22,7 @@ Kemenag Kabupaten Pasuruan belum memiliki sistem digital untuk mengumpulkan, mem
 Aplikasi web yang mendigitalkan alur *Input Operator → Validasi Admin → Skor → Leaderboard*, di mana skor madrasah murni berasal dari akumulasi capaian yang diinput Operator dan disetujui Admin berdasarkan 9 indikator mutu berbobot — tanpa target skor, skor minimum, atau score engine berbasis kategori.
 
 **AI Build Summary:**
-Bangun aplikasi web fullstack SPA menggunakan React 18 + Vite (frontend) yang mengonsumsi REST API JSON dari Express.js + Node.js (backend), dengan MySQL (di-hosting via aaPanel) sebagai database, Nginx sebagai web server/reverse proxy (serve static build React + proxy `/api` ke backend Express), dan PM2 sebagai process manager khusus untuk proses backend Express (frontend React di-build statis, tidak dijalankan lewat PM2). Styling tetap menggunakan Tailwind CSS 4. Sistem memiliki 3 role: Publik (read-only), Operator Madrasah (input & submit capaian pada 9 indikator), dan Admin Seksi Pendma (validasi, bobot, periode, laporan). Skor dihitung realtime dari `Σ(capaian Approved × bobot)` per indikator, per 9 indikator, lalu dirangking dalam 6 kelompok madrasah (MI/MTs/MA × Negeri/Swasta). Chart/grafik (Top 10 bar chart, grafik skor 9 indikator) dibangun dengan Chart.js atau ApexCharts. Wajib mendukung: validasi per baris data, alasan wajib saat reject/revoke, audit trail lengkap, ekspor PDF & Excel, dan penguncian periode (finalisasi) dengan mekanisme reopen beralasan.
+Bangun aplikasi web fullstack SPA menggunakan React 19 + Vite 8 (frontend) yang mengonsumsi REST API JSON dari Express 5 + Node.js ESM (backend), dengan Prisma ORM + MySQL (di-hosting via aaPanel) sebagai database, Nginx sebagai web server/reverse proxy (serve static build React + proxy `/api` ke backend Express), dan PM2 sebagai process manager khusus untuk proses backend Express (frontend React di-build statis, tidak dijalankan lewat PM2). Styling tetap menggunakan Tailwind CSS 4. Sistem memiliki 3 role: Publik (read-only), Operator Madrasah (input & submit capaian pada 9 indikator), dan Admin Seksi Pendma (validasi, bobot, periode, laporan). Skor dihitung realtime dari `Σ(capaian Approved × bobot)` per indikator, per 9 indikator, lalu dirangking dalam 6 kelompok madrasah (MI/MTs/MA × Negeri/Swasta). Chart/grafik (Top 10 bar chart, grafik skor 9 indikator) dibangun dengan ApexCharts. Wajib mendukung: validasi per baris data, alasan wajib saat reject/revoke, audit trail lengkap, ekspor PDF & Excel, dan penguncian periode (finalisasi) dengan mekanisme reopen beralasan.
 
 ---
 
@@ -202,7 +202,7 @@ Pengalaman dibagi tiga zona dengan mental model berbeda: (1) **Publik** — mode
 
 > **Prioritas implementasi:** Sebelum membangun halaman satu per satu, bangun dahulu komponen layout (Navbar/Topbar, Sidebar, Footer) per zona user sebagai **shared layout/shell** yang konsisten. Setiap halaman pada Section 10 akan menggunakan salah satu shell ini — tidak membangun navbar/sidebar/footer ulang per halaman.
 
-### 9.1 Shell — Publik (`components/layouts/PublicLayout.tsx`)
+### 9.1 Shell — Publik (`components/public/PublicLayout.jsx`)
 
 | Komponen | Isi | Perilaku |
 |---|---|---|
@@ -210,7 +210,7 @@ Pengalaman dibagi tiga zona dengan mental model berbeda: (1) **Publik** — mode
 | Sidebar | Tidak ada | — |
 | Footer | Logo & nama instansi, link cepat (Leaderboard, Tentang), kontak Kemenag Kabupaten Pasuruan, copyright | Full-width band warna  |
 
-### 9.2 Shell — Operator (`components/layouts/OperatorLayout.tsx`)
+### 9.2 Shell — Operator (`components/operator/OperatorLayout.jsx`)
 
 | Komponen | Isi | Perilaku |
 |---|---|---|
@@ -218,7 +218,7 @@ Pengalaman dibagi tiga zona dengan mental model berbeda: (1) **Publik** — mode
 | Sidebar | Dashboard, 9 Kartu Indikator (link ke Input Indikator), Riwayat Pengiriman, Profil Madrasah | Collapsible di layar sempit, item aktif ter-highlight warna |
 | Footer | Versi aplikasi, link bantuan/kontak Admin | Ringkas, satu baris |
 
-### 9.3 Shell — Admin (`components/layouts/AdminLayout.tsx`)
+### 9.3 Shell — Admin (`components/admin/AdminLayout.jsx`)
 
 | Komponen | Isi | Perilaku |
 |---|---|---|
@@ -229,10 +229,10 @@ Pengalaman dibagi tiga zona dengan mental model berbeda: (1) **Publik** — mode
 ### 9.4 Prinsip Konsistensi
 
 - Ketiga shell menggunakan token warna, tipografi, spacing, dan radius yang sama dari Section 7 (mis. radius 12px pada nav item & tombol, warna aktif , badge notifikasi).
-- Struktur route React Router mengikuti prefix per shell: `/` (publik, `PublicLayout`, tanpa proteksi), `/operator/*` (`OperatorLayout`, dibungkus `<ProtectedRoute role="operator">`), `/admin/*` (`AdminLayout`, dibungkus `<ProtectedRoute role="admin">`) — lihat komponen `ProtectedRoute.tsx` dan middleware `authMiddleware`/`roleMiddleware` di backend Express pada Section 16 (Suggested File Structure).
+- Struktur route React Router mengikuti prefix per shell: `/` (publik, `PublicLayout`, tanpa proteksi), `/operator/*` (`OperatorLayout`, dibungkus `<ProtectedRoute role="operator">`), `/admin/*` (`AdminLayout`, dibungkus `<ProtectedRoute role="admin">`) — lihat komponen `ProtectedRoute.jsx` dan middleware `authMiddleware`/`roleMiddleware` di backend Express pada Section 16 (Suggested File Structure).
 - Komponen `NotificationBell` identik secara visual di shell Operator & Admin (React component yang sama, di-reuse), hanya berbeda sumber data notifikasi (fetch dari endpoint API sesuai role user login).
 - Sidebar Operator & Admin sama-sama collapsible dengan pola interaksi (ikon + label, collapse ke ikon saja) yang identik — hanya berbeda daftar menu (props/config berbeda pada komponen `Sidebar` yang sama).
-- Build order yang disarankan: (1) `PublicLayout.tsx`, (2) `OperatorLayout.tsx`, (3) `AdminLayout.tsx`, (4) baru lanjut ke halaman individual (route) pada Section 10.
+- Build order yang disarankan: (1) `PublicLayout.jsx`, (2) `OperatorLayout.jsx`, (3) `AdminLayout.jsx`, (4) baru lanjut ke halaman individual (route) pada Section 10.
 
 ---
 
@@ -441,7 +441,7 @@ interface AuditLog {
 
 ## 13. API / Integration Surface
 
-Backend Express menggunakan pola Route + Controller + Service (business logic terpisah dari handler), seluruh endpoint di-prefix `/api` dan mengembalikan JSON murni (dikonsumsi React via `fetch`/`axios`, idealnya dengan React Query untuk caching & invalidation):
+Backend Express menggunakan pola Route + Controller + Service (business logic terpisah dari handler), seluruh endpoint di-prefix `/api` dan mengembalikan JSON murni (dikonsumsi React via fetch wrapper kustom `lib/api.js` dengan auto Bearer + auto-refresh 401):
 
 | Method | Path | Description | Auth Required | Response Shape |
 |---|---|---|---|---|
@@ -478,10 +478,10 @@ Backend Express menggunakan pola Route + Controller + Service (business logic te
 > **Catatan:** Endpoint `POST /api/operator/indikator/:id/draft` dan `POST /api/operator/indikator/:id/submit` menggunakan `:id` untuk ID indikator dari master data (bukan dari route frontend). Perubahan frontend dari 9 route terpisah `/operator/indikator/{kode}` menjadi satu halaman tab di `/operator/input` **tidak mengubah kontrak API** — `id` tetap dikirim via params sesuai kebutuhan. Hal yang sama berlaku untuk `POST /api/admin/validasi/:id/*` yang tetap menerima ID submission item meskipun detail validasi kini ditampilkan sebagai modal di `/admin/validasi` tanpa pindah route.
 
 **External integrations:**
-- PDF generation: library Node.js seperti `pdfkit` atau `puppeteer` (render HTML→PDF), dipanggil dari `exportService.js`.
+- PDF generation: library Node.js `pdfkit` *(terkonfirmasi)*, dipanggil dari `exportService.js`.
 - Excel generation: `exceljs` (standar de facto untuk generate XLSX di Node.js), dipanggil dari `exportService.js`.
 - Auth: implementasi custom di Express — `bcrypt` untuk hashing password, `jsonwebtoken` untuk JWT access/refresh token (bukan integrasi eksternal pihak ketiga).
-- Chart rendering (frontend): `Chart.js` (via `react-chartjs-2`) atau `ApexCharts` (via `react-apexcharts`) untuk `Top10BarChart` dan `IndicatorScoreChart`.
+- Chart rendering (frontend): `ApexCharts` (via `react-apexcharts`) *(terkonfirmasi)* untuk `Top10BarChart` dan `IndicatorScoreChart`; dimuat lazy per halaman chart.
 
 ---
 
@@ -491,13 +491,13 @@ Backend Express menggunakan pola Route + Controller + Service (business logic te
 |---|---|---|---|
 | Session login (role, user id, access token) | React Context (`AuthContext`) + memory, refresh token di httpOnly cookie | Session (refresh token persistent di cookie) | Menentukan akses route Operator/Admin/Publik via `ProtectedRoute`; access token dikirim sebagai `Authorization: Bearer` ke Express |
 | Filter periode & kelompok (leaderboard) | URL query params (React Router `useSearchParams`) | None | Agar leaderboard dapat di-share/bookmark |
-| Data server (leaderboard, antrian validasi, submission, dsb.) | React Query / server cache | Cache (invalidated on mutation) | Fetch dari REST API Express; auto-refetch setelah approve/reject/revoke agar leaderboard real-time |
+| Data server (leaderboard, antrian validasi, submission, dsb.) | Fetch wrapper kustom (`lib/api.js`) + Context API *(terkonfirmasi)* | Fetch dari REST API Express; auto-refresh token pada 401; refetch manual setelah approve/reject/revoke agar leaderboard terbarui |
 | Draft form indikator | Server (tabel `submission` status draft di MySQL) | Persistent | Disimpan di DB via API agar tidak hilang saat browser tertutup |
 | Status validasi realtime | Server (recalculate via `scoringService.js` di Express) | Persistent | Dipicu setiap approve/reject/revoke/perubahan bobot; frontend invalidate query terkait setelahnya |
 | Notifikasi belum dibaca | Server (MySQL) + Local UI badge count (React state) | Persistent | Badge di-refresh via polling interval atau refetch saat tab difokuskan |
 | Modal state (validasi, revoke, reopen) | Local UI (React `useState`) | None | State sementara untuk interaksi form dalam modal |
 | Countdown cut-off | Local UI (React `useState` + `useEffect` interval, dihitung dari `tanggalCutoff` server) | None | Dihitung ulang di client dari timestamp server |
-| Form multi-baris indikator (draft belum simpan) | Local UI (React `useState`/`useFieldArray` jika pakai React Hook Form) | None (sebelum simpan) | State lokal sebelum dikirim ke API sebagai draft/submit |
+| Form multi-baris indikator (draft belum simpan) | Local UI (controlled components `useState`) *(terkonfirmasi)* | None (sebelum simpan) | State lokal sebelum dikirim ke API sebagai draft/submit |
 
 ---
 
@@ -507,116 +507,129 @@ Backend Express menggunakan pola Route + Controller + Service (business logic te
 
 | Layer | Choice | Rationale |
 |---|---|---|
-| Frontend Framework | React 18 + Vite | SPA modern, dev experience cepat (HMR Vite), ekosistem komponen luas, cocok untuk 3 zona UI (publik/operator/admin) yang punya interaksi dinamis (form multi-baris, modal, filter) |
-| Routing (Frontend) | React Router v6 | Client-side routing per shell/role (`/`, `/operator/*`, `/admin/*`), mendukung nested routes & `ProtectedRoute` |
-| Data Fetching (Frontend) | React Query (TanStack Query) + Axios/Fetch | Caching, auto-refetch, dan invalidation query — penting agar leaderboard & antrian validasi terasa real-time setelah mutasi (approve/reject/revoke) |
-| Form Handling (Frontend) | React Hook Form | Mengelola form dinamis multi-baris (9 indikator) dan validasi field secara efisien |
-| Styling | Tailwind CSS 4 | Utility-first, tetap dipakai lintas stack; mempercepat pengembangan UI konsisten di 3 zona |
-| Charts | Chart.js (via `react-chartjs-2`) atau ApexCharts (via `react-apexcharts`) | Untuk `Top10BarChart` (leaderboard publik) dan `IndicatorScoreChart` (profil madrasah) — ApexCharts lebih kaya interaksi/animasi, Chart.js lebih ringan; pilih salah satu secara konsisten di seluruh app |
-| Backend Framework | Express.js (Node.js) | Ringan, fleksibel, ekosistem middleware luas, cocok untuk REST API JSON yang dikonsumsi SPA React |
-| Auth | Custom (bcrypt untuk hash password, jsonwebtoken untuk JWT access/refresh token) | Login NIP + password, role & permission diverifikasi lewat middleware Express di tiap route |
-| ORM / DB Access | Prisma atau Sequelize/Knex (pilih salah satu di awal Phase 1) | Migrasi skema terstruktur, query builder/typed model ke MySQL, memudahkan `ScoringService`/`RankingService` menulis query agregasi |
-| Database | MySQL (dikelola via aaPanel) | Standar, stabil, mudah dikelola tim internal Kemenag lewat panel manajemen aaPanel (backup, monitoring, phpMyAdmin bawaan) |
+| Monorepo | npm workspaces (`frontend/`, `backend/`) | Satu `npm install` di root, satu lockfile terpusat, script orkestrasi via flag `-w` |
+| Frontend Framework | **React 19 + Vite 8** *(terkonfirmasi)* | SPA modern, dev experience cepat (HMR Vite), ekosistem komponen luas, cocok untuk 3 zona UI (publik/operator/admin) yang punya interaksi dinamis (form multi-baris, modal, filter) |
+| Routing (Frontend) | **React Router v7** *(terkonfirmasi)* | Client-side routing per shell/role (`/`, `/operator/*`, `/admin/*`), mendukung nested routes & `ProtectedRoute`; route table diekstrak di `src/router.jsx` dengan lazy-load per halaman (code-splitting) |
+| Data Fetching (Frontend) | **Fetch wrapper kustom** (`src/lib/api.js`) — tanpa axios/react-query *(terkonfirmasi)* | `apiGet`/`apiFetch` dengan auto Bearer token + auto-refresh sekali pada 401 (single-flight); Context API untuk state global (AuthContext, OperatorContext) |
+| Form Handling (Frontend) | Controlled components (`useState`) *(terkonfirmasi)* | Form dinamis multi-baris 9 indikator dikelola tanpa library form tambahan |
+| Styling | **Tailwind CSS 4** *(terkonfirmasi)* | Utility-first, tetap dipakai lintas stack; mempercepat pengembangan UI konsisten di 3 zona; design tokens gaya Duolingo (lihat DESIGN.md) |
+| Charts | **ApexCharts** (via `react-apexcharts`) *(terkonfirmasi)* | Untuk `Top10BarChart` (leaderboard publik) dan `IndicatorScoreChart` (profil madrasah); dimuat lazy per halaman chart |
+| Backend Framework | **Express 5** (Node.js ESM) *(terkonfirmasi)* | Ringan, fleksibel, ekosistem middleware luas, cocok untuk REST API JSON yang dikonsumsi SPA React; entry dipisah `app.js` (factory) + `server.js` (bootstrap) |
+| Auth | Custom (**bcryptjs** hash password, **jsonwebtoken** JWT access/refresh token, refresh token di cookie httpOnly) *(terkonfirmasi)* | Login NIP + password, role & permission diverifikasi lewat middleware Express (`router.use(authMiddleware, roleMiddleware([...]))`) per router |
+| ORM / DB Access | **Prisma ORM 5** + singleton client (`src/db/prisma.js`) *(terkonfirmasi)* | Migrasi skema terstruktur & ter-versioning, query type-safe ke MySQL, memudahkan `ScoringService` menulis query agregasi |
+| Database | MySQL (dikelola via aaPanel; dev lokal via Laragon) *(terkonfirmasi)* | Standar, stabil, mudah dikelola tim internal Kemenag lewat panel manajemen aaPanel (backup, monitoring, phpMyAdmin bawaan) |
 | Web Server | Nginx | Serve static build React (`dist/`) dan reverse proxy `/api/*` ke Express (port internal); juga menangani HTTPS/SSL termination & gzip |
 | Process Manager (Backend) | PM2 | Menjaga proses Express tetap hidup (auto-restart on crash), cluster mode untuk multi-core, log management — **hanya untuk backend**, frontend React tidak butuh process manager karena berupa static build |
-| Hosting/Environment | aaPanel (VPS/dedicated server Linux) dengan Nginx + Node.js + MySQL; dev lokal pakai Vite dev server + `nodemon`/`ts-node-dev` untuk Express | Sesuai environment target production tim |
-| PDF Export | `pdfkit` atau `puppeteer` (Node.js) | Generate laporan PDF di backend Express, dipanggil dari endpoint `/api/admin/export/pdf` |
-| Excel Export | `exceljs` (Node.js) | Standar de facto untuk generate XLSX di ekosistem Node.js |
+| Hosting/Environment | aaPanel (VPS/dedicated server Linux) dengan Nginx + Node.js + MySQL; dev lokal pakai Laragon (Apache/MySQL) + Vite dev server + `node --watch` untuk Express | Sesuai environment target production tim |
+| PDF Export | `pdfkit` *(terkonfirmasi)* | Generate laporan PDF di backend Express, dipanggil dari endpoint export PDF admin |
+| Excel Export | `exceljs` *(terkonfirmasi)* | Standar de facto untuk generate XLSX di ekosistem Node.js |
 
 ---
 
 ## 16. Suggested File Structure
 
-Struktur dipisah dua folder utama (monorepo sederhana): `frontend/` (React + Vite) dan `backend/` (Express + Node.js), masing-masing di-deploy terpisah (frontend jadi static build yang dilayani Nginx, backend jadi proses Node yang dikelola PM2).
+*(Revisi v3.1: mencerminkan struktur aktual hasil restrukturisasi.)*
+
+Monorepo npm workspaces: root `package.json` mendeklarasikan `"workspaces": ["frontend", "backend"]` sehingga satu `npm install` meng-install keduanya dan lockfile terpusat di root. Deployment tetap terpisah (frontend jadi static build yang dilayani Nginx, backend jadi proses Node yang dikelola PM2).
 
 ```
 bima-unggul/
-├── frontend/                          # React + Vite (SPA)
+├── package.json                       # workspaces + script orkestrasi (dev, build, db:migrate, ...)
+├── scripts/
+│   └── dev.js                         # orchestrator dev backend + frontend
+│
+├── frontend/                          # React 19 + Vite 8 (SPA)
 │   ├── src/
-│   │   ├── main.tsx
-│   │   ├── App.tsx                    # React Router setup
-│   │   ├── routes/
-│   │   │   ├── public/
-│   │   │   │   ├── LandingPage.tsx
-│   │   │   │   ├── LeaderboardPage.tsx
-│   │   │   │   └── MadrasahProfilePage.tsx
-│   │   │   ├── auth/
-│   │   │   │   ├── LoginPage.tsx
-│   │   │   │   └── RegisterPage.tsx
-│   │   │   ├── operator/
-│   │   │   │   ├── DashboardPage.tsx
-│   │   │   │   ├── IndikatorPage.tsx
-│   │   │   │   └── SubmissionHistoryPage.tsx
-│   │   │   └── admin/
-│   │   │       ├── DashboardPage.tsx
-│   │   │       ├── ValidationQueuePage.tsx
-│   │   │       ├── AccountManagementPage.tsx
-│   │   │       ├── PeriodPage.tsx
-│   │   │       ├── WeightConfigPage.tsx
-│   │   │       └── ExportPage.tsx
+│   │   ├── main.jsx                   # entry point
+│   │   ├── App.jsx                    # provider global (AuthProvider, Toaster) + Suspense boundary
+│   │   ├── router.jsx                 # route table per zona; halaman di-lazy-load per chunk
+│   │   ├── pages/
+│   │   │   ├── public/                # HomePage, Leaderboard, MadrasahDetail, Tentang
+│   │   │   ├── auth/                  # Login, Daftar
+│   │   │   ├── operator/              # Dashboard, InputCapaian, RiwayatSubmission,
+│   │   │   │                          #   ProfilMadrasah, HapusData
+│   │   │   └── admin/                 # Dashboard, AntreanValidasi, ManajemenPeriode,
+│   │   │                              #   KonfigurasiBobot, ManajemenAkun, ExportLaporan, AuditLog
 │   │   ├── components/
-│   │   │   ├── layouts/
-│   │   │   │   ├── PublicLayout.tsx
-│   │   │   │   ├── OperatorLayout.tsx
-│   │   │   │   └── AdminLayout.tsx
-│   │   │   ├── ui/                    # PodiumTop3, RankingTable, IndicatorCard, dll (lihat Section 8)
-│   │   │   └── charts/
-│   │   │       ├── Top10BarChart.tsx      # Chart.js / ApexCharts
-│   │   │       └── IndicatorScoreChart.tsx
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx
-│   │   ├── hooks/                     # custom hooks React Query (useLeaderboard, useValidationQueue, dll)
-│   │   ├── lib/
-│   │   │   ├── apiClient.ts           # instance Axios/Fetch + interceptor JWT
-│   │   │   └── types.ts               # shared TypeScript types (cermin Section 12 Data Models)
-│   │   └── router/
-│   │       └── ProtectedRoute.tsx
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
+│   │   │   ├── public/                # PublicLayout, Navbar, Footer, PodiumTop3,
+│   │   │   │   ├── home/              #   HeroSection, IndikatorSection, MetodeSection, FaqSection
+│   │   │   │   ├── leaderboard/       #   FilterBar, LeaderboardChart, LeaderboardTable
+│   │   │   │   ├── madrasah/          #   ProfileHeader, IndikatorChart, IndikatorTable, PrestasiList
+│   │   │   │   └── tentang/
+│   │   │   ├── operator/              # OperatorLayout, Sidebar, TopBar, CapaianRow,
+│   │   │   │                          #   IndikatorTabs, DeleteRequest*, StatusBadge
+│   │   │   ├── admin/                 # AdminLayout, Sidebar, TopBar, ValidasiDetailModal,
+│   │   │   │                          #   PeriodeForm, BobotIndikatorForm, AuditLog*, DeleteRequest*
+│   │   │   ├── auth/                  # LoginForm, DaftarForm, AuthBrandPanel, ...
+│   │   │   ├── shared/                # NotificationDropdown, StatusBadge
+│   │   │   ├── ui/                    # DotPattern
+│   │   │   └── ProtectedRoute.jsx     # guard auth + role per zona
+│   │   ├── context/                   # AuthContext, OperatorContext
+│   │   ├── hooks/                     # custom hooks (useRevealOnScroll, useMagnetic)
+│   │   ├── lib/                       # api.js (fetch wrapper + auto-refresh 401), format.js,
+│   │   │                              #   operatorData.js, utils.js
+│   │   └── constants/                 # indikator.js
+│   ├── index.html                     # Google Fonts (Nunito / Nunito Sans)
+│   ├── .env.example                   # VITE_API_URL untuk build produksi
+│   ├── tailwind.config.js             # design tokens gaya Duolingo
+│   ├── vite.config.js                 # proxy dev '/api' → backend Express
 │   └── package.json
 │
-└── backend/                            # Express + Node.js (REST API)
+└── backend/                           # Express 5 + Node.js ESM (REST API)
     ├── src/
-    │   ├── server.js                   # entry point, dijalankan oleh PM2
-    │   ├── app.js                      # setup Express app, middleware global
+    │   ├── app.js                     # Express app factory: cors, json, cookie-parser, mounting routes
+    │   ├── server.js                  # bootstrap saja (listen port) — entry PM2
+    │   ├── config/
+    │   │   └── env.js                 # load dotenv + validasi env wajib saat boot
     │   ├── routes/
-    │   │   ├── auth.routes.js
-    │   │   ├── public.routes.js        # leaderboard, madrasah profile
-    │   │   ├── operator.routes.js
-    │   │   └── admin.routes.js
+    │   │   ├── auth.routes.js         # register/login/refresh/logout
+    │   │   ├── public.routes.js       # leaderboard, madrasah profile (open access)
+    │   │   ├── operator.routes.js     # router.use(auth + role operator)
+    │   │   ├── notification.routes.js # router.use(auth); controller notification
+    │   │   └── admin.routes.js        # router.use(auth + role admin)
     │   ├── controllers/
     │   │   ├── authController.js
-    │   │   ├── leaderboardController.js
-    │   │   ├── madrasahController.js
-    │   │   ├── operatorController.js
+    │   │   ├── publicController.js    # leaderboard + detail madrasah (strip linkBukti)
+    │   │   ├── operatorController.js  # profil madrasah + submission indikator
+    │   │   ├── notificationController.js
     │   │   └── admin/
-    │   │       ├── validationController.js
-    │   │       ├── accountController.js
-    │   │       ├── periodController.js
-    │   │       ├── weightController.js
-    │   │       └── exportController.js
+    │   │       ├── validationController.js   # approve/reject/revoke
+    │   │       ├── accountController.js      # kelola akun + approval
+    │   │       ├── periodController.js       # periode CRUD + finalisasi/reopen
+    │   │       ├── bobotController.js        # bobot indikator
+    │   │       ├── deleteRequestController.js
+    │   │       ├── exportController.js       # PDF (pdfkit) & Excel (exceljs)
+    │   │       └── auditLogController.js     # delegasi ke auditService.listAuditLogs
     │   ├── services/
-    │   │   ├── scoringService.js       # hitung skor per indikator & total
-    │   │   ├── rankingService.js       # ranking per kelompok + tie-breaker
-    │   │   ├── validationService.js    # approve/reject/revoke logic
-    │   │   ├── periodService.js        # lifecycle status periode
-    │   │   └── exportService.js        # generate PDF (pdfkit/puppeteer) & Excel (exceljs)
-    │   ├── models/                     # Prisma schema atau model Sequelize/Knex
-    │   │   ├── user.model.js
-    │   │   ├── madrasah.model.js
-    │   │   ├── submission.model.js
-    │   │   ├── submissionItem.model.js
-    │   │   └── periode.model.js
+    │   │   ├── authService.js          # user, bcrypt, issue/verify JWT pair
+    │   │   ├── submissionService.js    # draft/submit form dinamis per indikator + cutoff guard
+    │   │   ├── validationService.js    # antrian validasi + atomicity approve/reject
+    │   │   ├── scoringService.js       # skor madrasah + ranking 4 tingkat tie-breaker
+    │   │   ├── periodService.js        # lifecycle periode (aktif/finalisasi/reopen)
+    │   │   ├── bobotService.js         # bobot indikator + aturan lock
+    │   │   ├── accountService.js
+    │   │   ├── exportService.js        # generate PDF & Excel
+    │   │   ├── auditService.js         # recordAuditLog (+ transaction client) & listAuditLogs
+    │   │   └── notificationService.js
     │   ├── middlewares/
-    │   │   ├── authMiddleware.js       # verifikasi JWT
-    │   │   ├── roleMiddleware.js       # cek role (operator/admin)
-    │   │   └── periodCutoffMiddleware.js
+    │   │   ├── authMiddleware.js       # verifikasi Bearer JWT → req.user
+    │   │   └── roleMiddleware.js       # factory gate role (operator/admin)
+    │   ├── constants/
+    │   │   └── auth.constants.js       # AUTH_CONFIG (secret, expiry, cookie, password policy)
+    │   ├── utils/
+    │   │   └── httpError.js            # HttpError ber-status
     │   └── db/
-    │       ├── migrations/
-    │       └── seeds/
+    │       └── prisma.js               # singleton PrismaClient
+    ├── prisma/
+    │   ├── schema.prisma               # skema lengkap (User, Madrasah, Indikator, SubmissionItem,
+    │   │                               #   PeriodePenilaian, MadrasahScore, AuditLog, Notification, dst.)
+    │   ├── seed.js                     # seed 9 indikator master
+    │   └── migrations/                 # migrations SQL — TER-VERSIONING di git
+    ├── scripts/                        # utilitas dev (dummy accounts, cleanup, smoke test)
+    ├── tests/                          # skrip test mandiri (scoring, validasi E2E, publik/admin E2E)
+    │   └── TESTING_GUIDE.md            # panduan testing manual
     ├── ecosystem.config.js             # konfigurasi PM2 (nama proses, cluster mode, env)
-    ├── .env                            # kredensial DB MySQL, JWT secret, dll
+    ├── .env.example                    # DATABASE_URL, JWT secrets, PORT, FRONTEND_URL, dll
     └── package.json
 ```
 
@@ -716,7 +729,7 @@ bima-unggul/
 ## 19. Rollout & Next Steps
 
 **MVP scope:**
-- Includes: Auth custom (JWT + bcrypt) di Express, registrasi & approval Operator, input 9 indikator dengan draft/submit, validasi per baris (approve/reject/revoke + alasan), konfigurasi bobot, manajemen periode (termasuk cut-off & finalisasi), scoring & ranking realtime 6 kelompok, leaderboard & profil madrasah publik (dengan chart Chart.js/ApexCharts), export PDF/Excel, notifikasi in-app dasar, audit trail, permintaan hapus data.
+- Includes: Auth custom (JWT + bcrypt) di Express, registrasi & approval Operator, input 9 indikator dengan draft/submit, validasi per baris (approve/reject/revoke + alasan), konfigurasi bobot, manajemen periode (termasuk cut-off & finalisasi), scoring & ranking realtime 6 kelompok, leaderboard & profil madrasah publik (dengan chart ApexCharts), export PDF/Excel, notifikasi in-app dasar, audit trail, permintaan hapus data.
 - Excludes: aplikasi mobile, notifikasi email/SMS, analitik prediktif, kolaborasi real-time multi-user pada form yang sama.
 
 **Phase 2+ ideas:**
@@ -734,5 +747,5 @@ bima-unggul/
 - Finalisasi struktur tabel database (Section 8 & referensi entitas Section 32 dokumen sumber) — Owner: Eng, sebelum mulai Phase 1.
 - Review UI/UX 3 zona (Publik/Operator/Admin) dengan mock data — Owner: Design.
 - Validasi rumus scoring per indikator dengan Kepala Seksi Pendma sebelum implementasi `scoringService.js` — Owner: PM & Eng.
-- Tentukan ORM/query layer (Prisma vs Sequelize/Knex) untuk backend Express sebelum mulai migrasi skema database — Owner: Eng, sebelum mulai Phase 1.
+- ~~Tentukan ORM/query layer (Prisma vs Sequelize/Knex) untuk backend Express sebelum mulai migrasi skema database — Owner: Eng, sebelum mulai Phase 1.~~ **Selesai: Prisma ORM** (lihat Section 15 & 16).
 - Setup awal environment aaPanel (buat website Nginx + database MySQL + konfigurasi reverse proxy `/api`) dan konfigurasi PM2 (`ecosystem.config.js`) — Owner: Eng/Infra.
