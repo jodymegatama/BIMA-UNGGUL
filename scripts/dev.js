@@ -3,21 +3,21 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
+const root = path.join(__dirname, '..');
+
 console.log('🚀 Starting BIMA UNGGUL development servers...\n');
 
 // Backend
-const backendPath = path.join(__dirname, 'backend');
 const backend = spawn('npm', ['run', 'dev'], {
-  cwd: backendPath,
+  cwd: path.join(root, 'backend'),
   stdio: 'inherit',
   shell: true,
 });
 
 // Wait 2 seconds, then start frontend
 setTimeout(() => {
-  const frontendPath = path.join(__dirname, 'frontend');
   const frontend = spawn('npm', ['run', 'dev'], {
-    cwd: frontendPath,
+    cwd: path.join(root, 'frontend'),
     stdio: 'inherit',
     shell: true,
   });

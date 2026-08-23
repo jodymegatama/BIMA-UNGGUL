@@ -3,18 +3,20 @@
   "version": "1.0.0",
   "description": "Sistem Pemeringkatan Mutu Madrasah — Kementerian Agama Kabupaten Pasuruan",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "frontend:install": "cd frontend && npm install",
-    "backend:install": "cd backend && npm install",
-    "frontend:dev": "cd frontend && npm run dev",
-    "backend:dev": "cd backend && npm run dev",
-    "frontend:build": "cd frontend && npm run build",
-    "backend:start": "cd backend && npm start",
-    "db:migrate": "cd backend && npm run prisma:migrate",
-    "db:studio": "cd backend && npm run prisma:studio",
-    "install-all": "npm run frontend:install && npm run backend:install"
+    "dev": "node scripts/dev.js",
+    "frontend:dev": "npm run dev -w frontend",
+    "backend:dev": "npm run dev -w backend",
+    "frontend:build": "npm run build -w frontend",
+    "backend:start": "npm start -w backend",
+    "db:migrate": "npm run prisma:migrate -w backend",
+    "db:studio": "npm run prisma:studio -w backend",
+    "db:seed": "npm run prisma:seed -w backend",
+    "install-all": "npm install"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC"
 }
