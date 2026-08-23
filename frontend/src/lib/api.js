@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Dev: kosong → same-origin via proxy Vite (vite.config.js server.proxy '/api').
+// Prod: isi VITE_API_URL (.env.production / build args), mis. https://api.bimaunggul.id
+const BASE = import.meta.env.VITE_API_URL ?? '';
 
 function getToken() {
   try {
