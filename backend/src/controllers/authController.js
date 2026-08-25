@@ -106,7 +106,7 @@ export async function register(req, res) {
   }
 
   // 4b. Validate telepon (No. Telepon/WhatsApp — wajib, 10-15 digit)
-  const teleponClean = String(telepon || '').replace(/[\s\-]/g, '');
+  const teleponClean = String(telepon || '').replace(/[\s-]/g, '');
   if (!teleponClean) {
     return res.status(400).json({
       error: 'No. Telepon/WhatsApp wajib diisi',

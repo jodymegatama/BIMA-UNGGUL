@@ -43,7 +43,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
         status: /tolak|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
         read: n.statusBaca === 'sudah_dibaca',
       })));
-    } catch {}
+    } catch  { /* polling gagal — biarkan senyap */ }
   }, []);
 
   // Fetch awal + polling 30 detik + refetch saat tab kembali fokus (PRD §14)
@@ -60,11 +60,11 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
 
   const handleRead = async (id) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, read: true } : i)));
-    try { await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH', auth: true }); } catch {}
+    try { await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH', auth: true }); } catch  { /* polling gagal — biarkan senyap */ }
   };
   const handleReadAll = async () => {
     setItems((prev) => prev.map((i) => ({ ...i, read: true })));
-    try { await apiFetch('/api/notifications/read-all', { method: 'PATCH', auth: true }); } catch {}
+    try { await apiFetch('/api/notifications/read-all', { method: 'PATCH', auth: true }); } catch  { /* polling gagal — biarkan senyap */ }
   };
 
   return (

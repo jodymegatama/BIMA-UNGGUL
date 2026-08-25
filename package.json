@@ -16,7 +16,18 @@
     "db:migrate": "npm run prisma:migrate -w backend",
     "db:studio": "npm run prisma:studio -w backend",
     "db:seed": "npm run prisma:seed -w backend",
-    "install-all": "npm install"
+    "install-all": "npm install",
+    "lint": "npm run lint --workspaces --if-present"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "frontend": {
+    "scripts": {
+      "lint": "eslint src/"
+    }
+  },
+  "backend": {
+    "scripts": {
+      "lint": "eslint src/ scripts/ tests/"
+    }
+  }
 }

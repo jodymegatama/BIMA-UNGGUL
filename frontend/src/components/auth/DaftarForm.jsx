@@ -91,7 +91,7 @@ export default function DaftarForm({ onSuccess }) {
         name: f.namaLengkap.trim(),
         email,
         password: f.password,
-        telepon: f.telepon.replace(/[\s\-]/g, ''), // No. Telepon/WhatsApp — disimpan di kolom User.telepon
+        telepon: f.telepon.replace(/[\s-]/g, ''), // No. Telepon/WhatsApp — disimpan di kolom User.telepon
         madrasahData: {
           nama: f.namaMadrasah.trim(),
           jenjang: f.jenjang,

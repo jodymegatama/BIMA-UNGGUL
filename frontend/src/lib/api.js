@@ -19,7 +19,7 @@ function storeToken(token) {
   try {
     localStorage.setItem('accessToken', token);
     localStorage.setItem('token', token); // legacy key dipakai beberapa komponen lama
-  } catch {}
+  } catch  { /* biarkan senyap — non-kritis */ }
 }
 
 export function clearSession() {
@@ -27,7 +27,7 @@ export function clearSession() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('token');
     localStorage.removeItem('authUser');
-  } catch {}
+  } catch  { /* biarkan senyap — non-kritis */ }
 }
 
 // POST /api/auth/refresh (cookie httpOnly) → { accessToken } | 401/403 definitive

@@ -26,7 +26,7 @@ export default function KonfigurasiBobot() {
         setPeriodes(mapped);
         if (!periodeId) { setPeriodeId(mapped[0].id); setPeriodeStatus(mapped[0].status); }
       }
-    } catch {}
+    } catch  { /* biarkan senyap — non-kritis */ }
   }, [periodeId]);
 
   const fetchBobot = useCallback(async (pid) => {

@@ -22,7 +22,7 @@ export default function HapusData() {
         try {
           const alt = await apiFetch('/api/operator/riwayat?status=disetujui', { auth: true });
           arr = Array.isArray(alt) ? alt : (alt.data || []);
-        } catch {}
+        } catch  { /* biarkan senyap — non-kritis */ }
       }
       // normalize + merge with local delete-request state (if backend has GET endpoint later)
       setItems(arr.map((r) => ({

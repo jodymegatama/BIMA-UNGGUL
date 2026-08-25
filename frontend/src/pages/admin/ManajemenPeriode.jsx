@@ -7,6 +7,11 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function ManajemenPeriode() {
   const { token } = useAuth();
+    function mapStatus(s) {
+    const m = { belum_dimulai: 'Belum Dimulai', aktif: 'Aktif', cutoff: 'Cut-off', penyelesaian_validasi: 'Penyelesaian Validasi', finalisasi: 'Finalisasi', arsip: 'Arsip' };
+    return m[s] || s;
+  }
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -42,10 +47,6 @@ export default function ManajemenPeriode() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
-  function mapStatus(s) {
-    const m = { belum_dimulai: 'Belum Dimulai', aktif: 'Aktif', cutoff: 'Cut-off', penyelesaian_validasi: 'Penyelesaian Validasi', finalisasi: 'Finalisasi', arsip: 'Arsip' };
-    return m[s] || s;
-  }
   function toBackendStatus(s) {
     const rev = { 'Belum Dimulai': 'belum_dimulai', 'Aktif': 'aktif', 'Cut-off': 'cutoff', 'Penyelesaian Validasi': 'penyelesaian_validasi', 'Finalisasi': 'finalisasi', 'Arsip': 'arsip' };
     return rev[s] || s;

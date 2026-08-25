@@ -21,7 +21,7 @@ export async function hashPassword(password) {
     const hash = await bcrypt.hash(password, AUTH_CONFIG.BCRYPT_ROUNDS);
     return hash;
   } catch (err) {
-    throw new Error(`Password hashing failed: ${err.message}`);
+    throw new Error(`Password hashing failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -38,7 +38,7 @@ export async function comparePassword(password, hash) {
     const isMatch = await bcrypt.compare(password, hash);
     return isMatch;
   } catch (err) {
-    throw new Error(`Password comparison failed: ${err.message}`);
+    throw new Error(`Password comparison failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -57,7 +57,7 @@ export function generateAccessToken(payload) {
     });
     return token;
   } catch (err) {
-    throw new Error(`Access token generation failed: ${err.message}`);
+    throw new Error(`Access token generation failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -76,7 +76,7 @@ export function generateRefreshToken(payload) {
     });
     return token;
   } catch (err) {
-    throw new Error(`Refresh token generation failed: ${err.message}`);
+    throw new Error(`Refresh token generation failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -93,9 +93,9 @@ export function verifyRefreshToken(token) {
     return decoded;
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      throw new Error('Refresh token sudah kadaluarsa');
+      throw new Error('Refresh token sudah kadaluarsa', { cause: err });
     }
-    throw new Error('Refresh token tidak valid');
+    throw new Error('Refresh token tidak valid', { cause: err });
   }
 }
 
@@ -131,7 +131,7 @@ export async function generateBMUNumber() {
     const paddedNumber = String(nextNumber).padStart(AUTH_CONFIG.BMU_DIGITS, AUTH_CONFIG.BMU_PAD_CHAR);
     return `${AUTH_CONFIG.BMU_PREFIX}${paddedNumber}`;
   } catch (err) {
-    throw new Error(`BMU number generation failed: ${err.message}`);
+    throw new Error(`BMU number generation failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -263,7 +263,7 @@ export async function createPendingUser(userData) {
 
     return user;
   } catch (err) {
-    throw new Error(`User creation failed: ${err.message}`);
+    throw new Error(`User creation failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -328,7 +328,7 @@ export async function approveUserAndCreateMadrasah(userId, madrasahData) {
 
     return result;
   } catch (err) {
-    throw new Error(`User approval failed: ${err.message}`);
+    throw new Error(`User approval failed: ${err.message}`, { cause: err });
   }
 }
 
@@ -349,7 +349,7 @@ export async function findActiveUser(nip) {
     });
     return user || null;
   } catch (err) {
-    throw new Error(`User lookup failed: ${err.message}`);
+    throw new Error(`User lookup failed: ${err.message}`, { cause: err });
   }
 }
 
