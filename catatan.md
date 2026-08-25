@@ -19,11 +19,11 @@
 - `frontend/src/components/RouteErrorBoundary.jsx` baru: tangkap ChunkLoadError + error render, tombol retry/muat-ulang.
 - `frontend/src/router.jsx`: semua route lazy (publik/operator/admin) dibungkus `<Zone>` = ErrorBoundary + Suspense fallback "Memuat halaman...".
 
-## 3. 🥉 Tooling Kualitas Kode
-**Masalah:** nol konfigurasi lint/format — rawan inkonsistensi
-(contoh nyata: naming routes campur aduk yang sudah diperbaiki manual).
-**Solusi:** ESLint 9 (flat config) + Prettier + script `lint` di workspaces
-+ husky pre-commit hook (opsional).
+## 3. ✅ SELESAI (2026-08-25): Tooling Kualitas Kode
+**Dikerjakan:**
+- ESLint 9 flat config per workspace (`eslint.config.js`): frontend = browser globals + JSX + eslint-plugin-react-hooks; backend = node globals.
+- Script `npm run lint` di root & kedua workspace. Prettier `.prettierrc` bersama (husky pre-commit: belum, opsional).
+- Semua error lama dibereskan (cause-chain authService, no-empty catch, useless escape). Sisa 59 warning terdokumentasi — utang refactor bertahap.
 
 ## 4. Test Infrastructure Nyata
 **Masalah:** 3 skrip test ad-hoc di `backend/tests/` (testScoring,
