@@ -45,9 +45,9 @@ export default function LoginForm() {
       }
       setSuccess(`Login berhasil sebagai ${isAdmin ? 'Admin' : 'Operator'} — mengalihkan...`);
       setTimeout(() => {
-        if (isAdmin) navigate('/admin');
-        else navigate('/operator');
-      }, 600);
+        if (isAdmin) navigate('/admin', { replace: true });
+        else navigate('/operator', { replace: true });
+      }, 100);
     } catch (err) {
       // Preserve dummy triggers for local dev without backend: fallback
       const nipT = nip.trim();

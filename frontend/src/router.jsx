@@ -1,10 +1,27 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './components/public/PublicLayout';
 import OperatorLayout from './components/operator/OperatorLayout';
 import AdminLayout from './components/admin/AdminLayout';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import NotFound from './pages/NotFound';
+
+function PageFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="text-[13px] font-bold text-faded animate-pulse">Memuat halaman...</div>
+    </div>
+  );
+}
+
+function Zone({ children }) {
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<PageFallback />}>{children}</Suspense>
+    </RouteErrorBoundary>
+  );
+}
 
 // Zona Publik
 const HomePage = lazy(() => import('./pages/public/HomePage'));
@@ -50,24 +67,24 @@ function AppRoutes() {
 
       {/* Zona Operator — layout terpisah, protected operator */}
       <Route path="/operator" element={<ProtectedRoute role="operator"><OperatorLayout /></ProtectedRoute>}>
-        <Route index element={<OperatorDashboard />} />
-        <Route path="input" element={<InputCapaian />} />
-        <Route path="riwayat" element={<RiwayatSubmission />} />
-        <Route path="hapus-data" element={<HapusData />} />
-        <Route path="profil" element={<ProfilMadrasah />} />
+        <Route index element={<Zone><OperatorDashboard /></Zone>} />
+        <Route path="input" element={<Zone><InputCapaian /></Zone>} />
+        <Route path="riwayat" element={<Zone><RiwayatSubmission /></Zone>} />
+        <Route path="hapus-data" element={<Zone><HapusData /></Zone>} />
+        <Route path="profil" element={<Zone><ProfilMadrasah /></Zone>} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
       {/* Zona Admin — protected admin */}
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="validasi" element={<AntreanValidasi />} />
-        <Route path="validasi/:id" element={<AntreanValidasi />} />
-        <Route path="periode" element={<ManajemenPeriode />} />
-        <Route path="bobot" element={<KonfigurasiBobot />} />
-        <Route path="akun" element={<ManajemenAkun />} />
-        <Route path="laporan" element={<ExportLaporan />} />
-        <Route path="audit-log" element={<AuditLog />} />
+        <Route index element={<Zone><AdminDashboard /></Zone>} />
+        <Route path="validasi" element={<Zone><AntreanValidasi /></Zone>} />
+        <Route path="validasi/:id" element={<Zone><AntreanValidasi /></Zone>} />
+        <Route path="periode" element={<Zone><ManajemenPeriode /></Zone>} />
+        <Route path="bobot" element={<Zone><KonfigurasiBobot /></Zone>} />
+        <Route path="akun" element={<Zone><ManajemenAkun /></Zone>} />
+        <Route path="laporan" element={<Zone><ExportLaporan /></Zone>} />
+        <Route path="audit-log" element={<Zone><AuditLog /></Zone>} />
         <Route path="*" element={<NotFound />} />
       </Route>
 

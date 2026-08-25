@@ -37,7 +37,7 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             <div className="text-[12px] font-bold text-pencil mt-1">{item.madrasahNama} • {item.madrasahKelompok} • {item.indikatorNama}</div>
             <div className="text-[11px] font-medium text-faded mt-1">ID {item.id} • {new Date(item.tanggalSubmit).toLocaleString('id-ID')} • Periode {item.periode} {item.skor ? `• Skor ${item.skor}` : ''}</div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-zinc-50 border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-100">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50">
             <X size={16} weight="bold" />
           </button>
         </div>
@@ -75,7 +75,7 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             <div className="flex flex-wrap gap-2">
               {item.status === 'Menunggu' && (
                 <>
-                  <button onClick={() => onApprove(item.id)} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
+                  <button onClick={() => onApprove(item.id)} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none">
                     <CheckCircle size={16} weight="fill" color="white" /> Approve
                   </button>
                   <button onClick={() => setMode('reject')} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-ink">
@@ -89,7 +89,7 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
                 </button>
               )}
               {item.status === 'Ditolak' && (
-                <button onClick={() => onApprove(item.id)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
+                <button onClick={() => onApprove(item.id)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none">
                   <CheckCircle size={16} weight="fill" color="white" /> Approve ulang
                 </button>
               )}

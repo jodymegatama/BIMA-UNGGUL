@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { toast } from 'sonner';
-import { PlusCircle, FloppyDisk, PaperPlaneTilt, Buildings, Info, SpinnerGap, CheckCircle, WarningCircle, Stack } from 'phosphor-react';
+import { PlusCircle, FloppyDisk, PaperPlaneTilt, Buildings, Info, SpinnerGap, CheckCircle, WarningCircle, Stack, Trash } from 'phosphor-react';
 import IndikatorTabs from '../../components/operator/IndikatorTabs';
 import CapaianRow from '../../components/operator/CapaianRow';
+import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import { INDIKATORS, emptyRowFor, validateRow, buildPayload } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
 import { useOperator } from '../../context/OperatorContext';
@@ -24,6 +25,7 @@ function groupByIndikator(list, indikatorList) {
 export default function InputCapaian() {
   const { madrasah } = useOperator();
   const madrasahNama = madrasah?.nama || '-';
+  const [searchParams, setSearchParams] = useSearchParams();
   const [periodeNama, setPeriodeNama] = useState('—');
   const [indikators, setIndikators] = useState(INDIKATORS);
   const [active, setActive] = useState('diklat');
@@ -32,6 +34,52 @@ export default function InputCapaian() {
   const [busy, setBusy] = useState(null);
   const [lastAction, setLastAction] = useState(null); // {type:'success'|'error'|'info', msg} untuk status inline aria-live
   const [loadingIndikator, setLoadingIndikator] = useState(true);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // baris server-draft yang akan dihapus
+  const [deleting, setDeleting] = useState(false);
+
+  /** Muat draft periode aktif (backend sudah filter periode; status=draft) → merge ke form. */
+  async function loadDrafts() {
+    try {
+      setLoadingDrafts(true);
+      const resD = await apiFetch('/api/operator/submission-item?status=draft', { auth: true });
+      const arr = Array.isArray(resD) ? resD : (resD?.data || []);
+      if (!arr.length) return;
+      setData((prev) => {
+        const next = { ...prev };
+        arr.forEach((r0) => {
+          const kode = r0.indikator?.slug || 'diklat';
+          if (!next[kode]) next[kode] = [];
+          if (next[kode].some((x) => String(x.id) === String(r0.id))) return;
+          next[kode].push({
+            id: r0.id,
+            indikatorKode: kode,
+            indikatorNama: r0.indikator?.nama,
+            namaKegiatan: r0.namaKegiatan || '',
+            institusi: r0.institusi || '',
+            namaPeserta: r0.namaPeserta || '',
+            statusPegawai: r0.statusPegawai || '',
+            tingkatWilayah: r0.tingkatWilayah || '',
+            jenjangPendidikan: r0.jenjangPendidikan || '',
+            jumlah: r0.jumlah ?? '',
+            pembilang: r0.pembilang ?? '',
+            penyebut: r0.penyebut ?? '',
+            linkBukti: r0.linkBukti || '',
+            catatan: r0.catatan || '',
+            updatedAt: r0.updatedAt || null,
+            status: 'Draft',
+            _error: {},
+          });
+        });
+        Object.keys(next).forEach((k) => { next[k] = next[k].map((r, i) => ({ ...r, _idx: i + 1 })); });
+        return next;
+      });
+    } catch {
+      // draft gagal dimuat → halaman tetap bisa dipakai untuk input baru
+    } finally {
+      setLoadingDrafts(false);
+    }
+  }
 
   // Fetch 9 indikator aktif — GET /api/operator/indikator (tanpa periode, pakai aktif terbaru)
   useEffect(() => {
@@ -55,7 +103,12 @@ export default function InputCapaian() {
               const flat = Object.values(prev).flat().filter((r) => !String(r.id).startsWith('new-'));
               return groupByIndikator(flat, mapped);
             });
-            if (!mapped.find((i) => i.kode === active)) setActive(mapped[0].kode);
+            // ?tab= dari URL (mis. Riwayat › Lanjutkan) — fallback ke tab pertama
+            const wanted = searchParams.get('tab');
+            const initial = mapped.find((i) => i.kode === wanted) ? wanted : mapped[0].kode;
+            setActive((cur) => (mapped.find((i) => i.kode === cur) ? cur : initial));
+            // muat draft periode aktif — hanya bila ada periode (draft difilter per periode di backend)
+            if (res?.periode?.id && !ignore) loadDrafts();
           }
         }
       } catch {
@@ -74,6 +127,25 @@ export default function InputCapaian() {
   const activeInd = indikators.find((i) => i.kode === active);
   const activeIndikatorId = activeInd?.id;
 
+  // Draft server (id numeric) pada tab aktif — untuk strip info & intersep hapus
+  const serverDraftRows = rows.filter((r) => typeof r.id === 'number');
+  const latestDraftUpdate = useMemo(() => {
+    const max = serverDraftRows.reduce((m, r) => {
+      const t = r.updatedAt ? new Date(r.updatedAt).getTime() : 0;
+      return t > m ? t : m;
+    }, 0);
+    return max ? new Date(max).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+  }, [serverDraftRows]);
+
+  // Set kode indikator yang punya draft server — untuk dot indicator di IndikatorTabs
+  const draftKodes = useMemo(() => {
+    const s = new Set();
+    Object.entries(data).forEach(([kode, list]) => {
+      if (list.some((r) => typeof r.id === 'number')) s.add(kode);
+    });
+    return s;
+  }, [data]);
+
   const updateRow = (id, field, val) => {
     setData((prev) => ({
       ...prev,
@@ -86,8 +158,40 @@ export default function InputCapaian() {
       ...prev,
       [active]: prev[active].filter((r) => r.id !== id).map((r, i) => ({ ...r, _idx: i + 1 })),
     }));
-    toast.info('Baris dihapus.');
   };
+
+  /** Intersep hapus: baris server-draft → modal konfirmasi + DELETE; baris lokal baru → langsung. */
+  function handleRemoveRequest(id) {
+    const row = rows.find((r) => String(r.id) === String(id));
+    if (row && typeof row.id === 'number') {
+      setDeleteTarget(row);
+      return;
+    }
+    removeRow(id);
+  }
+
+  async function confirmDeleteDraft() {
+    if (deleting) return; // guard double-click
+    if (!deleteTarget || typeof deleteTarget.id !== 'number') return;
+    setDeleting(true);
+    try {
+      await apiFetch(`/api/operator/submission-item/${deleteTarget.id}`, { method: 'DELETE', auth: true });
+      removeRow(deleteTarget.id);
+      toast.success('Draf dihapus.');
+      setDeleteTarget(null);
+    } catch (e) {
+      if (e.status === 404) {
+        // Draf sudah tidak ada di server (state basi / sudah terhapus) → tetap bersihkan dari daftar
+        removeRow(deleteTarget.id);
+        toast.info('Draf sudah tidak ada di server — dihapus dari daftar.');
+        setDeleteTarget(null);
+      } else {
+        throw e; // ditangkap modal → tampilkan error
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const addRow = () => {
     const newId = `new-${active}-${Date.now()}`;
@@ -127,7 +231,8 @@ export default function InputCapaian() {
       // optimistic local
       setData((prev) => ({ ...prev, [active]: prev[active].map((r) => ({ ...r, status: 'Draft' })) }));
       if (activeIndikatorId) {
-        const items = rows.filter(rowHasContent).map((r) => buildPayload(active, r));
+        // PERTAHANKAN id server → saveItems melakukan UPDATE, bukan membuat duplikat
+        const items = rows.filter(rowHasContent).map((r) => ({ ...(typeof r.id === 'number' ? { id: r.id } : {}), ...buildPayload(active, r) }));
         if (items.length === 0) {
           setLastAction({ type: 'info', msg: 'Tidak ada baris berisi untuk disimpan.' });
           toast.info('Tidak ada baris berisi untuk disimpan.');
@@ -211,7 +316,16 @@ export default function InputCapaian() {
         </div>
       </div>
 
-      <IndikatorTabs activeKode={active} onChange={setActive} counts={counts} indikatorList={indikators} />
+      <IndikatorTabs
+        activeKode={active}
+        onChange={(kode) => {
+          setActive(kode);
+          setSearchParams((sp) => { sp.set('tab', kode); return sp; }, { replace: true });
+        }}
+        counts={counts}
+        indikatorList={indikators}
+        draftKodes={draftKodes}
+      />
 
       <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 flex items-start gap-3 shadow-card">
         <div className="w-9 h-9 rounded-[12px] bg-eager border-2 border-eager-dark shadow-sticker flex items-center justify-center shrink-0 text-white font-black text-[12px]">0{indikators.findIndex((i) => i.kode === active) + 1}</div>
@@ -234,19 +348,27 @@ export default function InputCapaian() {
             transition={{ duration: 0.2 }}
             className="rounded-[16px] border-2 border-dashed border-zinc-300 bg-white/60 p-10 text-center"
           >
-            <div className="w-14 h-14 rounded-full bg-zinc-50 border-2 border-zinc-200 mx-auto flex items-center justify-center">
-              <Stack size={22} weight="regular" color="#afafaf" />
-            </div>
-            <div className="text-[15px] font-display font-black text-charcoal mt-4">Belum ada baris capaian</div>
-            <p className="text-[13px] font-medium text-pencil mt-1 max-w-[46ch] mx-auto">
-              Tambahkan baris pertama untuk indikator <b>{activeInd?.nama}</b> — bisa lebih dari satu, tanpa batas jumlah.
-            </p>
-            <button
-              onClick={addRow}
-              className="mt-5 inline-flex items-center gap-2 h-11 px-6 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
-            >
-              <PlusCircle size={18} weight="bold" color="white" /> Tambah Baris Baru
-            </button>
+            {loadingDrafts ? (
+              <div className="inline-flex items-center gap-2 text-[13px] font-bold text-pencil">
+                <SpinnerGap size={16} weight="bold" className="animate-spin" /> Memuat draft tersimpan…
+              </div>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-full bg-zinc-50 border-2 border-zinc-200 mx-auto flex items-center justify-center">
+                  <Stack size={22} weight="regular" color="#afafaf" />
+                </div>
+                <div className="text-[15px] font-display font-black text-charcoal mt-4">Belum ada baris capaian</div>
+                <p className="text-[13px] font-medium text-pencil mt-1 max-w-[46ch] mx-auto">
+                  Tambahkan baris pertama untuk indikator <b>{activeInd?.nama}</b> — bisa lebih dari satu, tanpa batas jumlah.
+                </p>
+                <button
+                  onClick={addRow}
+                  className="mt-5 inline-flex items-center gap-2 h-11 px-6 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
+                >
+                  <PlusCircle size={18} weight="bold" color="white" /> Tambah Baris Baru
+                </button>
+              </>
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -256,9 +378,19 @@ export default function InputCapaian() {
             exit={{ opacity: 0, y: -12, scale: 0.985 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
           >
+            {/* Strip info draf — visibilitas bahwa baris di bawah adalah draf tersimpan */}
+            {serverDraftRows.length > 0 && (
+              <div className="mb-4 rounded-[12px] bg-[#f0f9ff] border-2 border-[#cde9ff] px-4 py-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-bold text-charcoal">
+                <Info size={14} weight="fill" color="#0b5cab" />
+                <span>Draf tersimpan • {serverDraftRows.length} baris</span>
+                {latestDraftUpdate && <span className="font-medium text-pencil">• terakhir diubah {latestDraftUpdate}</span>}
+                <span className="ml-auto text-[11px] font-medium text-pencil hidden sm:inline">Lanjutkan mengedit lalu Simpan/Kirim</span>
+              </div>
+            )}
+
             <div className="grid gap-4">
               {rows.map((r) => (
-                <CapaianRow key={r.id} row={r} indikatorKode={active} onChange={updateRow} onRemove={removeRow} />
+                <CapaianRow key={r.id} row={r} indikatorKode={active} onChange={updateRow} onRemove={handleRemoveRequest} />
               ))}
             </div>
 
@@ -271,6 +403,16 @@ export default function InputCapaian() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal konfirmasi hapus draft (hard delete + audit trail) */}
+      {deleteTarget && (
+        <DeleteDraftModal
+          draft={deleteTarget}
+          busy={deleting}
+          onConfirm={confirmDeleteDraft}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
 
       {/* Sticky action bar — selalu terlihat saat scroll; feedback tepat di titik aksi (UX fix) */}
       <div className="sticky bottom-0 z-20 -mx-4 lg:-mx-6 px-4 lg:px-6 py-3 bg-white/95 backdrop-blur border-t-2 border-zinc-100 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">

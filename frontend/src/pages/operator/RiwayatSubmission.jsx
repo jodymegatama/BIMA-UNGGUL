@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Funnel, MagnifyingGlass, PencilSimple, PaperPlaneTilt, Eye, WarningCircle, CheckCircle, Clock, Trash, SpinnerGap } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
 import CapaianRow from '../../components/operator/CapaianRow';
+import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import { apiFetch } from '../../lib/api';
 import { validateRow, buildPayload } from '../../constants/indikator';
 
@@ -68,6 +70,32 @@ export default function RiwayatSubmission() {
   const [loading, setLoading] = useState(true);
   const [deleteAlasan, setDeleteAlasan] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteDraftTarget, setDeleteDraftTarget] = useState(null); // {id, indikatorNama, namaKegiatan, updatedAt}
+  const [deletingDraft, setDeletingDraft] = useState(false);
+
+  /** Hapus permanen DRAFT (hard delete + audit trail di backend). */
+  async function handleDeleteDraft() {
+    if (deletingDraft) return; // guard double-click
+    if (!deleteDraftTarget) return;
+    setDeletingDraft(true);
+    try {
+      await apiFetch(`/api/operator/submission-item/${deleteDraftTarget.id}`, { method: 'DELETE', auth: true });
+      setRows((prev) => prev.filter((r) => String(r.id) !== String(deleteDraftTarget.id)));
+      toast.success('Draf dihapus.');
+      setDeleteDraftTarget(null);
+    } catch (e) {
+      if (e.status === 404) {
+        // sudah tidak ada di server → bersihkan dari daftar, tanpa error
+        setRows((prev) => prev.filter((r) => String(r.id) !== String(deleteDraftTarget.id)));
+        toast.info('Draf sudah tidak ada di server — dihapus dari daftar.');
+        setDeleteDraftTarget(null);
+      } else {
+        toast.error(e.message || 'Gagal hapus draf.');
+      }
+    } finally {
+      setDeletingDraft(false);
+    }
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -316,9 +344,23 @@ export default function RiwayatSubmission() {
                         )}
                       </div>
                     ) : r.status === 'Draft' ? (
-                      <Link to="/operator/input" className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
-                        <PencilSimple size={12} weight="bold" /> Lanjutkan
-                      </Link>
+                      <div className="flex justify-end gap-1.5">
+                        {/* Lanjutkan → lompat ke tab indikator yang tepat; draft auto-load di sana */}
+                        <Link
+                          to={{ pathname: '/operator/input', search: `?tab=${encodeURIComponent(r.indikatorKode)}` }}
+                          className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker hover:brightness-[1.03]"
+                          title="Lanjutkan draft di halaman Input Capaian"
+                        >
+                          <PencilSimple size={12} weight="bold" /> Lanjutkan
+                        </Link>
+                        <button
+                          onClick={() => setDeleteDraftTarget(r)}
+                          className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-red-300 hover:text-red-700"
+                          title="Hapus draf permanen"
+                        >
+                          <Trash size={12} weight="bold" /> Hapus
+                        </button>
+                      </div>
                     ) : (
                       <span className="inline-flex h-8 px-3 rounded-full bg-zinc-50 border-2 border-zinc-100 text-[11px] font-bold text-faded">—</span>
                     )}
@@ -336,6 +378,21 @@ export default function RiwayatSubmission() {
           </div>
         )}
       </div>
+
+      {/* Modal konfirmasi hapus draft — hard delete + audit trail */}
+      {deleteDraftTarget && (
+        <DeleteDraftModal
+          draft={{
+            id: deleteDraftTarget.id,
+            indikatorNama: deleteDraftTarget.indikatorNama,
+            namaKegiatan: deleteDraftTarget.summary?.[0] || deleteDraftTarget.namaKegiatan,
+            updatedAt: deleteDraftTarget.updatedAt,
+          }}
+          busy={deletingDraft}
+          onConfirm={handleDeleteDraft}
+          onClose={() => setDeleteDraftTarget(null)}
+        />
+      )}
     </div>
   );
 }

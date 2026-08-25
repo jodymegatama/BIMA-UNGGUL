@@ -330,4 +330,27 @@ export async function requestDeleteSubmissionItem(req, res) {
   }
 }
 
+/**
+ * DELETE /api/operator/submission-item/:id
+ * Hapus permanen DRAFT milik operator (hard delete + audit log).
+ * Tidak diblokir cut-off — draft ≠ submission resmi (housekeeping).
+ */
+export async function deleteDraftSubmissionItem(req, res) {
+  try {
+    const userId = requireOperatorContext(req);
+    const { madrasahId } = await getMadrasahIdFor(userId);
+    const result = await submissionService.deleteOwnDraftItem({
+      id: req.params.id,
+      userId,
+      madrasahId,
+      ip: req.ip,
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    if (err?.status) return res.status(err.status).json({ error: err.message, code: err.code || undefined });
+    console.error('[deleteDraftSubmissionItem]', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export default { getMadrasah, updateMadrasah, getIndikatorStatus, listSubmissionItems };

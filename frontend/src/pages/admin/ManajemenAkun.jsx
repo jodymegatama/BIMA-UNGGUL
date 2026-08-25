@@ -162,7 +162,7 @@ export default function ManajemenAkun() {
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <div className="flex justify-end gap-1.5">
                       {r.status === 'Menunggu' && (
-                        <button onClick={() => handleApprove(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker">
+                        <button onClick={() => handleApprove(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none">
                           <CheckCircle size={12} weight="fill" color="white" /> Approve
                         </button>
                       )}

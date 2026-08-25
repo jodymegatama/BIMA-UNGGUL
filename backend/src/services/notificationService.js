@@ -3,14 +3,16 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Buat notifikasi in-app untuk user tertentu
+ * Buat notifikasi in-app untuk user tertentu.
  * @param {number} userId
  * @param {string} tipe - contoh: submission_approved, submission_rejected, account_approved
  * @param {string} pesan
+ * @param {object} client - Prisma client / transaction client (default: global) —
+ *                          agar notifikasi atomic bersama perubahan data pemicunya.
  */
-export async function createNotification(userId, tipe, pesan) {
+export async function createNotification(userId, tipe, pesan, client = prisma) {
   try {
-    const notif = await prisma.notification.create({
+    const notif = await client.notification.create({
       data: { userId: Number(userId), tipe, pesan, statusBaca: 'belum_dibaca' },
     });
     return notif;
@@ -18,6 +20,18 @@ export async function createNotification(userId, tipe, pesan) {
     console.error('[notificationService.create]', err.message);
     return null;
   }
+}
+
+/**
+ * Tandai SEMUA notifikasi milik user sebagai sudah dibaca (bulk).
+ * Context7 /prisma/web: updateMany → { count }
+ */
+export async function markAllAsRead(userId) {
+  const result = await prisma.notification.updateMany({
+    where: { userId: Number(userId), statusBaca: 'belum_dibaca' },
+    data: { statusBaca: 'sudah_dibaca' },
+  });
+  return result;
 }
 
 /**

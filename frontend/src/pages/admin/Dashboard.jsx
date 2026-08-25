@@ -86,7 +86,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 shadow-card">
           <div className="flex items-center justify-between">
-            <span className="w-9 h-9 rounded-[12px] bg-spark border-2 border-spark-dark shadow-sticker-blue flex items-center justify-center text-white">
+            <span className="w-9 h-9 rounded-[12px] bg-spark border-2 border-spark-dark shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none-blue flex items-center justify-center text-white">
               <ClipboardText size={18} weight="fill" color="white" />
             </span>
             {(menungguTotal ?? 0) > 0 && <span className="inline-flex h-6 px-2 rounded-full bg-spark text-white text-[11px] font-black">Perlu aksi</span>}
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 shadow-card">
-          <div className="w-9 h-9 rounded-[12px] bg-eager border-2 border-eager-dark shadow-sticker flex items-center justify-center text-white">
+          <div className="w-9 h-9 rounded-[12px] bg-eager border-2 border-eager-dark shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none flex items-center justify-center text-white">
             <CheckCircle size={18} weight="fill" color="white" />
           </div>
           <div className="font-display font-black text-[28px] leading-none text-charcoal mt-3">{disetujuiTotal ?? '—'}</div>

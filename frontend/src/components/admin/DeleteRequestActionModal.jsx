@@ -32,7 +32,7 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
             </div>
             <div className="text-[11px] font-bold text-faded">{item.indikatorNama} • {item.indikatorKode} • Skor {item.skor} • ID {item.submissionItemId}</div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-zinc-50 border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-100 shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 shrink-0">
             <X size={16} weight="bold" />
           </button>
         </div>
@@ -55,7 +55,7 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
 
           {isMenunggu && !mode && (
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => onApprove(item.id)} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
+              <button onClick={() => onApprove(item.id)} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none">
                 <CheckCircle size={16} weight="fill" color="white" /> Setujui Hapus
               </button>
               <button onClick={() => setMode('reject')} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-ink">
@@ -87,7 +87,7 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
 
           {!isMenunggu && (
             <div className="flex justify-end">
-              <button onClick={onClose} className="h-9 px-4 rounded-full bg-zinc-900 text-white border-2 border-black text-[12px] font-black">Tutup</button>
+              <button onClick={onClose} className="h-9 px-4 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black">Tutup</button>
             </div>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   submitIndikatorItems,
   updateSubmissionItem,
   requestDeleteSubmissionItem,
+  deleteDraftSubmissionItem,
 } from '../controllers/operatorController.js';
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.post('/indikator/:id/draft', draftIndikatorItems);
 router.post('/indikator/:id/submit', submitIndikatorItems);
 router.patch('/submission-item/:id', updateSubmissionItem);
 router.post('/submission-item/:id/request-delete', requestDeleteSubmissionItem);
+// Hapus permanen DRAFT milik operator — bebas cut-off (housekeeping), wajib audit log
+router.delete('/submission-item/:id', deleteDraftSubmissionItem);
 
 export default router;

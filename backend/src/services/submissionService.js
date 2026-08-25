@@ -379,10 +379,51 @@ export async function requestDeleteItem({ id, alasan, userId, madrasahId, ip }) 
   }, TX_OPTS);
 }
 
+// ==================== DELETE /api/operator/submission-item/:id (draft only) ====================
+
+/**
+ * Hapus permanen DRAFT milik operator.
+ * - Hard delete (bukan soft-delete — konteks beda dengan alur Permintaan Hapus Data final).
+ * - TIDAK diblokir cut-off: draft ≠ submission resmi; housekeeping diperbolehkan
+ *   (keputusan desain 2026-08-23). Simpan/kirim tetap diblokir setelah cutoff.
+ * - Wajib audit log: siapa/kapan/indikator apa yang dihapus.
+ */
+export async function deleteOwnDraftItem({ id, userId, madrasahId, ip }) {
+  const itemId = parseInt(id, 10);
+  if (!Number.isFinite(itemId)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
+
+  const item = await getOwnedItem(itemId, madrasahId);
+  if (item.status !== 'draft') {
+    throw new HttpError(400, 'INVALID_STATUS', `Hanya baris berstatus draft yang bisa dihapus (saat ini: ${item.status})`);
+  }
+
+  return prisma.$transaction(async (tx) => {
+    await tx.submissionItem.delete({ where: { id: itemId } });
+    await recordAuditLog(
+      {
+        userId,
+        action: 'delete_draft_submission',
+        entity: 'SubmissionItem',
+        entityId: itemId,
+        dataSebelum: {
+          indikatorId: item.indikatorId,
+          periodeId: item.periodeId,
+          namaKegiatan: item.namaKegiatan,
+          status: item.status,
+        },
+        ipAddress: ip,
+      },
+      tx,
+    );
+    return { success: true, id: itemId };
+  }, TX_OPTS);
+}
+
 export default {
   FIELD_RULES,
   validateItem,
   saveItems,
   updateOwnItem,
   requestDeleteItem,
+  deleteOwnDraftItem,
 };

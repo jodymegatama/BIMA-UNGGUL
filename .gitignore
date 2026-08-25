@@ -44,3 +44,7 @@ _backup/
 
 # Tooling lokal
 .opencode/
+
+# QA / agent session artifacts
+frontend/public/qa-auth.html
+.hermes/

@@ -7,14 +7,18 @@ import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { recalculateAfterAction } from './scoringService.js';
 
+import { deriveStatus } from './periodService.js';
+
 const TX_OPTS = { timeout: 20000, maxWait: 5000 };
 
 export async function listBobot({ periodeId }) {
   if (!periodeId) throw new HttpError(400, 'MISSING_PERIODE', 'periodeId wajib');
   const pid = parseInt(periodeId, 10);
   if (!Number.isFinite(pid)) throw new HttpError(400, 'INVALID_ID', 'periodeId tidak valid');
-  const periode = await prisma.periodePenilaian.findUnique({ where: { id: pid } });
-  if (!periode) throw new HttpError(404, 'PERIODE_NOT_FOUND', 'Periode tidak ditemukan');
+  const periodeRaw = await prisma.periodePenilaian.findUnique({ where: { id: pid } });
+  if (!periodeRaw) throw new HttpError(404, 'PERIODE_NOT_FOUND', 'Periode tidak ditemukan');
+
+  const periode = { ...periodeRaw, status: deriveStatus(periodeRaw) };
 
   // Merge left-join: SELALU kembalikan 9 indikator master, dimerge dengan bobot eksisting
   // sehingga frontend mendapat id + tipeFormula otoritatif walau belum ada config bobot.

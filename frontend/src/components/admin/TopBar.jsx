@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { List, Bell, CaretRight } from 'phosphor-react';
 import { Link, useLocation } from 'react-router-dom';
 import NotificationDropdown from '../shared/NotificationDropdown';
@@ -13,6 +13,16 @@ const titleMap = {
   '/admin/laporan': 'Laporan / Export',
 };
 
+// Judul ramah untuk tipe notifikasi (PRD §12)
+const NOTIF_TITLE = {
+  account_approved: 'Akun disetujui',
+  submission_approved: 'Capaian Disetujui',
+  submission_rejected: 'Capaian Ditolak',
+  submission_revoked: 'Capaian Dicabut',
+  delete_request_approved: 'Permintaan Hapus Disetujui',
+  delete_request_rejected: 'Permintaan Hapus Ditolak',
+};
+
 export default function TopBar({ periode = '2026/2027', onMenu }) {
   const { pathname } = useLocation();
   // handle detail pages like /admin/validasi/:id
@@ -21,31 +31,41 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
   const [items, setItems] = useState([]);
   const notifCount = items.filter((i) => !i.read).length;
 
-  // Real notifications from backend
-  useEffect(() => {
-    let ignore = false;
-    apiFetch('/api/notifications', { auth: true })
-      .then((data) => {
-        if (ignore) return;
-        const arr = Array.isArray(data) ? data : (data.data || []);
-        setItems(arr.map((n) => ({
-          id: n.id,
-          judul: n.tipe || 'Notifikasi',
-          desc: n.pesan || '',
-          time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
-          status: /tolak/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
-          read: n.statusBaca === 'sudah_dibaca',
-        })));
-      })
-      .catch(() => {});
-    return () => { ignore = true; };
+  const loadNotifications = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/notifications', { auth: true });
+      const arr = Array.isArray(data) ? data : (data.data || []);
+      setItems(arr.map((n) => ({
+        id: n.id,
+        judul: NOTIF_TITLE[n.tipe] || (n.tipe || 'Notifikasi'),
+        desc: n.pesan || '',
+        time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
+        status: /tolak|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
+        read: n.statusBaca === 'sudah_dibaca',
+      })));
+    } catch {}
   }, []);
+
+  // Fetch awal + polling 30 detik + refetch saat tab kembali fokus (PRD §14)
+  useEffect(() => {
+    loadNotifications();
+    const iv = setInterval(loadNotifications, 30000);
+    const onFocus = () => loadNotifications();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(iv);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [loadNotifications]);
 
   const handleRead = async (id) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, read: true } : i)));
     try { await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH', auth: true }); } catch {}
   };
-  const handleReadAll = () => setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+  const handleReadAll = async () => {
+    setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+    try { await apiFetch('/api/notifications/read-all', { method: 'PATCH', auth: true }); } catch {}
+  };
 
   return (
     <div className="h-[64px] flex items-center justify-between gap-4 px-4 lg:px-6 border-b-2 border-zinc-100 bg-white shrink-0">

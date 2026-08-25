@@ -1,3 +1,5 @@
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -10,15 +12,29 @@ import publicRoutes from './routes/public.routes.js';
 
 const app = express();
 
-// Middleware
+// 1. Security Headers (Helmet)
+app.use(helmet());
+
+// 2. Rate Limiting (Brute-force protection for /api/auth/login)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // maks 5 percobaan GAGAL per window per IP
+  skipSuccessfulRequests: true, // login sukses tidak dihitung — hanya gagal
+  message: { error: 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// 3. Middleware
 app.use(cors({
   origin: env.frontendUrl,
   credentials: true,
 }));
 app.use(express.json());
-app.use(cookieParser()); // wajib agar req.cookies.refreshToken terbaca (POST /api/auth/refresh & logout)
+app.use(cookieParser());
 
-// Routes
+// 4. Routes — loginLimiter WAJIB sebelum authRoutes (middleware dieksekusi berurutan)
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/operator', operatorRoutes);
 app.use('/api/admin', adminRoutes);

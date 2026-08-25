@@ -121,7 +121,7 @@ export default function ExportLaporan() {
           <button
             onClick={() => triggerDownload('excel')}
             disabled={!!loading || !periode}
-            className="inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none disabled:opacity-60"
           >
             {loading === 'excel' ? <SpinnerGap size={16} weight="bold" className="animate-spin" /> : <FileXls size={18} weight="fill" color="white" />}
             {loading === 'excel' ? 'Memproses Excel...' : 'Export Excel'}
