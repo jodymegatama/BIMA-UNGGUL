@@ -33,11 +33,10 @@
 - `npm test` (root) menjalankan keduanya. Backend 10/10, frontend 2/2.
 - Catatan: skrip ad-hoc lama di `backend/tests/` (testScoring dkk) tetap ada sebagai smoke script manual.
 
-## 5. Seed Data Demo
-**Masalah:** DB kosong (leaderboard 0 baris) — sulit development & demo stakeholder.
-**Solusi:** perluas `backend/prisma/seed.js`: seed madrasah contoh (6 kelompok:
-MI/MTs/MA × Negeri/Swasta) + submission capaian + periode aktif.
-Alternatif cepat: gunakan `npm run dummy:create` + buat data lewat API.
+## 5. ✅ SELESAI (2026-08-25): Seed Data Demo
+**Dikerjakan:**
+- `backend/prisma/seed-demo.js`: script idempoten untuk seeding demo (9 indikator, periode aktif DEMO/2026, 6 madrasah demo dengan 6 kelompok, submission + validasi otomatis via API dummy admin).
+- Leaderboard kini terisi dan valid untuk demo/testing.
 
 ---
 ### Ditunda (bukan prioritas)
