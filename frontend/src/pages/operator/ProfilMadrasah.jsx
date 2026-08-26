@@ -27,11 +27,6 @@ import { INDIKATORS } from '../../constants/indikator';
 import { formatSkor } from '../../lib/format';
 import IndikatorTable from '../../components/public/madrasah/IndikatorTable';
 
-const EMPTY_MADRASAH = {
-  id: null, nama: '-', bmuId: '-', jenjang: '-', status: '-',
-  kelompok: '-', jumlahSiswa: null, alamat: '-', slug: '',
-};
-
 function mapIndikatorSkor(breakdown) {
   if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0 }));
   return INDIKATORS.map((ind) => ({

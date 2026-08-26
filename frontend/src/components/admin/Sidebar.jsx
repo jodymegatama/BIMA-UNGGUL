@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { SquaresFour, ClipboardText, Calendar, Sliders, Users, FileArrowDown, SignOut, ShieldCheck, Trophy, Scroll } from 'phosphor-react';
+import { SquaresFour, ClipboardText, Calendar, Sliders, Users, FileArrowDown, SignOut, ShieldCheck, Scroll } from 'phosphor-react';
 
 const menu = [
   { to: '/admin', label: 'Dashboard', icon: SquaresFour, end: true },

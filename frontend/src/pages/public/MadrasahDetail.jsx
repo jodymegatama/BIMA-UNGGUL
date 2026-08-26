@@ -25,9 +25,8 @@ function capitalizeTingkat(v) {
 function mapPrestasi(apiList) {
   if (!Array.isArray(apiList)) return [];
   return apiList.map((p) => {
-    // SECURITY: strip linkBukti even if backend leaks (defense in depth)
-    const { linkBukti, link_bukti, bukti, ...rest } = p;
-    void rest;
+    // SECURITY: linkBukti/link_bukti/bukti sengaja TIDAK dipetakan ke output
+    // (defense in depth — backend sudah filter di select). Jangan tambahkan tanpa review security.
     return {
       id: p.id,
       indikatorKode: p.indikator?.slug || p.indikatorKode || 'diklat',

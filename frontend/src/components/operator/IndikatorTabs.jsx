@@ -1,17 +1,5 @@
 import { INDIKATORS as MOCK_INDIKATORS } from '../../constants/indikator';
 
-const iconMap = {
-  diklat: '🎓',
-  penghargaan_individu: '🏅',
-  penghargaan_institusi: '🏛️',
-  prestasi_siswa: '🏆',
-  lulus_jenjang_lanjutan: '🎓',
-  rapor_rata_rata: '📊',
-  siswa_lanjutan_unggulan: '🎯',
-  giat_inovatif: '💡',
-  rasio_penerimaan: '📈',
-};
-
 export default function IndikatorTabs({ activeKode, onChange, counts = {}, indikatorList, draftKodes = new Set() }) {
   const list = Array.isArray(indikatorList) && indikatorList.length ? indikatorList : MOCK_INDIKATORS;
   return (

@@ -15,7 +15,6 @@ import { formatSkor } from '../../lib/format';
  */
 
 const PODIUM_HEIGHT = { 1: 'h-[78px]', 2: 'h-[54px]', 3: 'h-[42px]' };
-const PODIUM_WIDTH = { 1: 'max-w-[168px] -mt-4', 0: 'max-w-[148px]' };
 
 function Placeholder({ rank }) {
   const isOne = rank === 1;

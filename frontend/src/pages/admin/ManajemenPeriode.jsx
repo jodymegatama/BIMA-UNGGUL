@@ -38,7 +38,7 @@ export default function ManajemenPeriode() {
         _raw: r,
       }));
       setRows(mapped);
-    } catch (e) {
+    } catch {
       // keep empty, show toast if needed
     } finally { setLoading(false); }
   }, [token]);
@@ -46,11 +46,6 @@ export default function ManajemenPeriode() {
   useEffect(() => { fetchRows(); }, [fetchRows]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
-
-  function toBackendStatus(s) {
-    const rev = { 'Belum Dimulai': 'belum_dimulai', 'Aktif': 'aktif', 'Cut-off': 'cutoff', 'Penyelesaian Validasi': 'penyelesaian_validasi', 'Finalisasi': 'finalisasi', 'Arsip': 'arsip' };
-    return rev[s] || s;
-  }
 
   const handleCreate = async (data) => {
     try {
@@ -61,17 +56,16 @@ export default function ManajemenPeriode() {
       setRows((prev) => [...prev, { id: r.id, nama: r.namaPeriode, tahunCapaian: r.tahunCapaian, tanggalMulai: r.tanggalMulai, tanggalCutoff: r.tanggalCutoff, status: mapStatus(r.status) }]);
       setShowForm(false);
       showToast(`Periode ${r.namaPeriode} dibuat — ${mapStatus(r.status || 'belum_dimulai')}`);
-    } catch (e) { showToast(e.message || 'Gagal buat periode'); }
+    } catch { showToast(e.message || 'Gagal buat periode'); }
   };
 
   const handleFinal = async (id) => {
     try {
-      const res = await apiFetch(`/api/admin/periode/${id}/finalisasi`, { method: 'POST', auth: true });
-      const updated = res.data || res;
+      await apiFetch(`/api/admin/periode/${id}/finalisasi`, { method: 'POST', auth: true });
       setRows((prev) => prev.map((r) => (String(r.id) === String(id) ? { ...r, status: 'Finalisasi' } : r)));
       setConfirmFinal(null);
       showToast('Periode difinalisasi — submission & bobot terkunci');
-    } catch (e) { showToast(e.message || 'Gagal finalisasi'); }
+    } catch { showToast(e.message || 'Gagal finalisasi'); }
   };
 
   const handleReopen = async () => {
@@ -81,7 +75,7 @@ export default function ManajemenPeriode() {
       setRows((prev) => prev.map((r) => (String(r.id) === String(reopen.id) ? { ...r, status: 'Penyelesaian Validasi' } : r)));
       setReopen(null); setAlasan(''); setErr('');
       showToast(`Periode ${reopen.nama} di-reopen → Penyelesaian Validasi`);
-    } catch (e) { setErr(e.message || 'Gagal reopen'); }
+    } catch { setErr(e.message || 'Gagal reopen'); }
   };
 
   const now = new Date();

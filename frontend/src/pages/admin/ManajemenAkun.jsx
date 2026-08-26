@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap, Info } from 'phosphor-react';
+import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,7 +51,7 @@ export default function ManajemenAkun() {
       }));
       setRows(mapped);
       setTotal(res.total ?? mapped.length);
-    } catch (e) {
+    } catch {
       // keep empty
     } finally { setLoading(false); }
   }, [token, activeTab, q, page]);
@@ -67,21 +67,21 @@ export default function ManajemenAkun() {
       const bmu = res.madrasah?.nomorMadrasah || res.bmuId || 'BMU-XXXXXX';
       showToast(`Akun disetujui — Madrasah ${bmu}`);
       fetchRows();
-    } catch (e) { showToast(e.message || 'Gagal approve'); }
+    } catch { showToast(e.message || 'Gagal approve'); }
   };
   const handleDeactivate = async (id) => {
     try {
       await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'nonaktif' }, auth: true });
       showToast('Akun dinonaktifkan');
       fetchRows();
-    } catch (e) { showToast(e.message || 'Gagal'); }
+    } catch { showToast(e.message || 'Gagal'); }
   };
   const handleActivate = async (id) => {
     try {
       await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'aktif' }, auth: true });
       showToast('Akun diaktifkan kembali');
       fetchRows();
-    } catch (e) { showToast(e.message || 'Gagal'); }
+    } catch { showToast(e.message || 'Gagal'); }
   };
 
   const filtered = rows; // already filtered server-side

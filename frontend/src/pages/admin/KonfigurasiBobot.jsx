@@ -1,14 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FloppyDisk, Lock, Clock, CheckCircle, WarningCircle, Info, SpinnerGap } from 'phosphor-react';
+import { FloppyDisk, Lock, Clock, CheckCircle, WarningCircle, SpinnerGap } from 'phosphor-react';
 import BobotIndikatorForm from '../../components/admin/BobotIndikatorForm';
 import { apiFetch } from '../../lib/api';
-import { useAuth } from '../../context/AuthContext';
 
 // Fallback periode list if GET /api/admin/periode fails
 const FALLBACK_PERIODE = [{ id: 'fallback', namaPeriode: '2026/2027', nama: '2026/2027', status: 'aktif' }];
 
 export default function KonfigurasiBobot() {
-  const { token } = useAuth();
   const [periodes, setPeriodes] = useState(FALLBACK_PERIODE);
   const [periodeId, setPeriodeId] = useState(null);
   const [periodeStatus, setPeriodeStatus] = useState('Aktif');

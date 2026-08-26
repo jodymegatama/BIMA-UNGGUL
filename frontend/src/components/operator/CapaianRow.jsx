@@ -24,10 +24,6 @@ export default function CapaianRow({ row, indikatorKode, onChange, onRemove, sho
   const fields = INDIKATOR_FIELDS[indikatorKode] || [];
   const err = row._error || {};
 
-  const inputBase = 'mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 transition';
-  const inputOk = `${inputBase} border-zinc-200 focus:border-eager focus:ring-eager/20`;
-  const inputErr = `${inputBase} border-red-300 focus:border-red-400 focus:ring-red-200`;
-
   const renderField = (f) => {
     if (f.type === 'ratio') {
       return (

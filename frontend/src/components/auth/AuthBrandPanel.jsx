@@ -1,4 +1,4 @@
-import { Trophy, ShieldCheck, Buildings, CheckCircle, Medal, User } from 'phosphor-react';
+import { Trophy, ShieldCheck, Buildings, Medal, User } from 'phosphor-react';
 
 /**
  * AuthBrandPanel — sisi kanan/dekoratif untuk halaman auth

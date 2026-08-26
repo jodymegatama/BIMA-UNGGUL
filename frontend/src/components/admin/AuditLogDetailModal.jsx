@@ -1,4 +1,4 @@
-import { X, Clock, User, ShieldCheck, Hash, Globe } from 'phosphor-react';
+import { X, Clock, User, Hash, Globe } from 'phosphor-react';
 
 function kv(list) {
   if (!list) return null;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
+
 import { Funnel, MagnifyingGlass, PencilSimple, PaperPlaneTilt, Eye, WarningCircle, CheckCircle, Clock, Trash, SpinnerGap } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
 import CapaianRow from '../../components/operator/CapaianRow';
@@ -105,7 +105,7 @@ export default function RiwayatSubmission() {
         if (ignore) return;
         const normalized = normalizeApiRows(data);
         setRows(normalized); // set even if empty — no mock fallback
-      } catch (e) {
+      } catch {
         // alternative path /api/operator/riwayat
         try {
           const alt = await apiFetch('/api/operator/riwayat', { auth: true });

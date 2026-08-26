@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, WarningCircle, Trash, CheckCircle, Buildings } from 'phosphor-react';
+import { X, WarningCircle, CheckCircle, Buildings } from 'phosphor-react';
 import DeleteRequestStatusBadge from '../operator/DeleteRequestStatusBadge';
 
 export default function DeleteRequestActionModal({ item, onClose, onApprove, onReject }) {

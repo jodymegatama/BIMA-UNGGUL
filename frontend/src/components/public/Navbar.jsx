@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, } from 'react-router-dom';
 import { Trophy, List, X, ArrowRight } from 'phosphor-react';
 
 /**
@@ -16,7 +16,6 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isHome = location.pathname === '/';
   const isLeaderboard = location.pathname === '/leaderboard';
