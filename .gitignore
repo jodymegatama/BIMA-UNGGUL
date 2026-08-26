@@ -48,3 +48,7 @@ _backup/
 # QA / agent session artifacts
 frontend/public/qa-auth.html
 .hermes/
+
+# lint report artefak
+frontend/lint-report.json
+frontend/warn-plan.json
