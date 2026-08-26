@@ -42,7 +42,7 @@ export default function HapusData() {
     } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => { fetchItems(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchItems]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });

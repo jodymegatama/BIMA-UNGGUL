@@ -41,7 +41,7 @@ export default function AdminLayout() {
 
   // Re-fetch badge: mount, ganti route, window focus, polling ringan
   useEffect(() => {
-    fetchPending();
+    fetchPending(); // eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react)
     const onFocus = () => fetchPending();
     window.addEventListener('focus', onFocus);
     const iv = setInterval(fetchPending, 60000);

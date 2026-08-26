@@ -56,8 +56,8 @@ export default function ManajemenAkun() {
     } finally { setLoading(false); }
   }, [token, activeTab, q, page]);
 
-  useEffect(() => { fetchRows(); }, [fetchRows]);
-  useEffect(() => { setPage(1); }, [activeTab, q]);
+  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
+
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
@@ -67,21 +67,21 @@ export default function ManajemenAkun() {
       const bmu = res.madrasah?.nomorMadrasah || res.bmuId || 'BMU-XXXXXX';
       showToast(`Akun disetujui — Madrasah ${bmu}`);
       fetchRows();
-    } catch { showToast(e.message || 'Gagal approve'); }
+    } catch (e) { showToast(e.message || 'Gagal approve'); }
   };
   const handleDeactivate = async (id) => {
     try {
       await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'nonaktif' }, auth: true });
       showToast('Akun dinonaktifkan');
       fetchRows();
-    } catch { showToast(e.message || 'Gagal'); }
+    } catch (e) { showToast(e.message || 'Gagal'); }
   };
   const handleActivate = async (id) => {
     try {
       await apiFetch(`/api/admin/akun/${id}`, { method: 'PATCH', body: { status: 'aktif' }, auth: true });
       showToast('Akun diaktifkan kembali');
       fetchRows();
-    } catch { showToast(e.message || 'Gagal'); }
+    } catch (e) { showToast(e.message || 'Gagal'); }
   };
 
   const filtered = rows; // already filtered server-side
@@ -97,7 +97,7 @@ export default function ManajemenAkun() {
         {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => setActiveTab(t)}
+            onClick={() => { setActiveTab(t); setPage(1); }}
             className={`h-8 px-4 rounded-full border-2 text-[12px] font-black ${activeTab === t ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
           >
             {t}
@@ -112,7 +112,7 @@ export default function ManajemenAkun() {
             autoComplete="off"
             aria-label="Cari NIP, nama, atau madrasah"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => { setQ(e.target.value); setPage(1); }}
             placeholder="Cari NIP / nama / madrasah..."
             className="w-full h-9 pl-9 pr-3 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:border-ink"
           />

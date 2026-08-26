@@ -43,7 +43,7 @@ export default function ManajemenPeriode() {
     } finally { setLoading(false); }
   }, [token]);
 
-  useEffect(() => { fetchRows(); }, [fetchRows]);
+  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
@@ -56,7 +56,7 @@ export default function ManajemenPeriode() {
       setRows((prev) => [...prev, { id: r.id, nama: r.namaPeriode, tahunCapaian: r.tahunCapaian, tanggalMulai: r.tanggalMulai, tanggalCutoff: r.tanggalCutoff, status: mapStatus(r.status) }]);
       setShowForm(false);
       showToast(`Periode ${r.namaPeriode} dibuat — ${mapStatus(r.status || 'belum_dimulai')}`);
-    } catch { showToast(e.message || 'Gagal buat periode'); }
+    } catch (e) { showToast(e.message || 'Gagal buat periode'); }
   };
 
   const handleFinal = async (id) => {
@@ -65,7 +65,7 @@ export default function ManajemenPeriode() {
       setRows((prev) => prev.map((r) => (String(r.id) === String(id) ? { ...r, status: 'Finalisasi' } : r)));
       setConfirmFinal(null);
       showToast('Periode difinalisasi — submission & bobot terkunci');
-    } catch { showToast(e.message || 'Gagal finalisasi'); }
+    } catch (e) { showToast(e.message || 'Gagal finalisasi'); }
   };
 
   const handleReopen = async () => {
@@ -75,7 +75,7 @@ export default function ManajemenPeriode() {
       setRows((prev) => prev.map((r) => (String(r.id) === String(reopen.id) ? { ...r, status: 'Penyelesaian Validasi' } : r)));
       setReopen(null); setAlasan(''); setErr('');
       showToast(`Periode ${reopen.nama} di-reopen → Penyelesaian Validasi`);
-    } catch { setErr(e.message || 'Gagal reopen'); }
+    } catch (e) { setErr(e.message || 'Gagal reopen'); }
   };
 
   const now = new Date();

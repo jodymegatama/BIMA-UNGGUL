@@ -62,8 +62,8 @@ export default function KonfigurasiBobot() {
     } finally { setLoading(false); }
   }, [periodes]);
 
-  useEffect(() => { fetchPeriodes(); }, [fetchPeriodes]);
-  useEffect(() => { if (periodeId) fetchBobot(periodeId); }, [periodeId, fetchBobot]);
+  useEffect(() => { fetchPeriodes(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchPeriodes]);
+  useEffect(() => { if (periodeId) fetchBobot(periodeId); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [periodeId, fetchBobot]);
 
   const isLocked = periodeStatus === 'Finalisasi' || periodeStatus === 'Arsip' || periodeStatus === 'finalisasi';
 

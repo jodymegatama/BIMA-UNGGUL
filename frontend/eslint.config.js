@@ -9,7 +9,7 @@ export default [
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
-      globals: { ...globals.browser },
+      globals: { ...globals.browser, ...globals.vitest }, // API global vitest: describe/it/expect/vi
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
     plugins: { 'react-hooks': reactHooks },

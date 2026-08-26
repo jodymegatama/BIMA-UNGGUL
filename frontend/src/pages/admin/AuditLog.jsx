@@ -53,10 +53,10 @@ export default function AuditLog() {
     } finally { setLoading(false); }
   }, [token, filters, page, sortAsc]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
-  useEffect(() => { setPage(1); }, [filters]);
+  useEffect(() => { fetchLogs(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchLogs]);
 
-  const handleFilterChange = (next) => setFilters(next);
+
+  const handleFilterChange = (next) => { setFilters(next); setPage(1); };
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (

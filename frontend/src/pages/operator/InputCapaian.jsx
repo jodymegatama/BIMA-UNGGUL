@@ -112,7 +112,6 @@ export default function InputCapaian() {
         }
       } catch {
         // keep skeleton constants — tidak error UI
-      } finally {
       }
     }
     fetchIndikator();
