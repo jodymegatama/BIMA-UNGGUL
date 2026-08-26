@@ -25,12 +25,13 @@
 - Script `npm run lint` di root & kedua workspace. Prettier `.prettierrc` bersama (husky pre-commit: belum, opsional).
 - Semua error lama dibereskan (cause-chain authService, no-empty catch, useless escape). Sisa 59 warning terdokumentasi — utang refactor bertahap.
 
-## 4. Test Infrastructure Nyata
-**Masalah:** 3 skrip test ad-hoc di `backend/tests/` (testScoring,
-testValidationE2E, testPublicAndAdminE2E) masih console.log tanpa assertion,
-tidak bisa jalan otomatis di CI.
-**Solusi:** migrasi ke Vitest (+ supertest untuk API). Butuh DB test terpisah
-atau strategi reset data.
+## 4. ✅ SELESAI (2026-08-25): Test Infrastructure Nyata
+**Dikerjakan:**
+- Vitest di kedua workspace; supertest untuk API backend (request langsung ke `app`, tanpa port).
+- Backend: unit (`deriveStatus`, `HttpError`) + integrasi (health/helmet/login/admin API). Kredensial dari env `BACKEND_TEST_*`, auto-skip bila kosong.
+- Frontend: happy-dom + Testing Library; contoh test `RouteErrorBoundary`.
+- `npm test` (root) menjalankan keduanya. Backend 10/10, frontend 2/2.
+- Catatan: skrip ad-hoc lama di `backend/tests/` (testScoring dkk) tetap ada sebagai smoke script manual.
 
 ## 5. Seed Data Demo
 **Masalah:** DB kosong (leaderboard 0 baris) — sulit development & demo stakeholder.
