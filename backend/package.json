@@ -16,7 +16,7 @@
     "smoke:dynamic-form": "node scripts/smoke-dynamic-form.mjs",
     "dummy:create": "node scripts/create-dummy-accounts.mjs",
     "dummy:clean": "node scripts/clean-dummy.mjs",
-    "test": "npm run test:scoring"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -40,6 +40,8 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.9.1",
     "globals": "^17.11.0",
-    "prisma": "^5.18.0"
+    "prisma": "^5.18.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.11"
   }
 }

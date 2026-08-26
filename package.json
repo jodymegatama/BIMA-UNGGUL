@@ -17,17 +17,20 @@
     "db:studio": "npm run prisma:studio -w backend",
     "db:seed": "npm run prisma:seed -w backend",
     "install-all": "npm install",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "license": "ISC",
   "frontend": {
     "scripts": {
-      "lint": "eslint src/"
+      "lint": "eslint src/",
+      "test": "vitest run"
     }
   },
   "backend": {
     "scripts": {
-      "lint": "eslint src/ scripts/ tests/"
+      "lint": "eslint src/ scripts/ tests/",
+      "test": "vitest run"
     }
   }
 }
