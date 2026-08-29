@@ -39,6 +39,17 @@
 - Leaderboard kini terisi dan valid untuk demo/testing.
 
 ---
+
+## 6. ✅ SELESAI (2026-08-26): Code-Splitting ApexCharts
+**Dikerjakan:**
+- `frontend/src/components/shared/LazyChart.jsx` baru: wrapper `lazy(() => import('react-apexcharts'))` + Suspense fallback skeleton `animate-pulse` (hindari FOUC).
+- `LeaderboardChart.jsx` & `IndikatorChart.jsx`: ganti `import Chart from 'react-apexcharts'` statis → `<LazyChart ...>` (props identik, pass-through). ApexCharts kini hanya didownload saat chart dirender.
+- `vite.config.js`: coba `codeSplitting.groups` (Vite 8/Rolldown) tapi **dibuang** — malah memaksa preload apexcharts di entry. Biarkan Rolldown treat apexcharts sebagai dynamic chunk otomatis via `import()` di LazyChart.
+- Verifikasi: `dist/index.html` TIDAK preload apexcharts (count=0); `index.js` entry tetap ~416 kB; chunk `react-apexcharts.esm` 935 kB (gzip 267 kB) jadi on-demand.
+- Smoke test browser: `/leaderboard` & `/madrasah/:slug` render `.apexcharts-canvas` normal; skeleton muncul saat loading.
+- Ref: Context7 `/vitejs/vite` migration (manualChunks deprecated → codeSplitting).
+
 ### Ditunda (bukan prioritas)
 - **Upgrade Prisma 5 → 6/7**: tertinggal 2 major, ada breaking changes;
   kerjakan terpisah dari pengembangan fitur.
+- **Bug save bobot via UI** (`KonfigurasiBobot.jsx`): patch frontend PENDING — periodeId salah saat fetch listBobot; backend sudah dipatch (`deriveStatus`).

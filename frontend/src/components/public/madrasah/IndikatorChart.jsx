@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import LazyChart from '../../shared/LazyChart';
 import { ChartBar } from 'phosphor-react';
 
 /**
@@ -64,7 +64,7 @@ export default function IndikatorChart({ data = [] }) {
         </span>
       </div>
       <div className="p-4 lg:p-5">
-        <Chart options={options} series={series} type="radar" height={360} />
+        <LazyChart options={options} series={series} type="radar" height={360} />
         <div className="mt-2 text-[11px] font-bold text-faded text-center">Semakin luas area hijau, semakin merata capaian. Skor = Σ capaian disetujui × bobot.</div>
       </div>
     </div>
