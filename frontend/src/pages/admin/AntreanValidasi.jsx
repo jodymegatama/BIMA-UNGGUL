@@ -188,13 +188,13 @@ export default function AntreanValidasi() {
       <div className="flex gap-2">
         <button
           onClick={() => setActiveTab('validasi')}
-          className={`h-9 px-4 rounded-full border-2 text-[13px] font-black ${activeTab === 'validasi' ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+          className={`h-9 px-4 rounded-full border-2 text-[13px] font-black transition ${activeTab === 'validasi' ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
         >
           Validasi Submission
         </button>
         <button
           onClick={() => setActiveTab('hapus')}
-          className={`h-9 px-4 rounded-full border-2 text-[13px] font-black flex items-center gap-2 ${activeTab === 'hapus' ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+          className={`h-9 px-4 rounded-full border-2 text-[13px] font-black flex items-center gap-2 transition ${activeTab === 'hapus' ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
         >
           Permintaan Hapus
           {pendingHapus > 0 && <span className="min-w-[20px] h-5 px-1 rounded-full bg-eager text-white border border-white flex items-center justify-center text-[10px] font-black">{pendingHapus}</span>}
@@ -248,13 +248,13 @@ export default function AntreanValidasi() {
                         <div className="flex justify-end gap-1.5">
                           {r.status === 'Menunggu' && (
                             <>
-                              <button onClick={() => handleApprove(r.id)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black"><CheckCircle size={12} weight="fill" color="white" /> Approve</button>
-                              <button onClick={() => setSelected(r)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black"><XCircle size={12} weight="regular" /> Reject</button>
+                              <button onClick={() => handleApprove(r.id)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-[0_2px_0_0_#4caf00] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"><CheckCircle size={12} weight="fill" color="white" /> Approve</button>
+                              <button onClick={() => setSelected(r)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition"><XCircle size={12} weight="regular" /> Reject</button>
                             </>
                           )}
-                          {r.status === 'Disetujui' && <button onClick={() => setSelected(r)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black"><ArrowClockwise size={12} weight="regular" color="white" /> Revoke</button>}
+                          {r.status === 'Disetujui' && <button onClick={() => setSelected(r)} className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black shadow-[0_2px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"><ArrowClockwise size={12} weight="regular" color="white" /> Revoke</button>}
                           {r.status === 'Ditolak' && <span className="text-[11px] font-bold text-faded">Menunggu revisi Operator</span>}
-                          <button onClick={() => setSelected(r)} className="hidden sm:inline-flex h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil"><Clock size={12} weight="regular" /> Detail</button>
+                          <button onClick={() => setSelected(r)} className="hidden sm:inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition"><Clock size={12} weight="regular" /> Detail</button>
                         </div>
                       </td>
                     </tr>
@@ -266,8 +266,8 @@ export default function AntreanValidasi() {
             <div className="px-4 py-3 flex items-center justify-between text-[11px] font-bold text-faded border-t-2 border-zinc-100">
               <span>Total {total} • Hal {page}</span>
               <div className="flex gap-2">
-                <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Prev</button>
-                <button onClick={()=>setPage(p=>p+1)} disabled={rows.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Next</button>
+                <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Prev</button>
+                <button onClick={()=>setPage(p=>p+1)} disabled={rows.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Next</button>
               </div>
             </div>
           </div>
@@ -321,8 +321,8 @@ export default function AntreanValidasi() {
           <div className="flex items-center justify-between text-[11px] font-bold text-faded">
             <span>Total {deleteTotal} • Hal {deletePage}</span>
             <div className="flex gap-2">
-              <button disabled={deletePage<=1} onClick={()=>setDeletePage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Prev</button>
-              <button onClick={()=>setDeletePage(p=>p+1)} disabled={deleteRows.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Next</button>
+              <button disabled={deletePage<=1} onClick={()=>setDeletePage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Prev</button>
+              <button onClick={()=>setDeletePage(p=>p+1)} disabled={deleteRows.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Next</button>
             </div>
           </div>
         </>

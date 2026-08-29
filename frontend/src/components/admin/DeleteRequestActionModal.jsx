@@ -32,7 +32,7 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
             </div>
             <div className="text-[11px] font-bold text-faded">{item.indikatorNama} • {item.indikatorKode} • Skor {item.skor} • ID {item.submissionItemId}</div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-[1px] transition shrink-0">
             <X size={16} weight="bold" />
           </button>
         </div>
@@ -58,7 +58,7 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
               <button onClick={() => onApprove(item.id)} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none">
                 <CheckCircle size={16} weight="fill" color="white" /> Setujui Hapus
               </button>
-              <button onClick={() => setMode('reject')} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-ink">
+              <button onClick={() => setMode('reject')} className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 h-10 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-ink hover:text-ink active:translate-y-[1px] transition">
                 <WarningCircle size={16} weight="regular" /> Tolak
               </button>
             </div>
@@ -79,15 +79,15 @@ export default function DeleteRequestActionModal({ item, onClose, onApprove, onR
               />
               {err && <div className="flex items-center gap-1 text-[11px] font-bold text-red-600"><WarningCircle size={12} weight="fill" /> {err}</div>}
               <div className="flex gap-2">
-                <button onClick={() => { setMode(null); setAlasan(''); setErr(''); }} className="flex-1 h-9 rounded-full bg-white border-2 border-zinc-200 text-[12px] font-black">Batal</button>
-                <button onClick={handleReject} className="flex-1 h-9 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black">Konfirmasi Tolak</button>
+                <button onClick={() => { setMode(null); setAlasan(''); setErr(''); }} className="flex-1 h-9 rounded-full bg-white border-2 border-zinc-200 text-[12px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+                <button onClick={handleReject} className="flex-1 h-9 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">Konfirmasi Tolak</button>
               </div>
             </div>
           )}
 
           {!isMenunggu && (
             <div className="flex justify-end">
-              <button onClick={onClose} className="h-9 px-4 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black">Tutup</button>
+              <button onClick={onClose} className="h-9 px-4 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">Tutup</button>
             </div>
           )}
         </div>

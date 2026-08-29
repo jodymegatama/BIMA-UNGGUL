@@ -10,20 +10,20 @@ export default function ValidasiFilterBar({ filters, onChange }) {
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 shadow-card">
       <div className="flex flex-wrap gap-3">
-        <select value={filters.status} onChange={(e) => set('status', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black text-charcoal">
+        <select value={filters.status} onChange={(e) => set('status', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black text-charcoal hover:border-zinc-300 transition">
           {statusOptions.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
 
-        <select value={filters.indikator} onChange={(e) => set('indikator', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal">
+        <select value={filters.indikator} onChange={(e) => set('indikator', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal hover:border-zinc-300 transition">
           <option value="Semua">Semua Indikator</option>
           {INDIKATORS.map((ind) => (
             <option key={ind.kode} value={ind.kode}>{ind.nama}</option>
           ))}
         </select>
 
-        <select value={filters.periode} onChange={(e) => set('periode', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal">
+        <select value={filters.periode} onChange={(e) => set('periode', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal hover:border-zinc-300 transition">
           {periodeOptions.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
@@ -46,7 +46,7 @@ export default function ValidasiFilterBar({ filters, onChange }) {
 
         <button
           onClick={() => onChange({ status: 'Menunggu', indikator: 'Semua', periode: '2026/2027', q: '', kelompok: 'Semua' })}
-          className="h-9 px-4 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[12px] font-black text-pencil hover:border-charcoal"
+          className="h-9 px-4 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[12px] font-black text-pencil hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition"
         >
           Reset
         </button>
@@ -57,7 +57,7 @@ export default function ValidasiFilterBar({ filters, onChange }) {
           <button
             key={k}
             onClick={() => set('kelompok', k)}
-            className={`h-7 px-3 rounded-full border-2 text-[11px] font-black ${filters.kelompok === k ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+            className={`h-7 px-3 rounded-full border-2 text-[11px] font-black transition ${filters.kelompok === k ? 'bg-ink text-white border-black shadow-[0_2px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {k}
           </button>
