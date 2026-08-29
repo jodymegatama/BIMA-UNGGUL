@@ -78,8 +78,8 @@ export default function AuditLog() {
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-faded">Halaman {page} / {totalPages} — {total} entri</span>
           <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="h-8 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black disabled:opacity-50">Prev</button>
-            <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="h-8 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black disabled:opacity-50">Next</button>
+            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="h-8 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Prev</button>
+            <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="h-8 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Next</button>
           </div>
         </div>
       )}

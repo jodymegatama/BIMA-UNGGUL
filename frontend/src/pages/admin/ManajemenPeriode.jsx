@@ -129,7 +129,7 @@ export default function ManajemenPeriode() {
           <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Periode</h1>
           <p className="text-[12px] font-medium text-pencil mt-1">Lifecycle: Belum Dimulai → Aktif → Cut-off → Penyelesaian Validasi → Finalisasi → Arsip</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] hover:brightness-110">
+        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">
           <PlusCircle size={16} weight="bold" color="white" /> Buat Periode
         </button>
       </div>
@@ -216,8 +216,8 @@ export default function ManajemenPeriode() {
             <h3 className="font-display font-black text-[16px] text-charcoal">Finalisasi {confirmFinal.nama}?</h3>
             <p className="text-[13px] font-medium text-pencil mt-2">Periode akan terkunci. Submission & bobot tidak bisa diubah lagi. Yakin?</p>
             <div className="mt-4 flex gap-2">
-              <button onClick={() => setConfirmFinal(null)} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black">Batal</button>
-              <button onClick={() => handleFinal(confirmFinal.id)} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black">Ya, Finalisasi</button>
+              <button onClick={() => setConfirmFinal(null)} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+              <button onClick={() => handleFinal(confirmFinal.id)} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">Ya, Finalisasi</button>
             </div>
           </div>
         </div>
@@ -265,8 +265,8 @@ export default function ManajemenPeriode() {
             />
             {err && <div className="text-[11px] font-bold text-red-600 mt-1">{err}</div>}
             <div className="mt-4 flex gap-2">
-              <button onClick={() => { setReopen(null); setAlasan(''); setErr(''); }} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black">Batal</button>
-              <button onClick={handleReopen} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black">Konfirmasi Reopen</button>
+              <button onClick={() => { setReopen(null); setAlasan(''); setErr(''); }} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+              <button onClick={handleReopen} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">Konfirmasi Reopen</button>
             </div>
           </div>
         </div>

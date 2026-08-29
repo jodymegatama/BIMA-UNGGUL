@@ -137,7 +137,7 @@ export default function KonfigurasiBobot() {
           <button
             key={p.id}
             onClick={() => handlePeriodeChange(p.id)}
-            className={`h-9 px-4 rounded-full border-2 text-[12px] font-black ${String(periodeId) === String(p.id) ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+            className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${String(periodeId) === String(p.id) ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {p.namaPeriode || p.nama} <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full border ${p.status === 'Finalisasi' || p.status === 'Arsip' ? 'bg-zinc-100 border-zinc-200 text-faded' : 'bg-story border-[#b8eb8a] text-eager-dark'}`}>{p.status}</span>
           </button>
@@ -154,7 +154,7 @@ export default function KonfigurasiBobot() {
             <div className="text-[11px] font-bold text-pencil">{isLocked ? 'Terkunci (Finalisasi/Arsip) — read-only' : 'Editable — bobot akan dipakai untuk hitung skor realtime'}</div>
           </div>
         </div>
-        <button onClick={handleSave} disabled={isLocked || saving || !periodeId} className={`h-10 px-5 rounded-[12px] border-2 font-black text-[13px] flex items-center gap-2 ${isLocked ? 'bg-zinc-100 border-zinc-200 text-faded cursor-not-allowed' : 'bg-eager border-eager-dark text-white shadow-sticker hover:brightness-[1.03]'}`}>
+        <button onClick={handleSave} disabled={isLocked || saving || !periodeId} className={`h-10 px-5 rounded-[12px] border-2 font-black text-[13px] flex items-center gap-2 ${isLocked ? 'bg-zinc-100 border-zinc-200 text-faded cursor-not-allowed' : 'bg-eager border-eager-dark text-white shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none'}`}>
           {saving ? <><SpinnerGap size={16} weight="bold" className="animate-spin" /> Menyimpan...</> : isLocked ? 'Terkunci' : 'Simpan Bobot'}
         </button>
       </div>

@@ -113,7 +113,7 @@ export default function ExportLaporan() {
           <button
             onClick={() => triggerDownload('pdf')}
             disabled={!!loading || !periode}
-            className="inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] disabled:opacity-60 shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
           >
             {loading === 'pdf' ? <SpinnerGap size={16} weight="bold" className="animate-spin" /> : <FilePdf size={18} weight="fill" color="white" />}
             {loading === 'pdf' ? 'Memproses PDF...' : 'Export PDF'}

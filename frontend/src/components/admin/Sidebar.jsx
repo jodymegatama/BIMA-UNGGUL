@@ -108,7 +108,7 @@ export default function Sidebar({ admin, periode, pendingValidasi = 0, onNavigat
       <div className="p-3 border-t-2 border-zinc-100">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 h-10 px-3 rounded-[12px] border-2 border-zinc-200 bg-white text-[13px] font-black text-charcoal hover:border-charcoal hover:bg-zinc-50 transition"
+          className="w-full flex items-center gap-3 h-10 px-3 rounded-[12px] border-2 border-zinc-200 bg-white text-[13px] font-black text-charcoal hover:border-charcoal hover:bg-zinc-50 active:translate-y-[1px] transition"
         >
           <SignOut size={18} weight="regular" />
           Keluar

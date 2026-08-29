@@ -70,7 +70,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
   return (
     <div className="h-[64px] flex items-center justify-between gap-4 px-4 lg:px-6 border-b-2 border-zinc-100 bg-white shrink-0">
       <div className="flex items-center gap-3 min-w-0">
-        <button onClick={onMenu} className="lg:hidden w-9 h-9 rounded-[12px] border-2 border-zinc-200 bg-white flex items-center justify-center hover:bg-zinc-50" aria-label="Buka menu">
+        <button onClick={onMenu} className="lg:hidden w-9 h-9 rounded-[12px] border-2 border-zinc-200 bg-white flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-[1px] transition" aria-label="Buka menu">
           <List size={18} weight="regular" />
         </button>
         <div className="min-w-0">
@@ -96,7 +96,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
         <div className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="relative w-9 h-9 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50"
+            className="relative w-9 h-9 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-[1px] transition"
             aria-label="Notifikasi"
             aria-haspopup="true"
             aria-expanded={open}

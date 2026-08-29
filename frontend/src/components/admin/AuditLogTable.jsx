@@ -30,7 +30,7 @@ export default function AuditLogTable({ data = [], onRowClick, sortAsc = false, 
           <thead>
             <tr className="bg-zinc-50 border-b-2 border-zinc-100">
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">
-                <button onClick={onToggleSort} className="inline-flex items-center gap-1 hover:text-charcoal">
+                <button onClick={onToggleSort} className="inline-flex items-center gap-1 hover:text-charcoal active:translate-y-[1px] transition">
                   Waktu <Clock size={12} weight="bold" /> {sortAsc ? '↑' : '↓'}
                 </button>
               </th>

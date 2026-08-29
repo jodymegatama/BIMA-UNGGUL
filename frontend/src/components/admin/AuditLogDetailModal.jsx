@@ -27,7 +27,7 @@ export default function AuditLogDetailModal({ item, onClose }) {
             <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5"><User size={12} /> {item.userNama} • {item.userRole} • {item.userId}</div>
             <div className="text-[11px] font-bold text-faded flex items-center gap-1"><Clock size={12} /> {new Date(item.createdAt).toLocaleString('id-ID')}</div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-[1px] transition shrink-0">
             <X size={14} weight="bold" />
           </button>
         </div>
@@ -64,7 +64,7 @@ export default function AuditLogDetailModal({ item, onClose }) {
           </div>
 
           <div className="flex justify-end">
-            <button onClick={onClose} className="h-9 px-4 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black">Tutup</button>
+            <button onClick={onClose} className="h-9 px-4 rounded-full bg-ink text-white border-2 border-black text-[12px] font-black shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">Tutup</button>
           </div>
         </div>
       </div>

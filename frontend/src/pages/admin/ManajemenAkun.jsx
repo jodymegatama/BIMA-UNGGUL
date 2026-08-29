@@ -98,7 +98,7 @@ export default function ManajemenAkun() {
           <button
             key={t}
             onClick={() => { setActiveTab(t); setPage(1); }}
-            className={`h-8 px-4 rounded-full border-2 text-[12px] font-black ${activeTab === t ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
+            className={`h-8 px-4 rounded-full border-2 text-[12px] font-black transition ${activeTab === t ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {t}
           </button>
@@ -167,12 +167,12 @@ export default function ManajemenAkun() {
                         </button>
                       )}
                       {r.status === 'Aktif' && (
-                        <button onClick={() => handleDeactivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                        <button onClick={() => handleDeactivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal active:translate-y-[1px] transition">
                           Nonaktifkan
                         </button>
                       )}
                       {r.status === 'Nonaktif' && (
-                        <button onClick={() => handleActivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                        <button onClick={() => handleActivate(r.id)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal active:translate-y-[1px] transition">
                           Aktifkan
                         </button>
                       )}
@@ -187,8 +187,8 @@ export default function ManajemenAkun() {
         <div className="px-4 py-3 flex items-center justify-between text-[11px] font-bold text-faded border-t-2 border-zinc-100">
           <span>Total {total} • Hal {page}</span>
           <div className="flex gap-2">
-            <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Prev</button>
-            <button onClick={()=>setPage(p=>p+1)} disabled={filtered.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 disabled:opacity-50">Next</button>
+            <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Prev</button>
+            <button onClick={()=>setPage(p=>p+1)} disabled={filtered.length<20} className="h-7 px-3 rounded-full border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-charcoal active:translate-y-[1px] transition disabled:opacity-50 disabled:hover:border-zinc-200 disabled:active:translate-y-0">Next</button>
           </div>
         </div>
       </div>
