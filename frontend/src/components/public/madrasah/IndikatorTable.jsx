@@ -19,7 +19,7 @@ export default function IndikatorTable({ data = [] }) {
             <div className="text-[11px] font-bold text-pencil">9 indikator • total {total} poin</div>
           </div>
         </div>
-        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-faded bg-white border-2 border-zinc-200 rounded-full px-3 h-7">
+        <span className="hidden sm:inline-flex items-center shrink-0 gap-1 text-[11px] font-bold text-faded bg-white border-2 border-zinc-200 rounded-full px-3 h-7 whitespace-nowrap">
           <CheckCircle size={12} weight="regular" color="#58cc02" /> Tervalidasi
         </span>
       </div>

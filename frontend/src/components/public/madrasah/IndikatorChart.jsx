@@ -59,7 +59,7 @@ export default function IndikatorChart({ data = [] }) {
             <div className="text-[11px] font-bold text-pencil">Radar — distribusi per indikator</div>
           </div>
         </div>
-        <span className="hidden sm:inline-flex h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
+        <span className="hidden sm:inline-flex items-center shrink-0 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark whitespace-nowrap">
           Total {scores.reduce((a, b) => a + b, 0)} poin
         </span>
       </div>
