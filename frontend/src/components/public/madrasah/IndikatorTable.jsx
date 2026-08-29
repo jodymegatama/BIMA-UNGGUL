@@ -61,7 +61,7 @@ export default function IndikatorTable({ data = [] }) {
             <tr className="bg-zinc-50 border-t-2 border-zinc-100">
               <td className="px-4 py-3 text-[12px] font-black text-charcoal">Total</td>
               <td className="px-4 py-3 text-right">
-                <span className="inline-flex h-7 px-3 rounded-full bg-eager text-white border-2 border-eager-dark shadow-sticker text-[12px] font-black">
+                <span className="inline-flex items-center whitespace-nowrap h-7 px-3 rounded-full bg-eager text-white border-2 border-eager-dark shadow-sticker text-[12px] font-black">
                   {total} poin
                 </span>
               </td>
