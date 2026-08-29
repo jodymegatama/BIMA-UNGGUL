@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { X, Calendar, Clock, Info } from 'phosphor-react';
 
-export default function PeriodeForm({ onClose, onSubmit }) {
-  const [nama, setNama] = useState('');
-  const [mulai, setMulai] = useState('');
-  const [cutoff, setCutoff] = useState('');
+// helper: Date ISO -> 'YYYY-MM-DDTHH:mm' (untuk input datetime-local)
+function toLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export default function PeriodeForm({ onClose, onSubmit, initial = null, submitLabel = 'Buat Periode' }) {
+  const [nama, setNama] = useState(initial?.nama ?? '');
+  const [mulai, setMulai] = useState(initial ? toLocal(initial.tanggalMulai) : '');
+  const [cutoff, setCutoff] = useState(initial ? toLocal(initial.tanggalCutoff) : '');
   const [err, setErr] = useState({});
 
   const tahun = (() => {
@@ -29,8 +38,8 @@ export default function PeriodeForm({ onClose, onSubmit }) {
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-full max-w-[520px] rounded-[16px] border-2 border-zinc-200 bg-white shadow-float overflow-hidden">
         <div className="h-12 px-5 flex items-center justify-between border-b-2 border-zinc-100 bg-zinc-50/60">
-          <h3 className="font-display font-black text-[15px] text-charcoal">Buat Periode Baru</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center"><X size={14} weight="bold" /></button>
+          <h3 className="font-display font-black text-[15px] text-charcoal">{initial ? 'Edit Periode' : 'Buat Periode Baru'}</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:border-zinc-300 active:translate-y-[1px] transition"><X size={14} weight="bold" /></button>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -52,11 +61,11 @@ export default function PeriodeForm({ onClose, onSubmit }) {
           </div>
           <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 flex gap-2">
             <Info size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
-            <p className="text-[11px] leading-5 font-medium text-pencil">Periode baru akan berstatus <b>Belum Dimulai</b> hingga tanggal mulai tiba. Bobot per periode bisa diatur setelah periode dibuat.</p>
+            <p className="text-[11px] leading-5 font-medium text-pencil">{initial ? 'Perubahan tanggal akan menggeser status lifecycle sesuai jendela waktu.' : <>Periode baru akan berstatus <b>Belum Dimulai</b> hingga tanggal mulai tiba. Bobot per periode bisa diatur setelah periode dibuat.</>}</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={onClose} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black">Batal</button>
-            <button onClick={handle} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black hover:brightness-110">Buat Periode</button>
+            <button onClick={onClose} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+            <button onClick={handle} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">{submitLabel}</button>
           </div>
         </div>
       </div>

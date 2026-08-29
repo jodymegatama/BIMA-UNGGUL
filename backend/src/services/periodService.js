@@ -55,7 +55,12 @@ export async function listPeriode({ status, q } = {}) {
   const where = {};
   if (status) where.status = status;
   if (q) where.namaPeriode = { contains: q };
-  const rows = await prisma.periodePenilaian.findMany({ where, orderBy: { tanggalMulai: 'desc' } });
+  const rows = await prisma.periodePenilaian.findMany({
+    where,
+    orderBy: { tanggalMulai: 'desc' },
+    // _count untuk modal konfirmasi hapus (submission/skor/bobot yang akan ikut terhapus)
+    include: { _count: { select: { submissions: true, scores: true, bobots: true } } },
+  });
   // status fase awal diturunkan dari tanggal saat dibaca (DB tidak diubah)
   return rows.map((r) => ({ ...r, status: deriveStatus(r) }));
 }
@@ -101,7 +106,8 @@ export async function updatePeriode(id, patch, { userId, ip }) {
   const before = { ...existing };
   const updated = await prisma.periodePenilaian.update({ where: { id: pid }, data });
   await recordAuditLog({ userId, action: 'update_periode', entity: 'PeriodePenilaian', entityId: pid, dataSebelum: before, dataSesudah: updated, ipAddress: ip });
-  return updated;
+  // konsisten dengan listPeriode: status efektif di-derive dari tanggal, bukan raw DB
+  return { ...updated, status: deriveStatus(updated) };
 }
 
 export async function finalizePeriode(id, { userId, ip }) {
@@ -138,4 +144,32 @@ export async function reopenPeriode(id, { alasan, userId, ip }) {
   }, TX_OPTS);
 }
 
-export default { listPeriode, createPeriode, updatePeriode, finalizePeriode, reopenPeriode, deriveStatus, resolveAktifPeriode };
+export async function deletePeriode(id, { userId, ip }) {
+  const pid = parseInt(id, 10);
+  if (!Number.isFinite(pid)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
+  const existing = await prisma.periodePenilaian.findUnique({ where: { id: pid } });
+  if (!existing) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');
+  // Periode finalisasi/arsip tetap terkunci (data histori) — hanya lifecycle non-locked yang bisa dihapus
+  if (existing.status === 'finalisasi' || existing.status === 'arsip')
+    throw new HttpError(423, 'PERIOD_LOCKED', 'Periode finalisasi/arsip tidak bisa dihapus');
+
+  // KEPUTUSAN USER (2026-08-30): hapus tetap dijalankan walau ada submission/skor.
+  // Semua data terkait di-cascade manual dalam satu transaction (prisma deleteMany),
+  // jumlah data dikembalikan untuk ditampilkan di toast/modal konfirmasi.
+  return prisma.$transaction(async (tx) => {
+    const [subCount, scoreCount, bobotCount] = await Promise.all([
+      tx.submissionItem.count({ where: { periodeId: pid } }),
+      tx.madrasahScore.count({ where: { periodeId: pid } }),
+      tx.bobotIndikator.count({ where: { periodeId: pid } }),
+    ]);
+    await tx.bobotIndikator.deleteMany({ where: { periodeId: pid } });
+    await tx.submissionItem.deleteMany({ where: { periodeId: pid } });
+    await tx.madrasahScore.deleteMany({ where: { periodeId: pid } });
+    await tx.periodePenilaian.delete({ where: { id: pid } });
+    await recordAuditLog({ userId, action: 'delete_periode', entity: 'PeriodePenilaian',
+      entityId: pid, dataSebelum: existing, dataSesudah: null, ipAddress: ip }, tx);
+    return { id: pid, deleted: { submissions: subCount, scores: scoreCount, bobots: bobotCount } };
+  }, TX_OPTS);
+}
+
+export default { listPeriode, createPeriode, updatePeriode, deletePeriode, finalizePeriode, reopenPeriode, deriveStatus, resolveAktifPeriode };

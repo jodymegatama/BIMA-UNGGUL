@@ -50,3 +50,59 @@ describe('Auth API', () => {
     expect(Array.isArray(res.body.data ?? res.body)).toBe(true);
   });
 });
+
+describe('Periode CRUD admin (create → update → delete)', () => {
+  (hasCreds ? it : it.skip)('create → PATCH → DELETE → 200, DELETE lagi → 404', async () => {
+    expect(adminToken).toBeTruthy();
+    // tahun random + pre-cleanup -> test idempoten (format wajib YYYY/YYYY)
+    const th = 2100 + Math.floor(Math.random() * 200);
+    const nama = `${th}/${th + 1}`;
+    const mul = new Date().toISOString();
+    const cut = new Date(Date.now() + 86400000).toISOString();
+
+    // cleanup kalau sisa dari run sebelumnya
+    const list = await request(app)
+      .get('/api/admin/periode')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    for (const p of (list.body.data ?? [])) {
+      if (String(p.namaPeriode) === nama) {
+        await request(app)
+          .delete(`/api/admin/periode/${p.id}`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200);
+      }
+    }
+
+    // create
+    const create = await request(app)
+      .post('/api/admin/periode')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ namaPeriode: nama, tanggalMulai: mul, tanggalCutoff: cut })
+      .expect(201);
+    const pid = create.body.data?.id;
+    expect(pid).toBeTruthy();
+
+    // update (edit nama)
+    const update = await request(app)
+      .patch(`/api/admin/periode/${pid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ namaPeriode: `${th}/${th + 2}`, tanggalMulai: mul, tanggalCutoff: cut })
+      .expect(200);
+    expect(update.body.data?.namaPeriode).toBe(`${th}/${th + 2}`);
+
+    // delete
+    const del = await request(app)
+      .delete(`/api/admin/periode/${pid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(del.body.data?.id).toBe(pid);
+    expect(del.body.data?.deleted).toBeTruthy();
+
+    // delete lagi -> 404
+    await request(app)
+      .delete(`/api/admin/periode/${pid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(404);
+  });
+});

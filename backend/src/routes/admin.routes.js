@@ -42,6 +42,7 @@ router.patch('/akun/:id', accountController.update);
 router.get('/periode', periodController.list);
 router.post('/periode', periodController.create);
 router.patch('/periode/:id', periodController.update);
+router.delete('/periode/:id', periodController.remove);
 router.post('/periode/:id/finalisasi', periodController.finalize);
 router.post('/periode/:id/reopen', periodController.reopen);
 

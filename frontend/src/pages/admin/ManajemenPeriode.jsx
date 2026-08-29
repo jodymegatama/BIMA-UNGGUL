@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Lock, LockOpen, Clock, WarningCircle, CheckCircle, Calendar, SpinnerGap } from 'phosphor-react';
+import { PlusCircle, Lock, LockOpen, Clock, WarningCircle, CheckCircle, Calendar, SpinnerGap, PencilSimple, Trash, XCircle } from 'phosphor-react';
 import PeriodeStatusBadge from '../../components/admin/PeriodeStatusBadge';
 import PeriodeForm from '../../components/admin/PeriodeForm';
 import { apiFetch } from '../../lib/api';
@@ -15,7 +15,11 @@ export default function ManajemenPeriode() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editRow, setEditRow] = useState(null);
   const [confirmFinal, setConfirmFinal] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleteErr, setDeleteErr] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [reopen, setReopen] = useState(null);
   const [alasan, setAlasan] = useState('');
   const [err, setErr] = useState('');
@@ -35,6 +39,7 @@ export default function ManajemenPeriode() {
         tanggalMulai: r.tanggalMulai,
         tanggalCutoff: r.tanggalCutoff,
         status: mapStatus(r.status),
+        _count: r._count || {},
         _raw: r,
       }));
       setRows(mapped);
@@ -76,6 +81,36 @@ export default function ManajemenPeriode() {
       setReopen(null); setAlasan(''); setErr('');
       showToast(`Periode ${reopen.nama} di-reopen → Penyelesaian Validasi`);
     } catch (e) { setErr(e.message || 'Gagal reopen'); }
+  };
+
+  const handleEditSubmit = async (data) => {
+    try {
+      // data from PeriodeForm: { nama, tahunCapaian, tanggalMulai, tanggalCutoff }
+      const body = { namaPeriode: data.nama, tanggalMulai: data.tanggalMulai, tanggalCutoff: data.tanggalCutoff };
+      const res = await apiFetch(`/api/admin/periode/${editRow.id}`, { method: 'PATCH', body, auth: true });
+      const r = res.data || res;
+      setRows((prev) => prev.map((row) => (String(row.id) === String(editRow.id) ?
+        { ...row, id: r.id, nama: r.namaPeriode, tahunCapaian: r.tahunCapaian, tanggalMulai: r.tanggalMulai, tanggalCutoff: r.tanggalCutoff, status: mapStatus(r.status) } : row)));
+      setEditRow(null);
+      showToast(`Periode ${r.namaPeriode} diperbarui`);
+    } catch (e) { showToast(e.message || 'Gagal update periode'); }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteErr('');
+    try {
+      const res = await apiFetch(`/api/admin/periode/${confirmDelete.id}`, { method: 'DELETE', auth: true });
+      const info = res.data || res;
+      setRows((prev) => prev.filter((r) => String(r.id) !== String(confirmDelete.id)));
+      setConfirmDelete(null);
+      const d = info?.deleted;
+      showToast(d && (d.submissions || d.scores || d.bobots)
+        ? `Periode ${confirmDelete.nama} dihapus — ${d.submissions} submission, ${d.scores} skor, ${d.bobots} bobot ikut dihapus`
+        : `Periode ${confirmDelete.nama} dihapus`);
+    } catch (e) {
+      setDeleteErr(e.message || 'Gagal hapus periode');
+    } finally { setDeleting(false); }
   };
 
   const now = new Date();
@@ -129,15 +164,31 @@ export default function ManajemenPeriode() {
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <div className="flex justify-end gap-1.5">
                       {r.status === 'Aktif' && (
-                        <button onClick={() => setConfirmFinal(r)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black">
+                        <button onClick={() => setConfirmFinal(r)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black shadow-[0_2px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">
                           <Lock size={12} weight="fill" color="white" /> Finalisasi
                         </button>
                       )}
                       {r.status === 'Finalisasi' && (
-                        <button onClick={() => setReopen(r)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                        <button onClick={() => setReopen(r)} className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal active:translate-y-[1px] transition">
                           <LockOpen size={12} weight="regular" /> Reopen
                         </button>
                       )}
+                      <button
+                        onClick={() => setEditRow(r)}
+                        disabled={['Finalisasi', 'Arsip'].includes(r.status)}
+                        aria-label={`Edit periode ${r.nama}`}
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition disabled:opacity-40 disabled:pointer-events-none"
+                      >
+                        <PencilSimple size={12} weight="regular" /> Edit
+                      </button>
+                      <button
+                        onClick={() => { setConfirmDelete(r); setDeleteErr(''); }}
+                        disabled={['Finalisasi', 'Arsip'].includes(r.status)}
+                        aria-label={`Hapus periode ${r.nama}`}
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-red-300 hover:text-red-600 active:translate-y-[1px] transition disabled:opacity-40 disabled:pointer-events-none"
+                      >
+                        <Trash size={12} weight="regular" /> Hapus
+                      </button>
                       {r.status === 'Belum Dimulai' && <span className="text-[11px] font-bold text-faded">—</span>}
                     </div>
                   </td>
@@ -156,6 +207,7 @@ export default function ManajemenPeriode() {
       </div>
 
       {showForm && <PeriodeForm onClose={() => setShowForm(false)} onSubmit={handleCreate} />}
+      {editRow && <PeriodeForm onClose={() => setEditRow(null)} onSubmit={handleEditSubmit} initial={editRow} submitLabel="Simpan Perubahan" />}
 
       {confirmFinal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -166,6 +218,30 @@ export default function ManajemenPeriode() {
             <div className="mt-4 flex gap-2">
               <button onClick={() => setConfirmFinal(null)} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black">Batal</button>
               <button onClick={() => handleFinal(confirmFinal.id)} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black">Ya, Finalisasi</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30" onClick={() => { setConfirmDelete(null); setDeleteErr(''); }} />
+          <div className="relative w-full max-w-[480px] rounded-[16px] border-2 border-zinc-200 bg-white p-6 shadow-float">
+            <h3 className="font-display font-black text-[16px] text-charcoal">Hapus {confirmDelete.nama}?</h3>
+            <p className="text-[13px] font-medium text-pencil mt-2">
+              Periode ini memiliki <b>{confirmDelete._count?.submissionItems ?? confirmDelete._count?.submissions ?? 0} submission</b>, <b>{confirmDelete._count?.scores ?? 0} skor</b>, dan <b>{confirmDelete._count?.bobots ?? 0} bobot</b>.
+              Semua data tersebut akan <b className="text-red-600">DIHAPUS PERMANEN</b>. Apakah Anda yakin?
+            </p>
+            <div className="mt-3 rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">
+              <WarningCircle size={16} weight="regular" color="#d97706" className="shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-5 font-bold text-amber-900">Aksi ini tercatat di audit log dan tidak dapat dibatalkan.</p>
+            </div>
+            {deleteErr && <div className="mt-3 rounded-[12px] bg-red-50 border-2 border-red-200 text-red-900 px-4 py-3 text-[12px] font-bold">{deleteErr}</div>}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => { setConfirmDelete(null); setDeleteErr(''); }} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+              <button onClick={handleDelete} disabled={deleting} className="flex-1 h-10 rounded-full bg-red-600 border-2 border-red-700 text-white text-[13px] font-black shadow-[0_4px_0_0_#991b1b] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition disabled:opacity-60">
+                {deleting ? 'Menghapus...' : 'Ya, Hapus'}
+              </button>
             </div>
           </div>
         </div>
