@@ -22,10 +22,12 @@ export default function KonfigurasiBobot() {
       if (list.length) {
         const mapped = list.map((p) => ({ id: p.id, nama: p.namaPeriode || p.nama, namaPeriode: p.namaPeriode || p.nama, status: p.status === 'aktif' ? 'Aktif' : p.status === 'finalisasi' ? 'Finalisasi' : p.status }));
         setPeriodes(mapped);
-        if (!periodeId) { setPeriodeId(mapped[0].id); setPeriodeStatus(mapped[0].status); }
+        // functional update: tidak perlu baca state periodeId — bebas dari stale closure
+        setPeriodeId((cur) => cur ?? mapped[0].id);
+        setPeriodeStatus((cur) => cur === 'Aktif' ? (mapped[0].status || cur) : cur);
       }
     } catch  { /* biarkan senyap — non-kritis */ }
-  }, [periodeId]);
+  }, []);
 
   const fetchBobot = useCallback(async (pid) => {
     if (!pid || pid === 'fallback') { setData(null); setLoading(false); return; }
@@ -52,15 +54,12 @@ export default function KonfigurasiBobot() {
         }
       }
       setData(map);
-      // periode status for lock
-      const per = periodes.find((p) => String(p.id) === String(pid));
-      if (per) setPeriodeStatus(per.status);
     } catch (e) {
       setData(null);
       setToast({ type: 'error', msg: e.message || 'Gagal memuat bobot dari server.' });
       setTimeout(() => setToast(null), 4000);
     } finally { setLoading(false); }
-  }, [periodes]);
+  }, []);
 
   useEffect(() => { fetchPeriodes(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchPeriodes]);
   useEffect(() => { if (periodeId) fetchBobot(periodeId); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [periodeId, fetchBobot]);
@@ -92,22 +91,22 @@ export default function KonfigurasiBobot() {
     }
     setSaving(true);
     try {
-      // need to map kode -> indikatorId: fetch indikator list if needed, but backend expects indikatorId
-      // For now send by kode as backend may resolve; fallback to id lookup via periode indikators
-      // We'll try to resolve indikatorId via GET /api/admin/bobot already has indikator.id
-      const bobots = Object.entries(data).map(([kode, v]) => {
-        // backend expects numeric indikatorId — pakai id hasil fetch bila ada
-        const indikatorId = v.id ?? kode;
+      // Backend expects NUMERIC indikatorId (parseInt). Slug/kode tidak valid — jangan dikirim.
+      const bobots = Object.entries(data).map(([, v]) => {
+        const indikatorId = Number(v.id);
+        if (!Number.isFinite(indikatorId)) return null;
         const payload = { indikatorId };
         if (v.tipe === 'per_capaian' || v.tipe === 'persentase') payload.nilaiBobot = Number(v.nilai);
         if (v.tipe === 'per_tingkat') payload.bobotTingkatWilayah = { kabupaten: Number(v.kabupaten), provinsi: Number(v.provinsi), nasional: Number(v.nasional), internasional: Number(v.internasional) };
         if (v.tipe === 'per_jenjang') payload.bobotJenjang = { s1: Number(v.s1), s2: Number(v.s2), s3: Number(v.s3) };
         return payload;
-      });
-      // If bobots contain slug not numeric, we need to resolve via indikator list — fetch once
-      // For now filter numeric only; if none, show error
-      const numericBobots = bobots.filter((b) => /^\d+$/.test(String(b.indikatorId)));
-      const body = { periodeId, bobots: numericBobots.length ? numericBobots : bobots };
+      }).filter(Boolean);
+      if (bobots.length !== Object.keys(data).length) {
+        setToast({ type: 'error', msg: 'Sebagian indikator belum punya ID valid — reload halaman lalu coba lagi.' });
+        setTimeout(() => setToast(null), 4000);
+        return;
+      }
+      const body = { periodeId, bobots };
       await apiFetch('/api/admin/bobot', { method: 'PATCH', body, auth: true });
       setToast({ type: 'success', msg: `Bobot periode ${periodeId} disimpan — histori diperbarui` });
     } catch (e) {
