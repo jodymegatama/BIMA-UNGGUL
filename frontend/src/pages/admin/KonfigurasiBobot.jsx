@@ -66,6 +66,16 @@ export default function KonfigurasiBobot() {
 
   const isLocked = periodeStatus === 'Finalisasi' || periodeStatus === 'Arsip' || periodeStatus === 'finalisasi';
 
+  // Counter indikator terisi — untuk sticky save bar
+  const allValues = Object.values(data || {});
+  const isFilled = (item) => {
+    if (item.tipe === 'per_tingkat') return ['kabupaten', 'provinsi', 'nasional', 'internasional'].every((f) => item[f] !== '' && item[f] !== null);
+    if (item.tipe === 'per_jenjang') return ['s1', 's2', 's3'].every((f) => item[f] !== '' && item[f] !== null);
+    return item.nilai !== '' && item.nilai !== null;
+  };
+  const isiCount = allValues.filter(isFilled).length;
+  const totalCount = allValues.length;
+
   const handleChange = (kode, field, val) => {
     setData((prev) => ({
       ...prev,
@@ -154,9 +164,6 @@ export default function KonfigurasiBobot() {
             <div className="text-[11px] font-bold text-pencil">{isLocked ? 'Terkunci (Finalisasi/Arsip) — read-only' : 'Editable — bobot akan dipakai untuk hitung skor realtime'}</div>
           </div>
         </div>
-        <button onClick={handleSave} disabled={isLocked || saving || !periodeId} className={`h-10 px-5 rounded-[12px] border-2 font-black text-[13px] flex items-center gap-2 ${isLocked ? 'bg-zinc-100 border-zinc-200 text-faded cursor-not-allowed' : 'bg-eager border-eager-dark text-white shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none'}`}>
-          {saving ? <><SpinnerGap size={16} weight="bold" className="animate-spin" /> Menyimpan...</> : isLocked ? 'Terkunci' : 'Simpan Bobot'}
-        </button>
       </div>
 
       {toast && (
@@ -176,6 +183,27 @@ export default function KonfigurasiBobot() {
         <div className="rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">
           <Clock size={16} weight="regular" color="#d97706" className="shrink-0 mt-0.5" />
           <p className="text-[11px] leading-5 font-bold text-amber-900">Periode berstatus {periodeStatus} — bobot terkunci. Untuk ubah, lakukan Reopen di Manajemen Periode (butuh alasan, tercatat audit log).</p>
+        </div>
+      )}
+
+      {/* Sticky save bar — selalu terlihat saat scroll (pola context7 sticky bottom) */}
+      {!loading && (
+        <div className="sticky bottom-0 z-20 border-t-2 border-zinc-100 bg-white/95 backdrop-blur-sm pt-3 pb-1">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-[12px] font-black text-charcoal truncate">
+                {isLocked ? 'Periode terkunci' : `${isiCount} dari ${totalCount} indikator terisi`}
+              </div>
+              <div className="text-[11px] font-bold text-pencil truncate">Bobot 0 = indikator nonaktif • bobot dipakai untuk hitung skor realtime</div>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={isLocked || saving || !periodeId}
+              className={`h-10 px-5 rounded-[12px] border-2 font-black text-[13px] flex items-center gap-2 shrink-0 ${isLocked ? 'bg-zinc-100 border-zinc-200 text-faded cursor-not-allowed' : 'bg-eager border-eager-dark text-white shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition'}`}
+            >
+              {saving ? <><SpinnerGap size={16} weight="bold" className="animate-spin" /> Menyimpan...</> : isLocked ? 'Terkunci' : 'Simpan Bobot'}
+            </button>
+          </div>
         </div>
       )}
     </div>

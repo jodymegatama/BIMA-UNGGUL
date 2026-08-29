@@ -20,7 +20,7 @@ export default function BobotIndikatorForm({ data, onChange, locked }) {
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 lg:grid-cols-2 items-start">
       {Object.values(data || {}).map((item) => {
         const tipe = item.tipe;
         return (
@@ -57,7 +57,7 @@ export default function BobotIndikatorForm({ data, onChange, locked }) {
                     disabled={locked}
                     value={item.nilai ?? ''}
                     onChange={(e) => update(item.kode, 'nilai', e.target.value)}
-                    className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal focus:outline-none focus:ring-2 ${locked ? 'border-zinc-200 bg-zinc-50 cursor-not-allowed' : 'border-zinc-200 focus:border-eager focus:ring-eager/20'}`}
+                    className={`mt-1.5 w-full max-w-[220px] h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal focus:outline-none focus:ring-2 ${locked ? 'border-zinc-200 bg-zinc-50 cursor-not-allowed' : 'border-zinc-200 focus:border-eager focus:ring-eager/20'}`}
                     placeholder="10"
                   />
                   <div className="text-[11px] font-medium text-faded mt-1">Contoh: 10 poin per capaian disetujui • 0 = indikator nonaktif</div>
@@ -77,7 +77,7 @@ export default function BobotIndikatorForm({ data, onChange, locked }) {
                       disabled={locked}
                       value={item.nilai ?? ''}
                       onChange={(e) => update(item.kode, 'nilai', e.target.value)}
-                      className={`w-full h-10 pl-3 pr-8 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal focus:outline-none focus:ring-2 ${locked ? 'border-zinc-200 bg-zinc-50 cursor-not-allowed' : 'border-zinc-200 focus:border-eager focus:ring-eager/20'}`}
+                      className={`w-full max-w-[220px] h-10 pl-3 pr-8 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal focus:outline-none focus:ring-2 ${locked ? 'border-zinc-200 bg-zinc-50 cursor-not-allowed' : 'border-zinc-200 focus:border-eager focus:ring-eager/20'}`}
                       placeholder="0.5"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black text-faded">× %</span>
