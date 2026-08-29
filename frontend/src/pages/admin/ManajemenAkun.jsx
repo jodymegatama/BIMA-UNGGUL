@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap, Info } from 'phosphor-react';
+import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,13 +51,13 @@ export default function ManajemenAkun() {
       }));
       setRows(mapped);
       setTotal(res.total ?? mapped.length);
-    } catch (e) {
+    } catch {
       // keep empty
     } finally { setLoading(false); }
   }, [token, activeTab, q, page]);
 
-  useEffect(() => { fetchRows(); }, [fetchRows]);
-  useEffect(() => { setPage(1); }, [activeTab, q]);
+  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
+
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
@@ -97,7 +97,7 @@ export default function ManajemenAkun() {
         {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => setActiveTab(t)}
+            onClick={() => { setActiveTab(t); setPage(1); }}
             className={`h-8 px-4 rounded-full border-2 text-[12px] font-black ${activeTab === t ? 'bg-ink text-white border-black' : 'bg-white border-zinc-200 text-charcoal hover:bg-zinc-50'}`}
           >
             {t}
@@ -112,7 +112,7 @@ export default function ManajemenAkun() {
             autoComplete="off"
             aria-label="Cari NIP, nama, atau madrasah"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => { setQ(e.target.value); setPage(1); }}
             placeholder="Cari NIP / nama / madrasah..."
             className="w-full h-9 pl-9 pr-3 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:border-ink"
           />

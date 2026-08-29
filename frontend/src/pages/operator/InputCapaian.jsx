@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { toast } from 'sonner';
-import { PlusCircle, FloppyDisk, PaperPlaneTilt, Buildings, Info, SpinnerGap, CheckCircle, WarningCircle, Stack, Trash } from 'phosphor-react';
+import { PlusCircle, FloppyDisk, PaperPlaneTilt, Buildings, Info, SpinnerGap, CheckCircle, WarningCircle, Stack } from 'phosphor-react';
 import IndikatorTabs from '../../components/operator/IndikatorTabs';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
@@ -33,7 +33,6 @@ export default function InputCapaian() {
   // busy: 'draft' | 'submit' | null — loading state tombol aksi (anti double-submit)
   const [busy, setBusy] = useState(null);
   const [lastAction, setLastAction] = useState(null); // {type:'success'|'error'|'info', msg} untuk status inline aria-live
-  const [loadingIndikator, setLoadingIndikator] = useState(true);
   const [loadingDrafts, setLoadingDrafts] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // baris server-draft yang akan dihapus
   const [deleting, setDeleting] = useState(false);
@@ -113,8 +112,6 @@ export default function InputCapaian() {
         }
       } catch {
         // keep skeleton constants — tidak error UI
-      } finally {
-        if (!ignore) setLoadingIndikator(false);
       }
     }
     fetchIndikator();

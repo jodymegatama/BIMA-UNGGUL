@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { CheckCircle, XCircle, ArrowClockwise, Clock, WarningCircle } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
@@ -123,12 +123,12 @@ export default function AntreanValidasi() {
     } finally { setDeleteLoading(false); }
   }, [token, deleteFilter, deletePage]);
 
-  useEffect(() => { fetchValidasi(); }, [fetchValidasi]);
-  useEffect(() => { if (activeTab === 'hapus') fetchDelete(); }, [fetchDelete, activeTab]);
+  useEffect(() => { fetchValidasi(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchValidasi]);
+  useEffect(() => { if (activeTab === 'hapus') fetchDelete(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchDelete, activeTab]);
 
-  // Reset page on filter change
-  useEffect(() => { setPage(1); }, [filters]);
-  useEffect(() => { setDeletePage(1); }, [deleteFilter]);
+  // Reset page saat filter berubah — di event handler (bukan effect) sesuai docs react "You Might Not Need an Effect"
+  const handleFilterChange = (next) => { setFilters(next); setPage(1); };
+  const handleDeleteFilterChange = (updater) => { setDeleteFilter(updater); setDeletePage(1); };
 
   const pendingHapus = deleteRows.filter((r) => r.statusRequest === 'Menunggu Persetujuan').length;
 
@@ -203,7 +203,7 @@ export default function AntreanValidasi() {
 
       {activeTab === 'validasi' ? (
         <>
-          <ValidasiFilterBar filters={filters} onChange={setFilters} />
+          <ValidasiFilterBar filters={filters} onChange={handleFilterChange} />
 
           {toast && <div className="rounded-[12px] bg-emerald-50 border-2 border-emerald-200 text-emerald-900 px-4 py-3 flex gap-2 text-[13px] font-bold"><CheckCircle size={18} weight="fill" color="#059669" className="shrink-0 mt-0.5" /><span>{toast}</span></div>}
 
@@ -287,7 +287,7 @@ export default function AntreanValidasi() {
           <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 flex flex-wrap gap-3">
             <select
               value={deleteFilter.status}
-              onChange={(e) => setDeleteFilter((s) => ({ ...s, status: e.target.value }))}
+              onChange={(e) => handleDeleteFilterChange((s) => ({ ...s, status: e.target.value }))}
               className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-black text-charcoal"
             >
               <option value="Semua">Semua Status</option>
@@ -302,7 +302,7 @@ export default function AntreanValidasi() {
               autoComplete="off"
               aria-label="Cari madrasah, indikator, atau alasan pada permintaan hapus"
               value={deleteFilter.q}
-              onChange={(e) => setDeleteFilter((s) => ({ ...s, q: e.target.value }))}
+              onChange={(e) => handleDeleteFilterChange((s) => ({ ...s, q: e.target.value }))}
               placeholder="Cari madrasah / indikator / alasan..."
               className="flex-1 min-w-[200px] h-9 px-4 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:border-ink"
             />

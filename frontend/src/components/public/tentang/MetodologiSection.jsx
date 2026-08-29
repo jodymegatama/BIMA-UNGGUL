@@ -1,4 +1,4 @@
-import { ShieldCheck, GitBranch, Trophy, Scales, Clock, Flag, CheckCircle, WarningCircle, ArrowsLeftRight } from 'phosphor-react';
+import { ShieldCheck, GitBranch, Scales, Clock, Flag, WarningCircle, ArrowsLeftRight } from 'phosphor-react';
 
 /**
  * MetodologiSection — Bagian 3: Metodologi & Cara Kerja (PRD §6 Interaction, §11 formula, §9 lifecycle, 6 kelompok, tie-breaker)

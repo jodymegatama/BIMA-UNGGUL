@@ -48,7 +48,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
 
   // Fetch awal + polling 30 detik + refetch saat tab kembali fokus (PRD §14)
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(); // eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react)
     const iv = setInterval(loadNotifications, 30000);
     const onFocus = () => loadNotifications();
     window.addEventListener('focus', onFocus);

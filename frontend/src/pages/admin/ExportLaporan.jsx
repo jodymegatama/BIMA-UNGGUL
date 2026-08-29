@@ -19,7 +19,8 @@ export default function ExportLaporan() {
       const list = Array.isArray(res) ? res : (res.data || []);
       const mapped = list.map((p) => ({ id: p.id, nama: p.namaPeriode || p.nama, status: p.status }));
       setPeriodes(mapped);
-      if (mapped.length && !periode) setPeriode(String(mapped[0].id));
+      // functional update: tak perlu baca `periode` -> bebas dari exhaustive-deps
+      setPeriode((cur) => cur || String(mapped[0].id));
     }).catch(()=>{});
   }, [token]);
 

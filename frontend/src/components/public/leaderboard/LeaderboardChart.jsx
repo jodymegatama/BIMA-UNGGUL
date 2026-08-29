@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import LazyChart from '../../shared/LazyChart';
 import { ChartBar, Info } from 'phosphor-react';
 import { formatSkor } from '../../../lib/format';
 
@@ -84,7 +84,7 @@ export default function LeaderboardChart({ data = [] }) {
       </div>
 
       <div className="p-4 lg:p-5">
-        <Chart options={options} series={series} type="bar" height={360} />
+        <LazyChart options={options} series={series} type="bar" height={360} />
         <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-faded border-t-2 border-dashed border-zinc-100 pt-3">
           <Info size={14} weight="regular" color="#afafaf" />
           Tie-breaker: skor → jumlah approved → waktu capai skor → BMU ID. Grafik hanya visual; urutan tabel adalah sumber kebenaran.

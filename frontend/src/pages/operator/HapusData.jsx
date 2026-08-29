@@ -42,7 +42,7 @@ export default function HapusData() {
     } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => { fetchItems(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchItems]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -62,7 +62,7 @@ export default function HapusData() {
     }
   };
 
-  const handleBatal = async (id) => {
+  const handleBatal = async (_id) => {
     // Backend tidak punya endpoint cancel — tampilkan info
     showToast('Pembatalan pengajuan belum tersedia di backend.', 'error');
   };
@@ -137,7 +137,7 @@ export default function HapusData() {
       {loading ? (
         <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-8 text-center text-[13px] font-bold text-faded flex items-center justify-center gap-2"><SpinnerGap size={16} weight="bold" className="animate-spin" /> Memuat data approved...</div>
       ) : (
-        <DeleteRequestPanel items={items} onAjukan={handleAjukan} onBatal={handleBatal} onAjukanUlang={handleAjukan} />
+        <DeleteRequestPanel items={items} onAjukan={handleAjukan} onBatal={handleBatal} />
       )}
 
       <div className="rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">

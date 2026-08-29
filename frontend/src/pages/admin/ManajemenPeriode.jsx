@@ -38,19 +38,14 @@ export default function ManajemenPeriode() {
         _raw: r,
       }));
       setRows(mapped);
-    } catch (e) {
+    } catch {
       // keep empty, show toast if needed
     } finally { setLoading(false); }
   }, [token]);
 
-  useEffect(() => { fetchRows(); }, [fetchRows]);
+  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
-
-  function toBackendStatus(s) {
-    const rev = { 'Belum Dimulai': 'belum_dimulai', 'Aktif': 'aktif', 'Cut-off': 'cutoff', 'Penyelesaian Validasi': 'penyelesaian_validasi', 'Finalisasi': 'finalisasi', 'Arsip': 'arsip' };
-    return rev[s] || s;
-  }
 
   const handleCreate = async (data) => {
     try {
@@ -66,8 +61,7 @@ export default function ManajemenPeriode() {
 
   const handleFinal = async (id) => {
     try {
-      const res = await apiFetch(`/api/admin/periode/${id}/finalisasi`, { method: 'POST', auth: true });
-      const updated = res.data || res;
+      await apiFetch(`/api/admin/periode/${id}/finalisasi`, { method: 'POST', auth: true });
       setRows((prev) => prev.map((r) => (String(r.id) === String(id) ? { ...r, status: 'Finalisasi' } : r)));
       setConfirmFinal(null);
       showToast('Periode difinalisasi — submission & bobot terkunci');

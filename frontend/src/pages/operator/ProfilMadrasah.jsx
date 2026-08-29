@@ -27,11 +27,6 @@ import { INDIKATORS } from '../../constants/indikator';
 import { formatSkor } from '../../lib/format';
 import IndikatorTable from '../../components/public/madrasah/IndikatorTable';
 
-const EMPTY_MADRASAH = {
-  id: null, nama: '-', bmuId: '-', jenjang: '-', status: '-',
-  kelompok: '-', jumlahSiswa: null, alamat: '-', slug: '',
-};
-
 function mapIndikatorSkor(breakdown) {
   if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0 }));
   return INDIKATORS.map((ind) => ({
@@ -55,16 +50,16 @@ export default function ProfilMadrasah() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Sinkron dari context (Sidebar & halaman lain ikut update)
-  useEffect(() => {
+  // Sinkron dari context — pola "adjusting state when props change" (docs react.dev):
+  // bandingkan nilai prev SAAT RENDER, bukan di effect (hindari cascading render).
+  const [prevCtx, setPrevCtx] = useState({ m: ctxMadrasah, l: ctxLoading });
+  if (prevCtx.m !== ctxMadrasah || prevCtx.l !== ctxLoading) {
+    setPrevCtx({ m: ctxMadrasah, l: ctxLoading });
     setMadrasah(ctxMadrasah);
     setLoadingProfile(ctxLoading);
+    setForm(ctxMadrasah); // reset form mengikuti data terbaru
     if (ctxError) setToast({ type: 'error', msg: ctxError });
-  }, [ctxMadrasah, ctxLoading, ctxError]);
-
-  useEffect(() => {
-    setForm(madrasah);
-  }, [madrasah]);
+  }
 
   // Skor & rank — tergantung madrasah dari context, bukan fetchOwnMadrasah lagi
   useEffect(() => {

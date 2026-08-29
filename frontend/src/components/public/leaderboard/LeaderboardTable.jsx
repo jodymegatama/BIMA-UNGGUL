@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom';
 import { Trophy, ArrowUp, ArrowDown, ArrowsDownUp, Clock, CheckCircle, Hash } from 'phosphor-react';
 import { formatSkor } from '../../../lib/format';
 
+function SortIcon({ active, dir }) {
+  if (!active) return <ArrowsDownUp size={12} weight="bold" color="#afafaf" />;
+  return dir === 'asc' ? <ArrowUp size={12} weight="bold" /> : <ArrowDown size={12} weight="bold" />;
+}
+
 /**
  * LeaderboardTable — peringkat #4 ke atas
  * Kolom: Rank, Madrasah (nama + BMU + badge negeri/swasta), Skor, Approved, Updated (tie-breaker), Aksi
@@ -31,11 +36,6 @@ export default function LeaderboardTable({ data = [] }) {
 
   const toggle = (key) => {
     setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'skor' ? 'desc' : 'asc' }));
-  };
-
-  const SortIcon = ({ k }) => {
-    if (sort.key !== k) return <ArrowsDownUp size={12} weight="bold" color="#afafaf" />;
-    return sort.dir === 'asc' ? <ArrowUp size={12} weight="bold" /> : <ArrowDown size={12} weight="bold" />;
   };
 
   if (rows.length === 0) {
@@ -75,23 +75,23 @@ export default function LeaderboardTable({ data = [] }) {
             <tr className="bg-zinc-50 border-b-2 border-zinc-100">
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase whitespace-nowrap">
                 <button onClick={() => toggle('rank')} className="inline-flex items-center gap-1 hover:text-charcoal">
-                  Rank <SortIcon k="rank" />
+                  Rank <SortIcon active={sort.key === 'rank'} dir={sort.dir} />
                 </button>
               </th>
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Madrasah</th>
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase whitespace-nowrap text-right">
                 <button onClick={() => toggle('skor')} className="inline-flex items-center gap-1 hover:text-charcoal">
-                  Skor <SortIcon k="skor" />
+                  Skor <SortIcon active={sort.key === 'skor'} dir={sort.dir} />
                 </button>
               </th>
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase whitespace-nowrap text-right hidden sm:table-cell">
                 <button onClick={() => toggle('approved')} className="inline-flex items-center gap-1 hover:text-charcoal">
-                  Approved <SortIcon k="approved" />
+                  Approved <SortIcon active={sort.key === 'approved'} dir={sort.dir} />
                 </button>
               </th>
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase whitespace-nowrap hidden lg:table-cell">
                 <button onClick={() => toggle('updatedAt')} className="inline-flex items-center gap-1 hover:text-charcoal">
-                  Updated <SortIcon k="updatedAt" />
+                  Updated <SortIcon active={sort.key === 'updatedAt'} dir={sort.dir} />
                 </button>
               </th>
               <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase text-right">Aksi</th>

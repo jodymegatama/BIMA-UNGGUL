@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, } from 'react-router-dom';
 import { Trophy, List, X, ArrowRight } from 'phosphor-react';
 
 /**
@@ -14,9 +14,8 @@ import { Trophy, List, X, ArrowRight } from 'phosphor-react';
  */
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(() => window.scrollY > 8); // lazy init — deep link langsung scrolled
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isHome = location.pathname === '/';
   const isLeaderboard = location.pathname === '/leaderboard';
@@ -37,8 +36,6 @@ export default function Navbar() {
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    // init state in case page loads already scrolled (deep link)
-    setIsScrolled(window.scrollY > 8);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -78,10 +75,13 @@ export default function Navbar() {
     }
   }, [location.pathname, location.hash, scrollToId]);
 
-  // Tutup menu saat route berubah (mis. klik Lihat Peringkat)
-  useEffect(() => {
+  // Tutup menu saat route berubah (mis. klik Lihat Peringkat) — pola "storing info from
+  // previous renders" (docs react.dev): setState langsung saat render, tanpa effect.
+  const [prevPath, setPrevPath] = useState(location.pathname);
+  if (prevPath !== location.pathname) {
+    setPrevPath(location.pathname);
     setIsOpen(false);
-  }, [location.pathname]);
+  }
 
   const activePill = 'bg-eager border-eager-dark text-white shadow-sticker';
   const inactivePill = 'hover:bg-zinc-50 text-charcoal';

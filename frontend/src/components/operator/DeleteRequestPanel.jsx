@@ -1,7 +1,7 @@
-import { Clock, CheckCircle, XCircle, Trash, ArrowClockwise, WarningCircle, Buildings } from 'phosphor-react';
+import { XCircle, Trash, ArrowClockwise, WarningCircle, Buildings } from 'phosphor-react';
 import DeleteRequestStatusBadge from './DeleteRequestStatusBadge';
 
-export default function DeleteRequestPanel({ items = [], onAjukan, onBatal, onAjukanUlang }) {
+export default function DeleteRequestPanel({ items = [], onAjukan, onBatal }) {
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white overflow-hidden shadow-card">
       <div className="overflow-x-auto">
