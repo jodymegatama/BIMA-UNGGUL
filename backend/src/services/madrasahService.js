@@ -30,7 +30,7 @@ export async function listMadrasah({ q, kelompok, status, page = '1', limit = '2
   let p = parseInt(page, 10); let l = parseInt(limit, 10);
   if (!Number.isFinite(p) || p < 1) p = 1;
   if (!Number.isFinite(l) || l < 1) l = 20;
-  if (l > 100) l = 100;
+  if (l > 1000) l = 1000; // limit 1000: dropdown AkunForm butuh semua madrasah (default 20 utk tabel) — clamp 100 memotong >100 madrasah
 
   const where = {};
   if (status === 'nonaktif') {
