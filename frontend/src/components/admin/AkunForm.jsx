@@ -50,10 +50,10 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
               <label htmlFor="akun-nip" className="block text-[11px] font-black tracking-wide text-charcoal uppercase">NIP <span className="text-red-600">*</span></label>
               <input
                 id="akun-nip" name="nip" type="text" inputMode="numeric" autoComplete="off"
-                value={nip} readOnly={isEdit}
+                value={nip}
                 onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 18))}
                 placeholder="197812345678900001"
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.nip ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'} ${isEdit ? 'bg-zinc-50 text-faded' : ''}`}
+                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.nip ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
               />
               {err.nip && <div className="text-[11px] font-bold text-red-600 mt-1">{err.nip}</div>}
             </div>
@@ -140,7 +140,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
             <ShieldCheck size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
             <p className="text-[11px] leading-5 font-medium text-pencil">
               {isEdit
-                ? 'NIP tidak dapat diubah. Password kosong = tetap. Status nonaktif akan menolak login.'
+                ? 'NIP dapat diubah — wajib unik. Password kosong = tetap. Status nonaktif akan menolak login.'
                 : 'Akun baru berstatus <b>Aktif</b> langsung (admin membuat). Nonaktif hanya via data akun.'}
             </p>
           </div>

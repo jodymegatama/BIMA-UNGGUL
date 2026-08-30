@@ -43,6 +43,15 @@ export async function updateAkun(id, patch, { userId, ip }) {
   const existing = await prisma.user.findUnique({where:{id:uid}});
   if(!existing) throw new HttpError(404,'NOT_FOUND','User tidak ditemukan');
   const data={};
+  if (patch.nip!==undefined) {
+    const nipVal = String(patch.nip).trim();
+    if (!/^\d{8,18}$/.test(nipVal)) throw new HttpError(400,'INVALID_NIP','NIP harus 8–18 digit angka');
+    if (nipVal !== existing.nip) {
+      const dup = await prisma.user.findFirst({ where:{ nip: nipVal, NOT:{ id: uid } } });
+      if (dup) throw new HttpError(409,'DUPLICATE_NIP','NIP sudah terdaftar di akun lain');
+      data.nip = nipVal;
+    }
+  }
   if (patch.name!==undefined) data.name = String(patch.name);
   if (patch.email!==undefined) data.email = String(patch.email);
   if (patch.role!==undefined) {
@@ -58,9 +67,9 @@ export async function updateAkun(id, patch, { userId, ip }) {
     if (String(patch.password).length < 8) throw new HttpError(400,'WEAK_PASSWORD','Password minimal 8');
     data.password = await bcrypt.hash(String(patch.password),10);
   }
-  const before = { status: existing.status, role: existing.role };
+  const before = { nip: existing.nip, status: existing.status, role: existing.role };
   const updated = await prisma.user.update({ where:{id:uid}, data, select:{id:true,nip:true,name:true,email:true,role:true,status:true,madrasahId:true,createdAt:true}});
-  await recordAuditLog({ userId, action:'update_account', entity:'User', entityId:uid, dataSebelum:before, dataSesudah:{status:updated.status, role:updated.role}, ipAddress:ip});
+  await recordAuditLog({ userId, action:'update_account', entity:'User', entityId:uid, dataSebelum:before, dataSesudah:{nip:updated.nip,status:updated.status, role:updated.role}, ipAddress:ip});
   return updated;
 }
 
