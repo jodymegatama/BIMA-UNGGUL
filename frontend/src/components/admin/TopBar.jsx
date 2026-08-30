@@ -9,7 +9,7 @@ const titleMap = {
   '/admin/validasi': 'Antrian Validasi',
   '/admin/periode': 'Manajemen Periode',
   '/admin/bobot': 'Konfigurasi Bobot',
-  '/admin/akun': 'Manajemen Akun Operator',
+  '/admin/akun': 'Manajemen Akun & Madrasah',
   '/admin/laporan': 'Laporan / Export',
 };
 
