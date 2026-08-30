@@ -49,6 +49,6 @@
 - Smoke test browser: `/leaderboard` & `/madrasah/:slug` render `.apexcharts-canvas` normal; skeleton muncul saat loading.
 - Ref: Context7 `/vitejs/vite` migration (manualChunks deprecated → codeSplitting).
 
-### Ditunda (bukan prioritas)
-- **Upgrade Prisma 5 → 6/7**: tertinggal 2 major, ada breaking changes;
-  kerjakan terpisah dari pengembangan fitur.
+### Dibatalkan (keputusan user 2026-08-30)
+- **Upgrade Prisma 5 → 6/7** — tidak akan dikerjakan.
+- **Audit mobile responsive sistematis** — tidak akan dikerjakan.
