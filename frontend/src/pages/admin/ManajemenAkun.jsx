@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, H
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import AkunForm from '../../components/admin/AkunForm';
+import MadrasahTable from '../../components/admin/MadrasahTable';
 
 const tabs = ['Semua', 'Menunggu', 'Aktif', 'Nonaktif'];
 
@@ -20,6 +21,7 @@ function mapStatus(s) {
 export default function ManajemenAkun() {
   const { token, user } = useAuth();
   const myId = user?.id;
+  const [section, setSection] = useState('akun'); // 'akun' | 'madrasah'
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Semua');
@@ -152,18 +154,34 @@ export default function ManajemenAkun() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun Operator</h1>
-          <p className="text-[12px] font-medium text-pencil mt-1">Kelola pendaftaran operator & admin — tambah, edit, nonaktifkan, atau hapus akun. Approve otomatis generate <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> jika madrasah belum ada.</p>
+          <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun & Madrasah</h1>
+          <p className="text-[12px] font-medium text-pencil mt-1">Kelola akun operator/admin dan data madrasah dalam satu halaman.</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
-        >
-          <PlusCircle size={16} weight="bold" color="white" /> Tambah Akun
-        </button>
+        <div className="flex gap-2 bg-zinc-100 border-2 border-zinc-200 rounded-full p-1">
+          <button
+            onClick={() => setSection('akun')}
+            className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${section === 'akun' ? 'bg-ink text-white border-black shadow-[0_3px_0_0_#000437]' : 'border-transparent text-pencil hover:text-charcoal active:translate-y-[1px]'}`}
+          >
+            Data Akun
+          </button>
+          <button
+            onClick={() => setSection('madrasah')}
+            className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${section === 'madrasah' ? 'bg-ink text-white border-black shadow-[0_3px_0_0_#000437]' : 'border-transparent text-pencil hover:text-charcoal active:translate-y-[1px]'}`}
+          >
+            Data Madrasah
+          </button>
+        </div>
       </div>
 
+      {section === 'akun' && (
+      <>
       <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-ink border-2 border-black text-white font-black text-[12px] shadow-[0_3px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
+        >
+          <PlusCircle size={14} weight="bold" color="white" /> Tambah Akun
+        </button>
         {tabs.map((t) => (
           <button
             key={t}
@@ -331,6 +349,10 @@ export default function ManajemenAkun() {
           </div>
         </div>
       )}
+      </>
+      )}
+
+      {section === 'madrasah' && <MadrasahTable />}
     </div>
   );
 }

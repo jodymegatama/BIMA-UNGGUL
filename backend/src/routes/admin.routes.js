@@ -10,6 +10,7 @@ import * as deleteRequestController from '../controllers/admin/deleteRequestCont
 import * as authController from '../controllers/authController.js';
 import * as periodController from '../controllers/admin/periodController.js';
 import * as bobotController from '../controllers/admin/bobotController.js';
+import * as madrasahController from '../controllers/admin/madrasahController.js';
 import * as accountController from '../controllers/admin/accountController.js';
 import * as exportController from '../controllers/admin/exportController.js';
 import * as auditLogController from '../controllers/admin/auditLogController.js';
@@ -39,8 +40,13 @@ router.post('/akun', accountController.create);
 router.patch('/akun/:id', accountController.update);
 router.delete('/akun/:id', accountController.remove);
 
-// Madrasah dropdown (assign akun) — letak sebelum route periode agar tidak bentrok
-router.get('/madrasah', accountController.madrasahList);
+// Madrasah CRUD (soft/hard delete) — dropdown AkunForm pakai list ini (default aktif saja)
+router.get('/madrasah', madrasahController.list);
+router.post('/madrasah', madrasahController.create);
+router.patch('/madrasah/:id', madrasahController.update);
+router.patch('/madrasah/:id/soft-delete', madrasahController.softRemove);
+router.patch('/madrasah/:id/activate', madrasahController.activate);
+router.delete('/madrasah/:id', madrasahController.remove);
 
 // Periode
 router.get('/periode', periodController.list);

@@ -140,14 +140,66 @@ describe('Akun CRUD admin (create → delete + guard)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(404);
   });
+});
 
-  (hasCreds ? it : it.skip)('SELF_DELETE -> 400 (tidak bisa hapus akun sendiri)', async () => {
+describe('Madrasah CRUD admin (create → update → soft/hard delete)', () => {
+  (hasCreds ? it : it.skip)('create → 201, update → 200, jenjang immutable → 400, soft → 200, hard → 200, lagi → 404', async () => {
     expect(adminToken).toBeTruthy();
-    await request(app)
-      .delete('/api/admin/akun/0')
+    const ts = Date.now();
+    const nama = `MI Vit ${ts}`;
+
+    const c = await request(app)
+      .post('/api/admin/madrasah')
       .set('Authorization', `Bearer ${adminToken}`)
-      .expect((r) => {
-        expect([400, 404]).toContain(r.status); // id 0 tidak valid -> 400 (atau 404 user tidak ada)
-      });
+      .send({ namaMadrasah: nama, jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 120, alamat: 'Jl. Uji 1' })
+      .expect(201);
+    const mid = c.body.data?.id;
+    expect(mid).toBeTruthy();
+    expect(c.body.data?.nomorMadrasah).toMatch(/^BMU-\d{6}$/);
+    expect(c.body.data?.slug).toMatch(/^mi-vit-\d+$/);
+    expect(c.body.data?.kelompok).toBe('MI Swasta');
+
+    await request(app)
+      .patch(`/api/admin/madrasah/${mid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ namaMadrasah: nama + ' Edit', jumlahSiswa: 200 })
+      .expect(200);
+
+    // jenjang immutable
+    await request(app)
+      .patch(`/api/admin/madrasah/${mid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ jenjang: 'MA' })
+      .expect(400);
+
+    // soft delete
+    await request(app)
+      .patch(`/api/admin/madrasah/${mid}/soft-delete`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ alasan: 'test' })
+      .expect(200);
+
+    // list default (aktif) tidak memuat
+    const list = await request(app)
+      .get('/api/admin/madrasah')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect((list.body.data ?? []).some((m) => m.id === mid)).toBe(false);
+
+    // activate + hard delete
+    await request(app)
+      .patch(`/api/admin/madrasah/${mid}/activate`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const del = await request(app)
+      .delete(`/api/admin/madrasah/${mid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(del.body.data?.deletedCounts).toBeTruthy();
+
+    await request(app)
+      .delete(`/api/admin/madrasah/${mid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(404);
   });
 });

@@ -127,11 +127,15 @@ model Madrasah {
   kelompok          String            // MI Negeri etc — derived, immutable
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?         // Null = aktif, NotNull = nonaktif/soft-deleted (submission tetap)
   
   // Relasi
   users             User[]
   submissions       SubmissionItem[]
   scores            MadrasahScore[]
+
+  @@index([deletedAt])
+  @@index([kelompok])
 }
 
 model Notification {

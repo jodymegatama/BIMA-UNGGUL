@@ -108,26 +108,21 @@ export function verifyRefreshToken(token) {
  */
 export async function generateBMUNumber() {
   try {
-    // Query MAX nomorMadrasah yang ada
-    const lastMadrasah = await prisma.madrasah.findFirst({
-      where: {
-        nomorMadrasah: {
-          startsWith: AUTH_CONFIG.BMU_PREFIX,
-        },
-      },
-      orderBy: {
-        nomorMadrasah: 'desc',
-      },
+    // Ambil semua nomor BMU, ekstrak digit dengan regex (robust utk format apa pun)
+    const all = await prisma.madrasah.findMany({
+      where: { nomorMadrasah: { startsWith: AUTH_CONFIG.BMU_PREFIX } },
+      select: { nomorMadrasah: true },
     });
 
-    let nextNumber = 1;
-    if (lastMadrasah) {
-      // Extract digit dari "BMU-000001" → 1
-      const lastDigits = lastMadrasah.nomorMadrasah.substring(AUTH_CONFIG.BMU_PREFIX.length);
-      nextNumber = parseInt(lastDigits, 10) + 1;
+    let maxNumber = 0;
+    for (const m of all) {
+      const digits = m.nomorMadrasah.substring(AUTH_CONFIG.BMU_PREFIX.length).match(/^\d+$/);
+      if (!digits) continue; // format non-digit (mis. BMU-TEST-001) — abaikan
+      const num = parseInt(digits[0], 10);
+      if (Number.isFinite(num) && num > maxNumber) maxNumber = num;
     }
 
-    // Format ke BMU-000001 (6 digit padding)
+    const nextNumber = maxNumber + 1;
     const paddedNumber = String(nextNumber).padStart(AUTH_CONFIG.BMU_DIGITS, AUTH_CONFIG.BMU_PAD_CHAR);
     return `${AUTH_CONFIG.BMU_PREFIX}${paddedNumber}`;
   } catch (err) {

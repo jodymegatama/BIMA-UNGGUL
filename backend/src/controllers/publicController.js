@@ -34,7 +34,7 @@ export async function leaderboard(req,res){
 
 export async function madrasahDetail(req,res){
   const { slug } = req.params;
-  const madrasah = await prisma.madrasah.findUnique({ where:{ slug } });
+  const madrasah = await prisma.madrasah.findUnique({ where:{ slug, deletedAt: null } });
   if (!madrasah) throw new HttpError(404,'NOT_FOUND','Madrasah tidak ditemukan');
   // cari periode: query param ?periodeId= diprioritaskan untuk testing, fallback aktif terbaru
   let periode = null;

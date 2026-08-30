@@ -137,7 +137,7 @@ export async function calculateSkorMadrasah(madrasahId, periodeId, client = pris
 export async function calculateRanking(kelompok, periodeId) {
   // 1. Ambil semua madrasah di kelompok ini
   const madrasahList = await prisma.madrasah.findMany({
-    where: { kelompok },
+    where: { kelompok, deletedAt: null }, // soft-deleted (nonaktif) tidak tampil di leaderboard
   });
 
   // 2. Hitung skor per madrasah
