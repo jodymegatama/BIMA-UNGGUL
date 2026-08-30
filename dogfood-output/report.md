@@ -70,6 +70,17 @@ Testing: 4 fase (setup, publik, operator, admin). Semua bug diperbaiki + di-veri
 - ✅ Empty state selalu di-cross-check API (authenticated-web-qa step 5).
 - 🔍 DEMO/2026 ter-restore via seed + finalisasi (id 38) — user akan hapus lagi sendiri.
 
+## ✅ E2E fitur inti skoring (ditutup setelah Fase 4)
+
+Data uji khusus, cleanup bersih (hasil data nyata):
+1. Buat akun operator QA (201, id 36) → login → indikator diklat id 1, periode 2026/2027
+2. **Submit** 1 item diklat → 201 `menunggu` (itemId 312)
+3. **Approve** oleh admin → 200
+4. **Skor leaderboard**: MI Al Nassar Test `skor=10 · submission=1 · rank=1` (bobot 10 × 1 capaian — benar)
+5. **Cleanup**: submission + akun QA dihapus, recalc → leaderboard kembali `skor=0 · submission=0`
+
+**Verdict fitur inti skoring: ✅ berfungsi end-to-end.**
+
 ## Gate Final
 - `npm run lint` → 0 problem
 - `npm test` → 18/18 (backend 16 + frontend 2)
