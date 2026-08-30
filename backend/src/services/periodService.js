@@ -85,8 +85,8 @@ export async function listPeriode({ status, q } = {}) {
   const rows = await prisma.periodePenilaian.findMany({
     where,
     orderBy: { tanggalMulai: 'desc' },
-    // _count untuk modal konfirmasi hapus (submission/skor/bobot yang akan ikut terhapus)
-    include: { _count: { select: { submissions: true, scores: true, bobots: true } } },
+    // _count untuk modal konfirmasi hapus (submission/bobot yang akan ikut terhapus)
+    include: { _count: { select: { submissions: true, bobots: true } } },
   });
   // status fase awal diturunkan dari tanggal saat dibaca (DB tidak diubah)
   return rows.map((r) => ({ ...r, status: deriveStatus(r) }));
@@ -201,18 +201,16 @@ export async function deletePeriode(id, { userId, ip }) {
     if (locked.status === 'finalisasi' || locked.status === 'arsip')
       throw new HttpError(423, 'PERIOD_LOCKED', 'Periode finalisasi/arsip tidak bisa dihapus');
 
-    const [subCount, scoreCount, bobotCount] = await Promise.all([
+    const [subCount, bobotCount] = await Promise.all([
       tx.submissionItem.count({ where: { periodeId: pid } }),
-      tx.madrasahScore.count({ where: { periodeId: pid } }),
       tx.bobotIndikator.count({ where: { periodeId: pid } }),
     ]);
     await tx.bobotIndikator.deleteMany({ where: { periodeId: pid } });
     await tx.submissionItem.deleteMany({ where: { periodeId: pid } });
-    await tx.madrasahScore.deleteMany({ where: { periodeId: pid } });
     await tx.periodePenilaian.delete({ where: { id: pid } });
     await recordAuditLog({ userId, action: 'delete_periode', entity: 'PeriodePenilaian',
       entityId: pid, dataSebelum: existing, dataSesudah: null, ipAddress: ip }, tx);
-    return { id: pid, deletedCounts: { submissions: subCount, scores: scoreCount, bobots: bobotCount } };
+    return { id: pid, deletedCounts: { submissions: subCount, bobots: bobotCount } };
   }, TX_OPTS);
 }
 

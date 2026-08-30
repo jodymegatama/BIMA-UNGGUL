@@ -110,7 +110,7 @@ export default function MadrasahTable() {
       const info = res.data || res;
       const c = info.deletedCounts;
       setConfirmHard(null);
-      showToast(`${confirmHard.namaMadrasah} dihapus (${c?.submissions ?? 0} submission, ${c?.scores ?? 0} skor dihapus)`);
+      showToast(`${confirmHard.namaMadrasah} dihapus (${c?.submissions ?? 0} submission dihapus)`);
       fetchRows();
     } catch (e) { setActionErr(e.message || 'Gagal hapus madrasah'); }
     finally { setBusy(false); }

@@ -6,7 +6,6 @@
 import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
-import { recalculateAfterAction } from './scoringService.js';
 import bcrypt from 'bcryptjs';
 
 const TX_OPTS = { timeout: 15000, maxWait: 5000 };
@@ -111,11 +110,7 @@ export async function deleteAkun(id, { userId, ip }) {
 
     const deleted = await tx.user.delete({ where: { id: uid }, select: { id: true, nip: true, role: true } });
 
-    // Recalc skor madrasah yang kehilangan submission
-    for (const a of affected) {
-      await recalculateAfterAction(a.madrasahId, a.periodeId, tx);
-    }
-
+    // Skor TIDAK di-recalc — live-compute (scoringService hitung saat baca).
     return { ...deleted, deletedCounts: { submissions: sub, validations: val, deleteRequests: dlc + dlr, notifications: notif, madrasahAffected: affected.length } };
   }, TX_OPTS);
 }

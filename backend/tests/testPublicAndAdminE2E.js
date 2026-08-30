@@ -31,7 +31,6 @@ function assert(cond, msg){ if(!cond) throw new Error(msg); }
 async function cleanup() {
   const per = await prisma.periodePenilaian.findFirst({ where:{ namaPeriode:`${NS}/2026` }});
   if(per){
-    await prisma.madrasahScore.deleteMany({where:{periodeId:per.id}}).catch(()=>{});
     await prisma.validation.deleteMany({where:{submissionItem:{periodeId:per.id}}}).catch(()=>{});
     await prisma.deleteRequest.deleteMany({where:{submissionItem:{periodeId:per.id}}}).catch(()=>{});
     await prisma.submissionItem.deleteMany({where:{periodeId:per.id}}).catch(()=>{});
@@ -57,7 +56,6 @@ async function setup() {
   // one approved item with linkBukti
   const item = await prisma.submissionItem.create({ data:{ madrasahId: madrasah.id, indikatorId: diklat.id, periodeId: periode.id, createdById: operator.id, namaKegiatan:'Kegiatan Final Link', linkBukti:'https://secret.example.com/bukti.pdf', status:'disetujui' }});
   await prisma.validation.create({ data:{ submissionItemId: item.id, validatorId: admin.id, aksi:'approve' }});
-  await prisma.madrasahScore.upsert({ where:{ madrasahId_periodeId:{madrasahId:madrasah.id, periodeId:periode.id}}, update:{totalScore:10}, create:{madrasahId:madrasah.id, periodeId:periode.id, totalScore:10}});
   return { admin, operator, madrasah, periode, diklat, item };
 }
 

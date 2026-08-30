@@ -4,7 +4,7 @@
  */
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
-import { calculateRanking, recalculateRankingAllGroups } from './scoringService.js';
+import { calculateRanking, calculateRankingAllGroups } from './scoringService.js';
 import { prisma } from '../db/prisma.js';
 
 export async function getLeaderboardData({ periodeId, kelompok }) {
@@ -17,7 +17,7 @@ export async function getLeaderboardData({ periodeId, kelompok }) {
     const rankings = await calculateRanking(kelompok, pid);
     return { periode, kelompok, rankings };
   }
-  const all = await recalculateRankingAllGroups(pid);
+  const all = await calculateRankingAllGroups(pid);
   // flatten top? for export default first kelompok
   return { periode, kelompok: kelompok||'Semua', rankings: all };
 }

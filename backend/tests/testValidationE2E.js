@@ -14,7 +14,6 @@ function fmtScore(v) { return v == null ? 'null' : Number(v).toFixed(2); }
 
 async function cleanup() {
   // order: child first
-  await prisma.madrasahScore.deleteMany({ where: { madrasah: { nomorMadrasah: { startsWith: `BMU-${NS}` } } } }).catch(()=>{});
   // delete validations/deleteRequests for our test items via cascade from submissionItem
   // Find our test periode first
   const per = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: `${NS}/2026` } });
@@ -30,7 +29,6 @@ async function cleanup() {
       await prisma.auditLog.deleteMany({ where: { entityId: { in: ids } } }).catch(()=>{});
     }
     await prisma.bobotIndikator.deleteMany({ where: { periodeId: per.id } }).catch(()=>{});
-    await prisma.madrasahScore.deleteMany({ where: { periodeId: per.id } }).catch(()=>{});
     await prisma.periodePenilaian.deleteMany({ where: { id: per.id } }).catch(()=>{});
   }
   await prisma.madrasah.deleteMany({ where: { nomorMadrasah: { startsWith: `BMU-${NS}` } } }).catch(()=>{});
@@ -142,11 +140,11 @@ async function run() {
     assert(approved.status==='disetujui', 'should be disetujui');
     const val = await prisma.validation.findFirst({ where:{ submissionItemId:item1.id, aksi:'approve' }});
     assert(val, 'Validation approve should exist');
-    const cached = await prisma.madrasahScore.findUnique({ where:{ madrasahId_periodeId:{madrasahId: madrasah.id, periodeId: periode.id}}});
-    assert(cached && Number(cached.totalScore)===10, `cached score should 10, got ${fmtScore(cached?.totalScore)}`);
+    const live = await calculateSkorMadrasah(madrasah.id, periode.id);
+    assert(live && Number(live.totalScore)===10, `live score should 10, got ${fmtScore(live?.totalScore)}`);
     const audit = await prisma.auditLog.findFirst({ where:{ action:'approve_submission', entityId:String(item1.id)}});
     assert(audit && audit.dataSebelum?.status==='menunggu' && audit.dataSesudah?.status==='disetujui', 'audit dataSebelum/Sesudah');
-    console.log(`   score 0 -> ${fmtScore(cached.totalScore)} audit=${audit.id} ✅ PASS`);
+    console.log(`   score 0 -> ${fmtScore(live.totalScore)} audit=${audit.id} ✅ PASS`);
     results.push(['approve + score + audit atomic', true]);
 
     // --- Test 3: double approve harus 400 ---
@@ -196,8 +194,8 @@ async function run() {
     assert(revoked.status==='ditolak' && revoked.alasanPenolakan==='Koreksi data salah', 'revoke should set ditolak');
     const valRev = await prisma.validation.findFirst({where:{submissionItemId:item1.id, aksi:'revoke'}});
     assert(valRev?.alasan==='Koreksi data salah', 'validation revoke alasan');
-    const cachedAfterRevoke = await prisma.madrasahScore.findUnique({ where:{ madrasahId_periodeId:{madrasahId: madrasah.id, periodeId: periode.id}}});
-    assert(Number(cachedAfterRevoke.totalScore)===0, `score should 0 after revoke, got ${fmtScore(cachedAfterRevoke.totalScore)}`);
+    const liveAfterRevoke = await calculateSkorMadrasah(madrasah.id, periode.id);
+    assert(Number(liveAfterRevoke.totalScore)===0, `score should 0 after revoke, got ${fmtScore(liveAfterRevoke.totalScore)}`);
     const auditRev = await prisma.auditLog.findFirst({where:{action:'revoke_submission', entityId:String(item1.id)}});
     assert(auditRev && auditRev.dataSebelum?.status==='disetujui' && auditRev.dataSesudah?.status==='ditolak', 'audit revoke');
     console.log(`   score 10 -> 0, revoke->ditolak US4-ready ✅ PASS`);

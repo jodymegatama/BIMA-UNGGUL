@@ -17,7 +17,6 @@ import { prisma } from '../src/db/prisma.js';
 import {
   calculateSkorMadrasah,
   calculateRanking,
-  recalculateAfterAction,
 } from '../src/services/scoringService.js';
 
 // ============================================================================
@@ -26,7 +25,6 @@ import {
 
 async function cleanupTestData() {
   // Hapus data test sebelumnya (cascade akan handle relasi)
-  await prisma.madrasahScore.deleteMany({});
   await prisma.validation.deleteMany({});
   await prisma.submissionItem.deleteMany({});
   await prisma.bobotIndikator.deleteMany({});
@@ -302,7 +300,7 @@ async function test3_TieBreaker(periode, admin, indikatorMap) {
 }
 
 async function test4_RecalculateAfterAction(periode, admin, indikatorMap) {
-  console.log('\n🧪 TEST 4: recalculateAfterAction menyimpan ke cache table');
+  console.log('\n🧪 TEST 4: calculateSkorMadrasah (live-compute, tanpa cache)');
 
   const diklat = indikatorMap.get('diklat');
   const m = await createMadrasahWithSubmissions({
@@ -318,24 +316,13 @@ async function test4_RecalculateAfterAction(periode, admin, indikatorMap) {
     ],
   });
 
-  // Recalculate & simpan cache
-  const result = await recalculateAfterAction(m.id, periode.id);
-
-  // Cek cache tersimpan di MadrasahScore
-  const cached = await prisma.madrasahScore.findUnique({
-    where: {
-      madrasahId_periodeId: {
-        madrasahId: m.id,
-        periodeId: periode.id,
-      },
-    },
-  });
+  // Skor dihitung langsung saat dibaca (tidak ada cache table lagi)
+  const result = await calculateSkorMadrasah(m.id, periode.id);
 
   const expected = 2 * 10; // 2 items × bobot 10 = 20
-  const passed = cached && cached.totalScore === result.totalScore && Math.abs(result.totalScore - expected) < 0.0001;
+  const passed = result && Math.abs(result.totalScore - expected) < 0.0001;
 
   console.log(`   Calculated: ${result.totalScore}, Expected: ${expected}`);
-  console.log(`   Cached in MadrasahScore: ${cached?.totalScore ?? 'NOT FOUND'}`);
   console.log(passed ? '   ✅ PASS' : '   ❌ FAIL');
 
   return passed;

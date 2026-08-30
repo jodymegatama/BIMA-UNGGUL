@@ -7,8 +7,6 @@ import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { generateBMUNumber, generateSlug, deriveKelompok } from './authService.js';
-import { recalculateRankingAllGroups } from './scoringService.js';
-// note: recalculateRankingAllGroups hanya dipakai softDeleteMadrasah (bukan hard — madrasah sudah tiada)
 
 const TX_OPTS = { timeout: 20000, maxWait: 5000 };
 
@@ -169,15 +167,10 @@ export async function hardDeleteMadrasah(id, { userId, ip }) {
   if (!existing) throw new HttpError(404, 'NOT_FOUND', 'Madrasah tidak ditemukan');
 
   return prisma.$transaction(async (tx) => {
-    const [sub, scores] = await Promise.all([
-      tx.submissionItem.count({ where: { madrasahId: mid } }),
-      tx.madrasahScore.count({ where: { madrasahId: mid } }),
-    ]);
+    const sub = await tx.submissionItem.count({ where: { madrasahId: mid } });
 
-    // Hapus data (SubmissionItem & MadrasahScore onDelete Cascade — hapus eksplisit utk kontrol)
+    // Hapus data submission milik madrasah (User operator: putuskan relasi, bukan hapus akun)
     await tx.submissionItem.deleteMany({ where: { madrasahId: mid } });
-    await tx.madrasahScore.deleteMany({ where: { madrasahId: mid } });
-    // User operator madrasah: putuskan relasi (bukan hapus akun)
     await tx.user.updateMany({ where: { madrasahId: mid }, data: { madrasahId: null } });
 
     await recordAuditLog({ userId, action: 'delete_madrasah', entity: 'Madrasah', entityId: mid,
@@ -186,7 +179,7 @@ export async function hardDeleteMadrasah(id, { userId, ip }) {
 
     const deleted = await tx.madrasah.delete({ where: { id: mid }, select: { id: true, nomorMadrasah: true } });
 
-    return { ...deleted, deletedCounts: { submissions: sub, scores } };
+    return { ...deleted, deletedCounts: { submissions: sub } };
   }, TX_OPTS);
 }
 

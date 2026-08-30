@@ -9,7 +9,6 @@
 import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
-import { recalculateAfterAction } from './scoringService.js';
 import { createNotification } from './notificationService.js';
 
 const TX_OPTS = { timeout: 15000, maxWait: 5000 };
@@ -94,7 +93,6 @@ export async function approveSubmission({ id, adminId, ip }) {
       data: { submissionItemId: itemId, validatorId: adminId, aksi: 'approve' },
     });
 
-    await recalculateAfterAction(item.madrasahId, item.periodeId, tx);
 
     // Notifikasi operator pemilik capaian (PRD §12 — submission_approved) — atomic dalam tx
     await createNotification(
@@ -196,7 +194,6 @@ export async function revokeSubmission({ id, adminId, alasan, ip }) {
       data: { submissionItemId: itemId, validatorId: adminId, aksi: 'revoke', alasan: cleanAlasan },
     });
 
-    await recalculateAfterAction(item.madrasahId, item.periodeId, tx);
 
     // Notifikasi operator (PRD §12 — submission_revoked) — atomic dalam tx
     await createNotification(
@@ -294,7 +291,6 @@ export async function approveDeleteRequest({ id, adminId, ip }) {
       data: { status: 'disetujui', reviewedById: adminId, reviewedAt: new Date() },
     });
 
-    await recalculateAfterAction(req.submissionItem.madrasahId, req.submissionItem.periodeId, tx);
 
     // Notifikasi operator pengaju (delete_request_approved) — atomic dalam tx
     await createNotification(

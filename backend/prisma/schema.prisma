@@ -132,7 +132,6 @@ model Madrasah {
   // Relasi
   users             User[]
   submissions       SubmissionItem[]
-  scores            MadrasahScore[]
 
   @@index([deletedAt])
   @@index([kelompok])
@@ -164,7 +163,6 @@ model PeriodePenilaian {
   updatedAt     DateTime         @updatedAt
   bobots        BobotIndikator[]
   submissions   SubmissionItem[]
-  scores        MadrasahScore[]
 
   @@index([status])
 }
@@ -309,19 +307,3 @@ model AuditLog {
   @@index([userId, createdAt]) // untuk audit trail per user
 }
 
-// Cache table untuk skor per madrasah per periode
-// Digunakan untuk performa leaderboard (avoid recalculate setiap request)
-model MadrasahScore {
-  id           Int      @id @default(autoincrement())
-  madrasahId   Int
-  periodeId    Int
-  totalScore   Float    // Total skor per periode
-  lastRecalc   DateTime @default(now())
-  
-  madrasah     Madrasah @relation(fields: [madrasahId], references: [id], onDelete: Cascade)
-  periode      PeriodePenilaian @relation(fields: [periodeId], references: [id], onDelete: Cascade)
-  
-  @@unique([madrasahId, periodeId]) // satu score per madrasah per periode
-  @@index([periodeId, totalScore])
-  @@index([madrasahId])
-}

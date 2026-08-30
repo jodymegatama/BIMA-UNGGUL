@@ -5,7 +5,6 @@
 import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
-import { recalculateAfterAction } from './scoringService.js';
 
 import { deriveStatus } from './periodService.js';
 
@@ -99,7 +98,6 @@ export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
       distinct: ['madrasahId'],
     });
     for (const { madrasahId } of distinct) {
-      await recalculateAfterAction(madrasahId, pid, tx);
     }
 
     return updated;
