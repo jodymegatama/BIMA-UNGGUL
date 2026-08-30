@@ -69,9 +69,10 @@ export default function ManajemenAkun() {
   useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
   // fetch list madrasah untuk dropdown AkunForm
+  // limit=500: tabel madrasah bisa lebih dari 1 halaman (default 20) — dropdown harus lengkap
   useEffect(() => {
     if (!token) return;
-    apiFetch('/api/admin/madrasah', { auth: true })
+    apiFetch('/api/admin/madrasah?limit=500', { auth: true })
       .then((res) => {
         const list = Array.isArray(res) ? res : (res.data || []);
         setMadrasahList(list);
