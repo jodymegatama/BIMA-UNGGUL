@@ -70,16 +70,18 @@ Testing: 4 fase (setup, publik, operator, admin). Semua bug diperbaiki + di-veri
 - ✅ Empty state selalu di-cross-check API (authenticated-web-qa step 5).
 - 🔍 DEMO/2026 ter-restore via seed + finalisasi (id 38) — user akan hapus lagi sendiri.
 
-## ✅ E2E fitur inti skoring (ditutup setelah Fase 4)
+## ✅ E2E gap batch (ditutup setelah Fase 4 — 25/25 PASS)
 
-Data uji khusus, cleanup bersih (hasil data nyata):
-1. Buat akun operator QA (201, id 36) → login → indikator diklat id 1, periode 2026/2027
-2. **Submit** 1 item diklat → 201 `menunggu` (itemId 312)
-3. **Approve** oleh admin → 200
-4. **Skor leaderboard**: MI Al Nassar Test `skor=10 · submission=1 · rank=1` (bobot 10 × 1 capaian — benar)
-5. **Cleanup**: submission + akun QA dihapus, recalc → leaderboard kembali `skor=0 · submission=0`
+Data uji khusus, cleanup bersih:
+1. **Register publik + approve akun**: register → 201 `menunggu_persetujuan`; login sebelum approve → 401 (ditolak); approve → 200; login lanjut → OK
+2. **Reject**: tanpa alasan → 400; dengan alasan → 200 status `ditolak` + alasan tercatat
+3. **Revoke**: approve → revoke → 200 status `ditolak` + alasan
+4. **Soft-delete flow**: submit → approve (skor 10) → operator request-delete (201, queue menunggu) → admin approve → submission `deletedAt` + **skor recalc 0**
+5. **Notifikasi**: operator menerima 5 notif (delete_request_approved, submit_status, dll.) setelah aksi
+6. **Reopen periode**: finalisasi → reopen tanpa alasan → 400; dengan alasan → 200 status `aktif` (by-design, write kembali diizinkan)
+7. **Export**: PDF `%PDF-` 2663 byte ✓; Excel `PK(xlsx)` 7238 byte ✓ — isi file valid (magic bytes)
 
-**Verdict fitur inti skoring: ✅ berfungsi end-to-end.**
+**Perilaku benar yang dipastikan bukan bug:** reopen → status `aktif` (kode memilih aktif agar write diizinkan — by-design).
 
 ## Gate Final
 - `npm run lint` → 0 problem
