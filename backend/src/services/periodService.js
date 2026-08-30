@@ -33,6 +33,32 @@ export function deriveStatus(p) {
 }
 
 /**
+ * Guard: hanya SATU periode yang boleh "jalan" (menjangkau now) bersamaan.
+ * Interval detect (context7 /prisma/orm range query): dua interval overlap
+ * jika dan hanya jika a.mulai <= b.cutoff AND a.cutoff >= b.mulai.
+ * Histori (finalisasi/arsip/penyelesaian_validasi) dikecualikan — boleh overlap.
+ */
+async function assertNoOverlap({ excludeId, mulai, cutoff }) {
+  const baseWhere = {
+    status: { notIn: ['finalisasi', 'arsip', 'penyelesaian_validasi'] },
+    tanggalMulai: { lte: cutoff },
+    tanggalCutoff: { gte: mulai },
+  };
+  // Prisma tidak menerima NOT: { id: null } — bangun where conditional
+  const where = excludeId ? { ...baseWhere, NOT: { id: excludeId } } : baseWhere;
+  const conflict = await prisma.periodePenilaian.findFirst({
+    where,
+    select: { id: true, namaPeriode: true, tanggalMulai: true, tanggalCutoff: true },
+  });
+  if (conflict) {
+    const fmt = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '?');
+    throw new HttpError(409, 'PERIOD_OVERLAP',
+      `Tidak boleh ada 2 periode jalan bersamaan — periode "${conflict.namaPeriode}" (${fmt(conflict.tanggalMulai)} s/d ${fmt(conflict.tanggalCutoff)}) masih berjalan pada rentang waktu ini. Selesaikan (finalisasi) terlebih dahulu.`);
+  }
+  return conflict;
+}
+
+/**
  * Resolve periode efektif yang sedang berjalan (untuk leaderboard & detail publik).
  * 1) jendela tanggal mencakup now & belum dikunci manual
  * 2) fallback kompatibel: eksplisit berstatus 'aktif' (mis. data uji)
@@ -74,6 +100,9 @@ export async function createPeriode({ namaPeriode, tanggalMulai, tanggalCutoff }
   if (isNaN(mulai) || isNaN(cutoff)) throw new HttpError(400, 'INVALID_DATE', 'Tanggal tidak valid');
   if (mulai >= cutoff) throw new HttpError(400, 'INVALID_RANGE', 'tanggalMulai harus sebelum tanggalCutoff');
 
+  // Guard anti-overlap: tidak boleh ada 2 periode jalan bersamaan
+  await assertNoOverlap({ excludeId: null, mulai, cutoff });
+
   // status awal mengikuti posisi now terhadap jendela tanggal
   const initialStatus = deriveStatus({ status: null, tanggalMulai: mulai, tanggalCutoff: cutoff });
 
@@ -102,6 +131,14 @@ export async function updatePeriode(id, patch, { userId, ip }) {
   if (patch.tanggalCutoff !== undefined) data.tanggalCutoff = new Date(patch.tanggalCutoff);
   if (patch.status !== undefined) data.status = patch.status;
   if (data.tanggalMulai && data.tanggalCutoff && data.tanggalMulai >= data.tanggalCutoff) throw new HttpError(400, 'INVALID_RANGE', 'tanggalMulai harus sebelum tanggalCutoff');
+
+  // Guard anti-overlap: hanya berlaku utk periode yang masih jalan
+  // (finalisasi/arsip dikecualikan — histori boleh overlap)
+  if (existing.status !== 'finalisasi' && existing.status !== 'arsip') {
+    const effMulai = data.tanggalMulai || existing.tanggalMulai;
+    const effCutoff = data.tanggalCutoff || existing.tanggalCutoff;
+    await assertNoOverlap({ excludeId: pid, mulai: effMulai, cutoff: effCutoff });
+  }
 
   const before = { ...existing };
   const updated = await prisma.periodePenilaian.update({ where: { id: pid }, data });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Calendar, Clock, Info } from 'phosphor-react';
+import { X, Calendar, Clock, Info, WarningCircle } from 'phosphor-react';
 
 // helper: Date ISO -> 'YYYY-MM-DDTHH:mm' (untuk input datetime-local)
 function toLocal(iso) {
@@ -10,7 +10,7 @@ function toLocal(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function PeriodeForm({ onClose, onSubmit, initial = null, submitLabel = 'Buat Periode' }) {
+export default function PeriodeForm({ onClose, onSubmit, initial = null, submitLabel = 'Buat Periode', serverError = '' }) {
   const [nama, setNama] = useState(initial?.nama ?? '');
   const [mulai, setMulai] = useState(initial ? toLocal(initial.tanggalMulai) : '');
   const [cutoff, setCutoff] = useState(initial ? toLocal(initial.tanggalCutoff) : '');
@@ -63,6 +63,13 @@ export default function PeriodeForm({ onClose, onSubmit, initial = null, submitL
             <Info size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
             <p className="text-[11px] leading-5 font-medium text-pencil">{initial ? 'Perubahan tanggal akan menggeser status lifecycle sesuai jendela waktu.' : <>Periode baru akan berstatus <b>Belum Dimulai</b> hingga tanggal mulai tiba. Bobot per periode bisa diatur setelah periode dibuat.</>}</p>
           </div>
+          {serverError && (
+            <div className="rounded-[12px] bg-red-50 border-2 border-red-200 text-red-900 px-4 py-3 text-[12px] font-bold flex gap-2">
+              <WarningCircle size={16} weight="fill" color="#dc2626" className="shrink-0 mt-0.5" />
+              <span>{serverError}</span>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button onClick={onClose} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
             <button onClick={handle} className="flex-1 h-10 rounded-full bg-ink text-white border-2 border-black text-[13px] font-black shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">{submitLabel}</button>

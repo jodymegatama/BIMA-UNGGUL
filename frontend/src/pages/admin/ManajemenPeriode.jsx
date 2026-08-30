@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Lock, LockOpen, Clock, WarningCircle, CheckCircle, Calendar, SpinnerGap, PencilSimple, Trash, XCircle } from 'phosphor-react';
+import { PlusCircle, Lock, LockOpen, Clock, WarningCircle, CheckCircle, Calendar, SpinnerGap, PencilSimple, Trash } from 'phosphor-react';
 import PeriodeStatusBadge from '../../components/admin/PeriodeStatusBadge';
 import PeriodeForm from '../../components/admin/PeriodeForm';
 import { apiFetch } from '../../lib/api';
@@ -16,6 +16,7 @@ export default function ManajemenPeriode() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editRow, setEditRow] = useState(null);
+  const [formErr, setFormErr] = useState('');
   const [confirmFinal, setConfirmFinal] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleteErr, setDeleteErr] = useState('');
@@ -60,8 +61,12 @@ export default function ManajemenPeriode() {
       const r = res.data || res;
       setRows((prev) => [...prev, { id: r.id, nama: r.namaPeriode, tahunCapaian: r.tahunCapaian, tanggalMulai: r.tanggalMulai, tanggalCutoff: r.tanggalCutoff, status: mapStatus(r.status) }]);
       setShowForm(false);
+      setFormErr('');
       showToast(`Periode ${r.namaPeriode} dibuat — ${mapStatus(r.status || 'belum_dimulai')}`);
-    } catch (e) { showToast(e.message || 'Gagal buat periode'); }
+    } catch (e) {
+      // Banner merah persistent di modal (bukan cuma toast 3 detik)
+      setFormErr(e.message || 'Gagal buat periode');
+    }
   };
 
   const handleFinal = async (id) => {
@@ -92,8 +97,11 @@ export default function ManajemenPeriode() {
       setRows((prev) => prev.map((row) => (String(row.id) === String(editRow.id) ?
         { ...row, id: r.id, nama: r.namaPeriode, tahunCapaian: r.tahunCapaian, tanggalMulai: r.tanggalMulai, tanggalCutoff: r.tanggalCutoff, status: mapStatus(r.status) } : row)));
       setEditRow(null);
+      setFormErr('');
       showToast(`Periode ${r.namaPeriode} diperbarui`);
-    } catch (e) { showToast(e.message || 'Gagal update periode'); }
+    } catch (e) {
+      setFormErr(e.message || 'Gagal update periode');
+    }
   };
 
   const handleDelete = async () => {
@@ -129,7 +137,7 @@ export default function ManajemenPeriode() {
           <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Periode</h1>
           <p className="text-[12px] font-medium text-pencil mt-1">Lifecycle: Belum Dimulai → Aktif → Cut-off → Penyelesaian Validasi → Finalisasi → Arsip</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">
+        <button onClick={() => { setShowForm(true); setFormErr(''); }} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition">
           <PlusCircle size={16} weight="bold" color="white" /> Buat Periode
         </button>
       </div>
@@ -174,7 +182,7 @@ export default function ManajemenPeriode() {
                         </button>
                       )}
                       <button
-                        onClick={() => setEditRow(r)}
+                        onClick={() => { setEditRow(r); setFormErr(''); }}
                         disabled={['Finalisasi', 'Arsip'].includes(r.status)}
                         aria-label={`Edit periode ${r.nama}`}
                         className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition disabled:opacity-40 disabled:pointer-events-none"
@@ -206,8 +214,8 @@ export default function ManajemenPeriode() {
         <p className="text-[11px] leading-5 font-medium text-amber-900">Finalisasi mengunci submission & bobot. Reopen butuh alasan wajib dan tercatat di audit log — gunakan dengan hati-hati.</p>
       </div>
 
-      {showForm && <PeriodeForm onClose={() => setShowForm(false)} onSubmit={handleCreate} />}
-      {editRow && <PeriodeForm onClose={() => setEditRow(null)} onSubmit={handleEditSubmit} initial={editRow} submitLabel="Simpan Perubahan" />}
+      {showForm && <PeriodeForm onClose={() => setShowForm(false)} onSubmit={handleCreate} serverError={formErr} />}
+      {editRow && <PeriodeForm onClose={() => setEditRow(null)} onSubmit={handleEditSubmit} initial={editRow} submitLabel="Simpan Perubahan" serverError={formErr} />}
 
       {confirmFinal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

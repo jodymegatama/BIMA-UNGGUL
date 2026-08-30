@@ -57,8 +57,9 @@ describe('Periode CRUD admin (create → update → delete)', () => {
     // tahun random + pre-cleanup -> test idempoten (format wajib YYYY/YYYY)
     const th = 2100 + Math.floor(Math.random() * 200);
     const nama = `${th}/${th + 1}`;
-    const mul = new Date().toISOString();
-    const cut = new Date(Date.now() + 86400000).toISOString();
+    // tanggal di TAHUN YANG SAMA dengan nama — tidak overlap periode aktif
+    const mul = new Date(Date.UTC(th, 0, 1)).toISOString();
+    const cut = new Date(Date.UTC(th, 11, 31)).toISOString();
 
     // cleanup kalau sisa dari run sebelumnya
     const list = await request(app)
@@ -104,6 +105,46 @@ describe('Periode CRUD admin (create → update → delete)', () => {
       .delete(`/api/admin/periode/${pid}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(404);
+  });
+
+  (hasCreds ? it : it.skip)('create periode overlap -> 409 PERIOD_OVERLAP; non-overlap -> 201', async () => {
+    expect(adminToken).toBeTruthy();
+    const ts = Date.now();
+    // periode uji non-overlap dulu (di tahun jauh) — idempoten pre-cleanup
+    const pre = await request(app)
+      .get('/api/admin/periode')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    const list = pre.body.data ?? [];
+    for (const p of list) {
+      if (String(p.namaPeriode).startsWith('VIT-')) {
+        await request(app).delete(`/api/admin/periode/${p.id}`).set('Authorization', `Bearer ${adminToken}`);
+      }
+    }
+
+    // overlap dengan periode 2026/2027 (jika ada & masih jalan) -> 409
+    const aktif = list.find((p) => p.namaPeriode === '2026/2027' && ['aktif', 'belum_dimulai'].includes(p.status));
+    if (aktif) {
+      const res = await request(app)
+        .post('/api/admin/periode')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ namaPeriode: '2099/2100', tanggalMulai: '2026-01-01T00:00:00.000Z', tanggalCutoff: '2026-12-31T00:00:00.000Z' })
+        .expect(409);
+      expect(res.body.error).toContain('Tidak boleh ada 2 periode');
+    }
+
+    // non-overlap -> 201 + cleanup
+    const c = await request(app)
+      .post('/api/admin/periode')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ namaPeriode: '2098/2099', tanggalMulai: '2098-01-01T00:00:00.000Z', tanggalCutoff: '2098-12-31T00:00:00.000Z' })
+      .expect(201);
+    const pid = c.body.data?.id;
+    expect(pid).toBeTruthy();
+    await request(app)
+      .delete(`/api/admin/periode/${pid}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
   });
 });
 
