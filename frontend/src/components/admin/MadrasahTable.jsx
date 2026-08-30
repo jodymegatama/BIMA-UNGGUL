@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { MagnifyingGlass, PlusCircle, PencilSimple, Trash, SpinnerGap, WarningCircle, Power, Hash } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import { KELOMPOKS } from '../../constants/indikator';
 import MadrasahForm from './MadrasahForm';
-
-const KELOMPOK = ['MI Negeri', 'MI Swasta', 'MTs Negeri', 'MTs Swasta', 'MA Negeri', 'MA Swasta'];
 
 export default function MadrasahTable() {
   const { token } = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [kelompok, setKelompok] = useState('');
   const [status, setStatus] = useState('aktif'); // aktif | nonaktif
   const [page, setPage] = useState(1);
@@ -30,7 +30,7 @@ export default function MadrasahTable() {
     setLoading(true);
     try {
       const p = new URLSearchParams();
-      if (q.trim()) p.set('q', q.trim());
+      if (debouncedQ.trim()) p.set('q', debouncedQ.trim());
       if (kelompok) p.set('kelompok', kelompok);
       if (status) p.set('status', status);
       p.set('page', String(page));
@@ -54,7 +54,13 @@ export default function MadrasahTable() {
     } catch (e) {
       showToast(e.message || 'Gagal memuat madrasah');
     } finally { setLoading(false); }
-  }, [token, q, kelompok, status, page]);
+  }, [token, debouncedQ, kelompok, status, page]);
+
+  // debounce search 350ms — hindari 1 request per keystroke + race response
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
+    return () => clearTimeout(t);
+  }, [q]);
 
   useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
@@ -132,7 +138,7 @@ export default function MadrasahTable() {
           className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal focus:outline-none focus:border-ink"
         >
           <option value="">Semua kelompok</option>
-          {KELOMPOK.map((k) => <option key={k} value={k}>{k}</option>)}
+          {KELOMPOKS.map((k) => <option key={k} value={k}>{k}</option>)}
         </select>
         <div className="relative flex-1 min-w-[180px] max-w-[300px]">
           <MagnifyingGlass size={16} weight="regular" color="#afafaf" className="absolute left-3 top-1/2 -translate-y-1/2" />

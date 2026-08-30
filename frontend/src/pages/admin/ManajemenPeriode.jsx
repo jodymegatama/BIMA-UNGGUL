@@ -237,7 +237,7 @@ export default function ManajemenPeriode() {
           <div className="relative w-full max-w-[480px] rounded-[16px] border-2 border-zinc-200 bg-white p-6 shadow-float">
             <h3 className="font-display font-black text-[16px] text-charcoal">Hapus {confirmDelete.nama}?</h3>
             <p className="text-[13px] font-medium text-pencil mt-2">
-              Periode ini memiliki <b>{confirmDelete._count?.submissionItems ?? confirmDelete._count?.submissions ?? 0} submission</b>, <b>{confirmDelete._count?.scores ?? 0} skor</b>, dan <b>{confirmDelete._count?.bobots ?? 0} bobot</b>.
+              Periode ini memiliki <b>{confirmDelete._count?.submissions ?? 0} submission</b>, <b>{confirmDelete._count?.scores ?? 0} skor</b>, dan <b>{confirmDelete._count?.bobots ?? 0} bobot</b>.
               Semua data tersebut akan <b className="text-red-600">DIHAPUS PERMANEN</b>. Apakah Anda yakin?
             </p>
             <div className="mt-3 rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">

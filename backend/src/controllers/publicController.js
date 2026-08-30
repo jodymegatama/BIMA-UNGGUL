@@ -5,6 +5,7 @@ import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { calculateRanking, calculateSkorMadrasah } from '../services/scoringService.js';
 import { resolveAktifPeriode, deriveStatus } from '../services/periodService.js';
+import { KELOMPOKS_LIST, STATUS_HISTORI_PERIODE } from '../constants/periode.constants.js';
 
 export async function leaderboard(req,res){
   const { periodeId, kelompok } = req.query;
@@ -19,18 +20,19 @@ export async function leaderboard(req,res){
   if (!periode) throw new HttpError(404,'PERIODE_NOT_FOUND','Periode tidak ditemukan');
   // statusEfektif — derived dari jendela tanggal, bukan status mentah DB yang bisa stale
   const periodeWithStatus = { ...periode, statusEfektif: deriveStatus(periode) };
-  // jumlah madrasah aktif (soft-deleted tidak dihitung) — untuk badge statistik publik
-  const madrasahCount = await prisma.madrasah.count({ where: { deletedAt: null } });
   if (kelompok) {
-    const allowed = ['MI Negeri','MI Swasta','MTs Negeri','MTs Swasta','MA Negeri','MA Swasta'];
-    if (!allowed.includes(kelompok)) throw new HttpError(400,'INVALID_KELOMPOK','kelompok tidak valid');
-    const rankings = await calculateRanking(kelompok, pid);
+    if (!KELOMPOKS_LIST.includes(kelompok)) throw new HttpError(400,'INVALID_KELOMPOK','kelompok tidak valid');
+    const [rankings, madrasahCount] = await Promise.all([
+      calculateRanking(kelompok, pid),
+      prisma.madrasah.count({ where: { deletedAt: null } }),
+    ]);
     return res.json({ periode: periodeWithStatus, kelompok, rankings, madrasahCount });
   }
-  // all groups
-  const kelompokList = ['MI Negeri','MI Swasta','MTs Negeri','MTs Swasta','MA Negeri','MA Swasta'];
-  const all = {};
-  for (const k of kelompokList) all[k] = await calculateRanking(k, pid);
+  // all groups — paralel (sebelumnya serial 6×, endpoint publik paling sering di-hits)
+  const [all, madrasahCount] = await Promise.all([
+    Promise.all(KELOMPOKS_LIST.map((k) => calculateRanking(k, pid).then((r) => [k, r]))).then((pairs) => Object.fromEntries(pairs)),
+    prisma.madrasah.count({ where: { deletedAt: null } }),
+  ]);
   res.json({ periode: periodeWithStatus, rankings: all, madrasahCount });
 }
 
@@ -73,7 +75,7 @@ export default { leaderboard, madrasahDetail, listPeriodePublik, statsPublik };
  */
 export async function listPeriodePublik(req,res){
   const rows = await prisma.periodePenilaian.findMany({
-    where: { status: { notIn: ['finalisasi', 'arsip'] } },
+    where: { status: { notIn: STATUS_HISTORI_PERIODE } },
     orderBy: { tanggalMulai: 'desc' },
     select: { id: true, namaPeriode: true, tahunCapaian: true, tanggalMulai: true, tanggalCutoff: true, status: true },
   });
@@ -85,8 +87,6 @@ export async function listPeriodePublik(req,res){
  * GET /api/stats — statistik HeroSection Home (jumlah madrasah aktif + jumlah kelompok).
  */
 export async function statsPublik(req,res){
-  const [madrasahCount] = await Promise.all([
-    prisma.madrasah.count({ where: { deletedAt: null } }),
-  ]);
-  res.json({ madrasahCount, kelompokCount: 6 });
+  const madrasahCount = await prisma.madrasah.count({ where: { deletedAt: null } });
+  res.json({ madrasahCount, kelompokCount: KELOMPOKS_LIST.length });
 }

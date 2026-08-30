@@ -15,6 +15,7 @@
  */
 
 import { prisma } from '../db/prisma.js';
+import { KELOMPOKS_LIST } from '../constants/periode.constants.js';
 
 /**
  * Calculate total skor 1 madrasah untuk 1 periode
@@ -262,11 +263,7 @@ export async function recalculateAfterAction(madrasahId, periodeId, client = pri
  * @returns {Promise<Array>} - Array of rankings per kelompok
  */
 export async function recalculateRankingAllGroups(periodeId) {
-  const kelompokList = [
-    'MI Negeri', 'MI Swasta',
-    'MTs Negeri', 'MTs Swasta',
-    'MA Negeri', 'MA Swasta',
-  ];
+  const kelompokList = KELOMPOKS_LIST;
 
   const rankings = {};
   for (const kelompok of kelompokList) {

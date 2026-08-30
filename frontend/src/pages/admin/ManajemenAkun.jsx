@@ -114,7 +114,6 @@ export default function ManajemenAkun() {
       setActiveTab('Semua');
       fetchRows();
     } catch (e) {
-      setDeleteErr('');
       showToast(e.message || 'Gagal buat akun');
     }
   };

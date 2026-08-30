@@ -108,23 +108,40 @@ export function verifyRefreshToken(token) {
  */
 export async function generateBMUNumber() {
   try {
-    // Ambil semua nomor BMU, ekstrak digit dengan regex (robust utk format apa pun)
-    const all = await prisma.madrasah.findMany({
-      where: { nomorMadrasah: { startsWith: AUTH_CONFIG.BMU_PREFIX } },
+    const prefix = AUTH_CONFIG.BMU_PREFIX;
+
+    // Cari baris terakhir by orderBy desc (index scan O(1)) — parse 1 baris saja.
+    // Kegagalan row terakhir non-digit (mis. BMU-TEST-001) → fallback scan terbatas.
+    const last = await prisma.madrasah.findFirst({
+      where: { nomorMadrasah: { startsWith: prefix } },
+      orderBy: { nomorMadrasah: 'desc' },
       select: { nomorMadrasah: true },
     });
 
     let maxNumber = 0;
-    for (const m of all) {
-      const digits = m.nomorMadrasah.substring(AUTH_CONFIG.BMU_PREFIX.length).match(/^\d+$/);
-      if (!digits) continue; // format non-digit (mis. BMU-TEST-001) — abaikan
-      const num = parseInt(digits[0], 10);
-      if (Number.isFinite(num) && num > maxNumber) maxNumber = num;
+    if (last) {
+      const digits = String(last.nomorMadrasah).substring(prefix.length).match(/^\d+$/);
+      if (digits) maxNumber = parseInt(digits[0], 10);
+    }
+    if (maxNumber === 0) {
+      // fallback: nomor terakhir bukan digit murni — scan terbatas 500 baris terakhir
+      const tail = await prisma.madrasah.findMany({
+        where: { nomorMadrasah: { startsWith: prefix } },
+        orderBy: { nomorMadrasah: 'desc' },
+        take: 500,
+        select: { nomorMadrasah: true },
+      });
+      for (const m of tail) {
+        const d = String(m.nomorMadrasah).substring(prefix.length).match(/^\d+$/);
+        if (!d) continue;
+        const num = parseInt(d[0], 10);
+        if (Number.isFinite(num) && num > maxNumber) maxNumber = num;
+      }
     }
 
     const nextNumber = maxNumber + 1;
     const paddedNumber = String(nextNumber).padStart(AUTH_CONFIG.BMU_DIGITS, AUTH_CONFIG.BMU_PAD_CHAR);
-    return `${AUTH_CONFIG.BMU_PREFIX}${paddedNumber}`;
+    return `${prefix}${paddedNumber}`;
   } catch (err) {
     throw new Error(`BMU number generation failed: ${err.message}`, { cause: err });
   }

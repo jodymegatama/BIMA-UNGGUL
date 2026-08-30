@@ -1,15 +1,8 @@
 import { Calendar, Funnel } from 'phosphor-react';
+import { KELOMPOKS as KELOMPOK_LIST } from '../../../constants/indikator';
 
-const KELOMPOKS = [
-  { id: 'MI Negeri', label: 'MI Negeri' },
-  { id: 'MI Swasta', label: 'MI Swasta' },
-  { id: 'MTs Negeri', label: 'MTs Negeri' },
-  { id: 'MTs Swasta', label: 'MTs Swasta' },
-  { id: 'MA Negeri', label: 'MA Negeri' },
-  { id: 'MA Swasta', label: 'MA Swasta' },
-];
-
-const PERIODS = null; // deprecated — periode diambil dinamis dari GET /api/periode (BUG-03)
+// render pill dari registry frontend (constants/indikator.js KELOMPOKS)
+const KELOMPOKS = KELOMPOK_LIST.map((k) => ({ id: k, label: k }));
 
 /**
  * FilterBar — pill solid eager untuk aktif (mirip badge "Nasional 3x" di Indikator), outline untuk non-aktif
@@ -84,5 +77,3 @@ export default function FilterBar({ periode, kelompok, onPeriode, onKelompok, pe
     </div>
   );
 }
-
-export { KELOMPOKS, PERIODS };

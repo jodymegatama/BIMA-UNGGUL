@@ -51,7 +51,7 @@ function SkeletonCard() {
 
 export default function Leaderboard() {
   const [params, setParams] = useSearchParams();
-  const periode = params.get('periode') || '2026/2027';
+  const periode = params.get('periode') || '';
   const kelompok = params.get('kelompok') || KELOMPOK_FALLBACK;
   const ref = useRef(null);
   useRevealOnScroll(ref);
@@ -63,6 +63,7 @@ export default function Leaderboard() {
   const [lastRecalc, setLastRecalc] = useState(null);
   const [periodes, setPeriodes] = useState([]);
   const [madrasahCount, setMadrasahCount] = useState(null);
+  const [periodesLoaded, setPeriodesLoaded] = useState(false);
 
   // daftar periode untuk FilterBar — dinamis dari API (BUG-03)
   useEffect(() => {
@@ -78,23 +79,30 @@ export default function Leaderboard() {
           const aktif = list.find((p) => p.statusEfektif === 'aktif') || list[0];
           if (aktif) setParams((prev) => ({ ...prev, periode: aktif.namaPeriode }), { replace: true });
         }
-      } catch { /* biarkan kosong — fallback di bawah */ }
+      } catch { /* biarkan kosong — fetch leaderboard tetap jalan tanpa periodeId */ }
+      finally { if (!ignore) setPeriodesLoaded(true); }
     })();
     return () => { ignore = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // map nama periode (URL/pill) → periodeId utk query backend (BUG-03 wiring)
+  const periodeId = useMemo(() => {
+    const found = periodes.find((p) => p.namaPeriode === periode);
+    return found ? String(found.id) : undefined;
+  }, [periodes, periode]);
+
   useEffect(() => {
+    if (!periodesLoaded) return; // tunggu periodes dulu — hindari fetch dobel (periode kosong + resolved)
     let ignore = false;
     async function fetchLeaderboard() {
       setLoading(true);
       setError(null);
       try {
-        // Backend fallback auto-latest active jika periodeId tidak dikirim.
-        // Kita hanya kirim kelompok — periode string di UI dipertahankan kosmetik.
+        // Backend resolve auto-latest aktif bila periodeId tidak dikirim.
         const q = new URLSearchParams();
         q.set('kelompok', kelompok);
-        // Future: jika backend expose GET /api/periode publik, map periode string -> periodeId di sini
+        if (periodeId) q.set('periodeId', periodeId);
         const json = await apiGet(`/api/leaderboard?${q.toString()}`);
         if (ignore) return;
         const periodeResp = json.periode || null;
@@ -124,7 +132,7 @@ export default function Leaderboard() {
     }
     fetchLeaderboard();
     return () => { ignore = true; };
-  }, [kelompok, periode]);
+  }, [kelompok, periodeId, periodesLoaded]);
 
   const top3 = data.slice(0, 3);
   const hasApprovedData = data.some((r) => r.approved > 0);

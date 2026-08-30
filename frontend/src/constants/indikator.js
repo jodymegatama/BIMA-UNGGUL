@@ -31,14 +31,14 @@ const STATUS_PEGAWAI_OPTIONS = [
   { value: 'non_asn', label: 'non-ASN' },
 ];
 
-const TINGKAT_WILAYAH_OPTIONS = [
+export const TINGKAT_WILAYAH_OPTIONS = [
   { value: 'kabupaten', label: 'Kabupaten' },
   { value: 'provinsi', label: 'Provinsi' },
   { value: 'nasional', label: 'Nasional' },
   { value: 'internasional', label: 'Internasional' },
 ];
 
-const JENJANG_PENDIDIKAN_OPTIONS = [
+export const JENJANG_PENDIDIKAN_OPTIONS = [
   { value: 's1', label: 'S1' },
   { value: 's2', label: 'S2' },
   { value: 's3', label: 'S3' },

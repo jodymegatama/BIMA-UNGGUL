@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { X, Buildings, ShieldCheck } from 'phosphor-react';
 
+// kelas input shared (error-state ternary — satu sumber styling)
+const inputCls = (hasErr) => `mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${hasErr ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`;
+
 /**
  * AkunForm — modal create/edit akun operator/admin.
  * Mode create: NIP + password wajib. Mode edit: NIP readonly, password opsional.
@@ -53,7 +56,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
                 value={nip}
                 onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 18))}
                 placeholder="197812345678900001"
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.nip ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+                className={inputCls(Boolean(err.nip))}
               />
               {err.nip && <div className="text-[11px] font-bold text-red-600 mt-1">{err.nip}</div>}
             </div>
@@ -64,7 +67,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama lengkap"
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.name ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+                className={inputCls(Boolean(err.name))}
               />
               {err.name && <div className="text-[11px] font-bold text-red-600 mt-1">{err.name}</div>}
             </div>
@@ -78,7 +81,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@madrasah.sch.id"
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.email ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+                className={inputCls(Boolean(err.email))}
               />
               {err.email && <div className="text-[11px] font-bold text-red-600 mt-1">{err.email}</div>}
             </div>
@@ -89,7 +92,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter'}
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.password ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+                className={inputCls(Boolean(err.password))}
               />
               {err.password && <div className="text-[11px] font-bold text-red-600 mt-1">{err.password}</div>}
             </div>
@@ -132,6 +135,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
               >
                 <option value="aktif">Aktif</option>
                 <option value="nonaktif">Nonaktif</option>
+                {isEdit && <option value="menunggu">Menunggu</option>}
               </select>
             </div>
           )}

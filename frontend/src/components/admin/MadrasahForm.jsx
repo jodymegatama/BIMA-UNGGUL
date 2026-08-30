@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { X, Buildings } from 'phosphor-react';
 
+// kelas input shared (error-state ternary — satu sumber styling)
+const inputCls = (hasErr) => `mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${hasErr ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`;
+
 /**
  * MadrasahForm — modal create/edit madrasah.
  * Mode edit: jenjang & statusKepemilikan & BMU immutable (disabled).
@@ -56,7 +59,7 @@ export default function MadrasahForm({ onClose, onSubmit, initial = null }) {
               value={nama}
               onChange={(e) => setNama(e.target.value)}
               placeholder="MI Negeri Bangil"
-              className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.nama ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+              className={inputCls(Boolean(err.nama))}
             />
             {err.nama && <div className="text-[11px] font-bold text-red-600 mt-1">{err.nama}</div>}
           </div>
@@ -96,7 +99,7 @@ export default function MadrasahForm({ onClose, onSubmit, initial = null }) {
                 value={siswa}
                 onChange={(e) => setSiswa(e.target.value.replace(/\D/g, ''))}
                 placeholder="250"
-                className={`mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${err.siswa ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
+                className={inputCls(Boolean(err.siswa))}
               />
               {err.siswa && <div className="text-[11px] font-bold text-red-600 mt-1">{err.siswa}</div>}
             </div>

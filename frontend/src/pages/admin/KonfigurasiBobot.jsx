@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FloppyDisk, Lock, Clock, CheckCircle, WarningCircle, SpinnerGap } from 'phosphor-react';
 import BobotIndikatorForm from '../../components/admin/BobotIndikatorForm';
+import { TINGKAT_WILAYAH_OPTIONS, JENJANG_PENDIDIKAN_OPTIONS } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
+
+// kunci field per tipe — derived dari registry constants/indikator.js (satu sumber)
+const TINGKAT_WILAYAH_KEYS = TINGKAT_WILAYAH_OPTIONS.map((o) => o.value);
+const JENJANG_KEYS = JENJANG_PENDIDIKAN_OPTIONS.map((o) => o.value);
 
 // Fallback periode list if GET /api/admin/periode fails
 const FALLBACK_PERIODE = [{ id: 'fallback', namaPeriode: '2026/2027', nama: '2026/2027', status: 'aktif' }];
@@ -69,8 +74,8 @@ export default function KonfigurasiBobot() {
   // Counter indikator terisi — untuk sticky save bar
   const allValues = Object.values(data || {});
   const isFilled = (item) => {
-    if (item.tipe === 'per_tingkat') return ['kabupaten', 'provinsi', 'nasional', 'internasional'].every((f) => item[f] !== '' && item[f] !== null);
-    if (item.tipe === 'per_jenjang') return ['s1', 's2', 's3'].every((f) => item[f] !== '' && item[f] !== null);
+    if (item.tipe === 'per_tingkat') return TINGKAT_WILAYAH_KEYS.every((f) => item[f] !== '' && item[f] !== null);
+    if (item.tipe === 'per_jenjang') return JENJANG_KEYS.every((f) => item[f] !== '' && item[f] !== null);
     return item.nilai !== '' && item.nilai !== null;
   };
   const isiCount = allValues.filter(isFilled).length;

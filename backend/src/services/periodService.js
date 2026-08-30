@@ -6,6 +6,7 @@
 import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
+import { STATUS_HISTORI_PERIODE } from '../constants/periode.constants.js';
 
 const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
@@ -23,7 +24,7 @@ function parseTahun(namaPeriode) {
  */
 export function deriveStatus(p) {
   if (!p) return null;
-  if (['penyelesaian_validasi', 'finalisasi', 'arsip'].includes(p.status)) return p.status;
+  if (STATUS_HISTORI_PERIODE.includes(p.status)) return p.status;
   const now = new Date();
   const mulai = new Date(p.tanggalMulai);
   const cutoff = new Date(p.tanggalCutoff);
@@ -40,7 +41,7 @@ export function deriveStatus(p) {
  */
 async function assertNoOverlap({ excludeId, mulai, cutoff }) {
   const baseWhere = {
-    status: { notIn: ['finalisasi', 'arsip', 'penyelesaian_validasi'] },
+    status: { notIn: STATUS_HISTORI_PERIODE },
     tanggalMulai: { lte: cutoff },
     tanggalCutoff: { gte: mulai },
   };
@@ -67,7 +68,7 @@ export async function resolveAktifPeriode() {
   const now = new Date();
   const byWindow = await prisma.periodePenilaian.findFirst({
     where: {
-      status: { notIn: ['finalisasi', 'arsip', 'penyelesaian_validasi'] },
+      status: { notIn: STATUS_HISTORI_PERIODE },
       tanggalMulai: { lte: now },
       tanggalCutoff: { gte: now },
     },
@@ -194,6 +195,12 @@ export async function deletePeriode(id, { userId, ip }) {
   // Semua data terkait di-cascade manual dalam satu transaction (prisma deleteMany),
   // jumlah data dikembalikan untuk ditampilkan di toast/modal konfirmasi.
   return prisma.$transaction(async (tx) => {
+    // Re-check status DI DALAM txn (anti-TOCTOU: finalize/reopen bisa terjadi antar-sesi)
+    const locked = await tx.periodePenilaian.findUnique({ where: { id: pid }, select: { status: true } });
+    if (!locked) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');
+    if (locked.status === 'finalisasi' || locked.status === 'arsip')
+      throw new HttpError(423, 'PERIOD_LOCKED', 'Periode finalisasi/arsip tidak bisa dihapus');
+
     const [subCount, scoreCount, bobotCount] = await Promise.all([
       tx.submissionItem.count({ where: { periodeId: pid } }),
       tx.madrasahScore.count({ where: { periodeId: pid } }),

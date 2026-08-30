@@ -120,11 +120,4 @@ export async function deleteAkun(id, { userId, ip }) {
   }, TX_OPTS);
 }
 
-export async function listMadrasahDropdown() {
-  return prisma.madrasah.findMany({
-    select: { id: true, namaMadrasah: true, nomorMadrasah: true, jenjang: true },
-    orderBy: { namaMadrasah: 'asc' },
-  });
-}
-
-export default { listAkun, createAkun, updateAkun, deleteAkun, listMadrasahDropdown };
+export default { listAkun, createAkun, updateAkun, deleteAkun };

@@ -8,6 +8,7 @@ import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { generateBMUNumber, generateSlug, deriveKelompok } from './authService.js';
 import { recalculateRankingAllGroups } from './scoringService.js';
+// note: recalculateRankingAllGroups hanya dipakai softDeleteMadrasah (bukan hard — madrasah sudah tiada)
 
 const TX_OPTS = { timeout: 20000, maxWait: 5000 };
 
@@ -173,13 +174,6 @@ export async function hardDeleteMadrasah(id, { userId, ip }) {
       tx.madrasahScore.count({ where: { madrasahId: mid } }),
     ]);
 
-    // Periode terdampak untuk recalc ranking kelompok
-    const periodeList = await tx.submissionItem.findMany({
-      where: { madrasahId: mid },
-      select: { periodeId: true },
-      distinct: ['periodeId'],
-    });
-
     // Hapus data (SubmissionItem & MadrasahScore onDelete Cascade — hapus eksplisit utk kontrol)
     await tx.submissionItem.deleteMany({ where: { madrasahId: mid } });
     await tx.madrasahScore.deleteMany({ where: { madrasahId: mid } });
@@ -192,12 +186,7 @@ export async function hardDeleteMadrasah(id, { userId, ip }) {
 
     const deleted = await tx.madrasah.delete({ where: { id: mid }, select: { id: true, nomorMadrasah: true } });
 
-    // Recalc ranking kelompok madrasah (setelah data hilang)
-    for (const per of periodeList) {
-      try { await recalculateRankingAllGroups(per.periodeId); } catch (e) { console.error('[MadrasahService] recalc gagal periode', per.periodeId, e.message); }
-    }
-
-    return { ...deleted, deletedCounts: { submissions: sub, scores, periods: periodeList.length } };
+    return { ...deleted, deletedCounts: { submissions: sub, scores } };
   }, TX_OPTS);
 }
 
