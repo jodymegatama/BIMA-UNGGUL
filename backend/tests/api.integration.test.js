@@ -98,7 +98,7 @@ describe('Periode CRUD admin (create → update → delete)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
     expect(del.body.data?.id).toBe(pid);
-    expect(del.body.data?.deleted).toBeTruthy();
+    expect(del.body.data?.deletedCounts).toBeTruthy();
 
     // delete lagi -> 404
     await request(app)

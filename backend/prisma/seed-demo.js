@@ -7,6 +7,7 @@
  * Run: npm run db:seed   (atau: node prisma/seed-demo.js)
  */
 import { PrismaClient } from '@prisma/client';
+import { createPeriode } from '../src/services/periodService.js';
 
 const prisma = new PrismaClient();
 
@@ -28,14 +29,25 @@ async function seedPeriode() {
   const existing = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: `DEMO/${tahun}` } });
   if (existing) return existing;
   const now = new Date();
-  return prisma.periodePenilaian.create({
-    data: {
-      namaPeriode: `DEMO/${tahun}`,
-      tahunCapaian: tahun,
-      tanggalMulai: new Date(now.getTime() - 7 * 86400000), // mulai seminggu lalu
-      tanggalCutoff: new Date(now.getTime() + 90 * 86400000), // cutoff 90 hari lagi
-    },
-  });
+  // Route melalui service — agar guard assertNoOverlap (satu periode aktif) tetap berlaku.
+  // Kalau window DEMO overlap periode lain, 409 -> seed log & skip (jangan rusak invariant).
+  try {
+    const admin = await getAdmin();
+    return await createPeriode(
+      {
+        namaPeriode: `DEMO/${tahun}`,
+        tanggalMulai: new Date(now.getTime() - 7 * 86400000).toISOString(), // mulai seminggu lalu
+        tanggalCutoff: new Date(now.getTime() + 90 * 86400000).toISOString(), // cutoff 90 hari lagi
+      },
+      { userId: admin.id, ip: 'seed-demo' },
+    );
+  } catch (err) {
+    if (err?.status === 409) {
+      console.log(`⏭  Skipped DEMO/${tahun} — guard overlap: ${err.message}`);
+      return existing;
+    }
+    throw err;
+  }
 }
 
 async function main() {

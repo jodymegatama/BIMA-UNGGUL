@@ -212,7 +212,7 @@ export async function deletePeriode(id, { userId, ip }) {
     await tx.periodePenilaian.delete({ where: { id: pid } });
     await recordAuditLog({ userId, action: 'delete_periode', entity: 'PeriodePenilaian',
       entityId: pid, dataSebelum: existing, dataSesudah: null, ipAddress: ip }, tx);
-    return { id: pid, deleted: { submissions: subCount, scores: scoreCount, bobots: bobotCount } };
+    return { id: pid, deletedCounts: { submissions: subCount, scores: scoreCount, bobots: bobotCount } };
   }, TX_OPTS);
 }
 

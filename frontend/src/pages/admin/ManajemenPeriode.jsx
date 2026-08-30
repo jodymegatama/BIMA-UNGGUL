@@ -112,7 +112,7 @@ export default function ManajemenPeriode() {
       const info = res.data || res;
       setRows((prev) => prev.filter((r) => String(r.id) !== String(confirmDelete.id)));
       setConfirmDelete(null);
-      const d = info?.deleted;
+      const d = info?.deletedCounts;
       showToast(d && (d.submissions || d.scores || d.bobots)
         ? `Periode ${confirmDelete.nama} dihapus — ${d.submissions} submission, ${d.scores} skor, ${d.bobots} bobot ikut dihapus`
         : `Periode ${confirmDelete.nama} dihapus`);
