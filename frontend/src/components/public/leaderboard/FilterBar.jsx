@@ -9,13 +9,14 @@ const KELOMPOKS = [
   { id: 'MA Swasta', label: 'MA Swasta' },
 ];
 
-const PERIODS = ['2025/2026', '2026/2027'];
+const PERIODS = null; // deprecated — periode diambil dinamis dari GET /api/periode (BUG-03)
 
 /**
  * FilterBar — pill solid eager untuk aktif (mirip badge "Nasional 3x" di Indikator), outline untuk non-aktif
  * Props: { periode, kelompok, onPeriode, onKelompok }
  */
-export default function FilterBar({ periode, kelompok, onPeriode, onKelompok }) {
+export default function FilterBar({ periode, kelompok, onPeriode, onKelompok, periodes = [] }) {
+  const activePeriod = periodes.find((p) => p.namaPeriode === periode) || (periode ? { namaPeriode: periode } : null);
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 lg:p-5 shadow-card">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -27,24 +28,25 @@ export default function FilterBar({ periode, kelompok, onPeriode, onKelompok }) 
           <div>
             <div className="text-[11px] font-black tracking-wide text-faded uppercase">Periode penilaian</div>
             <div className="flex items-center gap-2 mt-1.5">
-              {PERIODS.map((p) => {
-                const active = p === periode;
+              {periodes.map((p) => {
+                const active = p.namaPeriode === periode;
                 return (
                   <button
-                    key={p}
-                    onClick={() => onPeriode(p)}
+                    key={String(p.id)}
+                    onClick={() => onPeriode(p.namaPeriode)}
                     className={`h-8 px-4 rounded-full border-2 text-[13px] font-black transition ${
                       active
                         ? 'bg-eager text-white border-eager-dark shadow-sticker'
                         : 'bg-white text-charcoal border-zinc-200 hover:border-charcoal'
                     }`}
                   >
-                    {p}
+                    {p.namaPeriode}
                   </button>
                 );
               })}
               <span className="hidden sm:inline-flex items-center gap-1.5 ml-2 text-[11px] font-bold text-faded">
-                <span className="w-1.5 h-1.5 rounded-full bg-eager animate-pulse" /> {periode === '2026/2027' ? 'Aktif' : 'Arsip'}
+                <span className={`w-1.5 h-1.5 rounded-full ${activePeriod?.statusEfektif === 'aktif' ? 'bg-eager animate-pulse' : 'bg-zinc-300'}`} />
+                {activePeriod?.statusEfektif === 'aktif' ? 'Aktif' : 'Nonaktif'}
               </span>
             </div>
           </div>

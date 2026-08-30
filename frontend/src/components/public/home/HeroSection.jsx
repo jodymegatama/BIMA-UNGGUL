@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { apiGet } from '../../../lib/api';
 import {
   Trophy,
   ArrowRight,
@@ -30,6 +31,19 @@ export default function HeroSection() {
   const ctaSecondaryRef = useMagnetic(true);
   const cardRef = useRef(null);
   const heroVisualRef = useRef(null);
+  const [stats, setStats] = useState(null);
+
+  // statistik nyata (BUG-01): madrasah aktif dari GET /api/stats
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const json = await apiGet('/api/stats');
+        if (!ignore && typeof json.madrasahCount === 'number') setStats(json);
+      } catch { /* biarkan null — fallback '—' */ }
+    })();
+    return () => { ignore = true; };
+  }, []);
 
   // Parallax hero card — persis script: mousemove on parent -> perspective(900) rotateY(cx*4) rotateX(-cy*4)
   useEffect(() => {
@@ -369,7 +383,7 @@ export default function HeroSection() {
               <Buildings size={16} weight="regular" color="#777777" />
             </span>
             <span>
-              Diikuti <b className="text-charcoal">184 madrasah</b> <span className="text-pencil font-medium">MI, MTs, MA Negeri dan Swasta se Kab. Pasuruan</span>
+              Diikuti <b className="text-charcoal">{stats?.madrasahCount ?? '—'} madrasah</b> <span className="text-pencil font-medium">MI, MTs, MA Negeri dan Swasta se Kab. Pasuruan</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-[12px] font-black">

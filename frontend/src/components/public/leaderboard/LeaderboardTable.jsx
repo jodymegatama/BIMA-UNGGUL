@@ -129,7 +129,7 @@ export default function LeaderboardTable({ data = [] }) {
                 <td className="px-4 py-3 text-right whitespace-nowrap hidden sm:table-cell text-[13px] font-bold text-charcoal">{r.approved}</td>
                 <td className="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-pencil">
-                    <Clock size={12} weight="regular" /> {new Date(r.updatedAt).toLocaleDateString('id-ID')}
+                    <Clock size={12} weight="regular" /> {r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('id-ID') : '—'}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">

@@ -148,6 +148,37 @@ describe('Periode CRUD admin (create → update → delete)', () => {
   });
 });
 
+describe('Endpoint publik (tanpa auth)', () => {
+  it('GET /api/stats -> 200 { madrasahCount, kelompokCount }', async () => {
+    const res = await request(app).get('/api/stats');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.madrasahCount).toBe('number');
+    expect(res.body.kelompokCount).toBe(6);
+  });
+
+  it('GET /api/periode -> 200 daftar non-finalisasi/arsip', async () => {
+    const res = await request(app).get('/api/periode');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    for (const p of res.body.data) {
+      expect(['finalisasi', 'arsip']).not.toContain(p.status);
+      expect(typeof p.statusEfektif).toBe('string');
+    }
+  });
+
+  it('GET /api/leaderboard -> 200 + madrasahCount number', async () => {
+    const res = await request(app).get('/api/leaderboard?kelompok=MI%20Negeri');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.madrasahCount).toBe('number');
+    expect(Array.isArray(res.body.rankings)).toBe(true);
+  });
+
+  it('GET /api/madrasah/:slug tidak ada -> 404', async () => {
+    const res = await request(app).get('/api/madrasah/qa-slug-tidak-ada-vit');
+    expect(res.status).toBe(404);
+  });
+});
+
 describe('Akun CRUD admin (create → delete + guard)', () => {
   (hasCreds ? it : it.skip)('create akun bersih → DELETE → 200, DELETE lagi → 404, self → 400', async () => {
     expect(adminToken).toBeTruthy();

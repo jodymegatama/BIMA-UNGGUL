@@ -19,17 +19,19 @@ export async function leaderboard(req,res){
   if (!periode) throw new HttpError(404,'PERIODE_NOT_FOUND','Periode tidak ditemukan');
   // statusEfektif — derived dari jendela tanggal, bukan status mentah DB yang bisa stale
   const periodeWithStatus = { ...periode, statusEfektif: deriveStatus(periode) };
+  // jumlah madrasah aktif (soft-deleted tidak dihitung) — untuk badge statistik publik
+  const madrasahCount = await prisma.madrasah.count({ where: { deletedAt: null } });
   if (kelompok) {
     const allowed = ['MI Negeri','MI Swasta','MTs Negeri','MTs Swasta','MA Negeri','MA Swasta'];
     if (!allowed.includes(kelompok)) throw new HttpError(400,'INVALID_KELOMPOK','kelompok tidak valid');
     const rankings = await calculateRanking(kelompok, pid);
-    return res.json({ periode: periodeWithStatus, kelompok, rankings });
+    return res.json({ periode: periodeWithStatus, kelompok, rankings, madrasahCount });
   }
   // all groups
   const kelompokList = ['MI Negeri','MI Swasta','MTs Negeri','MTs Swasta','MA Negeri','MA Swasta'];
   const all = {};
   for (const k of kelompokList) all[k] = await calculateRanking(k, pid);
-  res.json({ periode: periodeWithStatus, rankings: all });
+  res.json({ periode: periodeWithStatus, rankings: all, madrasahCount });
 }
 
 export async function madrasahDetail(req,res){
@@ -63,4 +65,28 @@ export async function madrasahDetail(req,res){
   res.json({ madrasah, periode, skor, prestasi });
 }
 
-export default { leaderboard, madrasahDetail };
+export default { leaderboard, madrasahDetail, listPeriodePublik, statsPublik };
+/**
+ * GET /api/periode — daftar periode untuk FilterBar publik (id + nama + statusEfektif).
+ * Publik hanya melihat periode yang masih relevan (tidak finalisasi/arsip) —
+ * histori diarsip tidak tampil di leaderboard publik.
+ */
+export async function listPeriodePublik(req,res){
+  const rows = await prisma.periodePenilaian.findMany({
+    where: { status: { notIn: ['finalisasi', 'arsip'] } },
+    orderBy: { tanggalMulai: 'desc' },
+    select: { id: true, namaPeriode: true, tahunCapaian: true, tanggalMulai: true, tanggalCutoff: true, status: true },
+  });
+  const data = rows.map((r) => ({ ...r, statusEfektif: deriveStatus(r) }));
+  res.json({ data });
+}
+
+/**
+ * GET /api/stats — statistik HeroSection Home (jumlah madrasah aktif + jumlah kelompok).
+ */
+export async function statsPublik(req,res){
+  const [madrasahCount] = await Promise.all([
+    prisma.madrasah.count({ where: { deletedAt: null } }),
+  ]);
+  res.json({ madrasahCount, kelompokCount: 6 });
+}

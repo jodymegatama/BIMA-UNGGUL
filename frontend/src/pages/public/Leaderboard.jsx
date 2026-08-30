@@ -61,6 +61,28 @@ export default function Leaderboard() {
   const [error, setError] = useState(null);
   const [periodeInfo, setPeriodeInfo] = useState(null);
   const [lastRecalc, setLastRecalc] = useState(null);
+  const [periodes, setPeriodes] = useState([]);
+  const [madrasahCount, setMadrasahCount] = useState(null);
+
+  // daftar periode untuk FilterBar — dinamis dari API (BUG-03)
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const json = await apiGet('/api/periode');
+        if (ignore) return;
+        const list = Array.isArray(json.data) ? json.data : [];
+        setPeriodes(list);
+        // default periode: dari URL, kalau kosong pakai yang statusEfektif aktif
+        if (!params.get('periode')) {
+          const aktif = list.find((p) => p.statusEfektif === 'aktif') || list[0];
+          if (aktif) setParams((prev) => ({ ...prev, periode: aktif.namaPeriode }), { replace: true });
+        }
+      } catch { /* biarkan kosong — fallback di bawah */ }
+    })();
+    return () => { ignore = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -77,6 +99,7 @@ export default function Leaderboard() {
         if (ignore) return;
         const periodeResp = json.periode || null;
         setPeriodeInfo(periodeResp);
+        if (typeof json.madrasahCount === 'number') setMadrasahCount(json.madrasahCount);
         // normalize rankings: backend bisa return { rankings: [...] } atau { rankings: { "MI Negeri": [...] } }
         let raw = json.rankings;
         let arr = [];
@@ -145,7 +168,7 @@ export default function Leaderboard() {
                 <Trophy size={12} weight="fill" color="#4caf00" /> Leaderboard Publik
               </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">
-                <Buildings size={12} weight="regular" /> 184 madrasah • 6 kelompok
+                <Buildings size={12} weight="regular" /> {madrasahCount ?? '—'} madrasah • 6 kelompok
               </span>
             </div>
             <h1 className="font-display font-black tracking-[-0.02em] text-[30px] lg:text-[40px] leading-none text-charcoal mt-3">
@@ -171,7 +194,7 @@ export default function Leaderboard() {
 
         {/* FilterBar */}
         <div className="mt-6 reveal" style={{ transitionDelay: '0.06s' }}>
-          <FilterBar periode={periode} kelompok={kelompok} onPeriode={setPeriode} onKelompok={setKelompok} />
+          <FilterBar periode={periode} kelompok={kelompok} onPeriode={setPeriode} onKelompok={setKelompok} periodes={periodes} />
         </div>
 
         {/* Loading / Error / Empty / Content */}
