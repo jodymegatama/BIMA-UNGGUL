@@ -6,7 +6,10 @@
 import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
+import { recalculateAfterAction } from './scoringService.js';
 import bcrypt from 'bcryptjs';
+
+const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
 export async function listAkun({ status, q, page='1', limit='20' }) {
   let p = parseInt(page,10); let l = parseInt(limit,10);
@@ -68,26 +71,44 @@ export async function deleteAkun(id, { userId, ip }) {
   const existing = await prisma.user.findUnique({ where: { id: uid } });
   if (!existing) throw new HttpError(404, 'NOT_FOUND', 'User tidak ditemukan');
 
-  // Guard: user dengan riwayat aktivitas tidak boleh dihapus (validation tidak
-  // punya onDelete; submission/audit cascade akan merusak data audit)
-  const [sub, val, dlc, dlr, notif] = await Promise.all([
-    prisma.submissionItem.count({ where: { createdById: uid } }),
-    prisma.validation.count({ where: { validatorId: uid } }),
-    prisma.deleteRequest.count({ where: { requestedById: uid } }),
-    prisma.deleteRequest.count({ where: { reviewedById: uid } }),
-    prisma.notification.count({ where: { userId: uid } }),
-  ]);
-  const total = sub + val + dlc + dlr + notif;
-  if (total > 0) {
-    throw new HttpError(409, 'ACCOUNT_HAS_DATA',
-      `Akun memiliki riwayat aktivitas (${sub} submission, ${val} validasi, ${dlc + dlr} permintaan hapus, ${notif} notifikasi) — nonaktifkan saja, tidak bisa dihapus`);
-  }
+  // Keputusan user (2026-08-30): hard delete boleh — SEMUA data terkait ikut
+  // terhapus, warning sudah tampil di modal. Counts dikembalikan utk toast.
+  return prisma.$transaction(async (tx) => {
+    const [sub, val, dlc, dlr, notif] = await Promise.all([
+      tx.submissionItem.count({ where: { createdById: uid } }),
+      tx.validation.count({ where: { validatorId: uid } }),
+      tx.deleteRequest.count({ where: { requestedById: uid } }),
+      tx.deleteRequest.count({ where: { reviewedById: uid } }),
+      tx.notification.count({ where: { userId: uid } }),
+    ]);
 
-  await recordAuditLog({ userId, action: 'delete_account', entity: 'User', entityId: uid,
-    dataSebelum: { nip: existing.nip, role: existing.role, status: existing.status }, dataSesudah: null, ipAddress: ip });
-  const deleted = await prisma.user.delete({ where: { id: uid },
-    select: { id: true, nip: true, role: true } });
-  return deleted;
+    // Madrasah & periode terdampak — untuk recalc skor setelah data hilang
+    const affected = await tx.submissionItem.findMany({
+      where: { createdById: uid },
+      select: { madrasahId: true, periodeId: true },
+      distinct: ['madrasahId', 'periodeId'],
+    });
+
+    // Hapus data dependen EKSPLISIT (Validation.validatorId TANPA onDelete -> wajib manual)
+    await tx.validation.deleteMany({ where: { validatorId: uid } });
+    await tx.deleteRequest.deleteMany({ where: { requestedById: uid } });
+    await tx.notification.deleteMany({ where: { userId: uid } });
+    // SubmissionItem & AuditLog & DeleteRequest.reviewedBy: onDelete Cascade/SetNull otomatis.
+    await tx.submissionItem.deleteMany({ where: { createdById: uid } });
+    await tx.auditLog.deleteMany({ where: { userId: uid } });
+
+    await recordAuditLog({ userId, action: 'delete_account', entity: 'User', entityId: uid,
+      dataSebelum: { nip: existing.nip, role: existing.role, status: existing.status }, dataSesudah: null, ipAddress: ip }, tx);
+
+    const deleted = await tx.user.delete({ where: { id: uid }, select: { id: true, nip: true, role: true } });
+
+    // Recalc skor madrasah yang kehilangan submission
+    for (const a of affected) {
+      await recalculateAfterAction(a.madrasahId, a.periodeId, tx);
+    }
+
+    return { ...deleted, deletedCounts: { submissions: sub, validations: val, deleteRequests: dlc + dlr, notifications: notif, madrasahAffected: affected.length } };
+  }, TX_OPTS);
 }
 
 export async function listMadrasahDropdown() {

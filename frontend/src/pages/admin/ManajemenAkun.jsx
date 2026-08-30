@@ -133,10 +133,14 @@ export default function ManajemenAkun() {
     setDeleting(true);
     setDeleteErr('');
     try {
-      await apiFetch(`/api/admin/akun/${confirmDelete.id}`, { method: 'DELETE', auth: true });
+      const res = await apiFetch(`/api/admin/akun/${confirmDelete.id}`, { method: 'DELETE', auth: true });
+      const info = res.data || res;
       setRows((prev) => prev.filter((r) => String(r.id) !== String(confirmDelete.id)));
       setConfirmDelete(null);
-      showToast(`Akun ${confirmDelete.nip || ''} dihapus`);
+      const c = info?.deletedCounts;
+      showToast(c && (c.submissions || c.validations || c.deleteRequests || c.notifications)
+        ? `Akun ${confirmDelete.nip || ''} dihapus — ${c.submissions} submission, ${c.validations} validasi, ${c.notifications} notifikasi ikut terhapus${c.madrasahAffected ? ` (skor ${c.madrasahAffected} madrasah dihitung ulang)` : ''}`
+        : `Akun ${confirmDelete.nip || ''} dihapus`);
     } catch (e) {
       setDeleteErr(e.message || 'Gagal hapus akun');
     } finally { setDeleting(false); }
@@ -306,11 +310,11 @@ export default function ManajemenAkun() {
             <h3 className="font-display font-black text-[16px] text-charcoal">Hapus akun {confirmDelete.nama}?</h3>
             <p className="text-[13px] font-medium text-pencil mt-2">
               Akun NIP <span className="font-mono font-black text-charcoal">{confirmDelete.nip}</span> akan dihapus permanen.
-              Akun dengan riwayat aktivitas (submission/validasi/audit) tidak dapat dihapus — <b>nonaktifkan saja</b>.
+              <b className="text-red-600"> SEMUA data terkait ikut terhapus</b>: submission yang dibuat, riwayat validasi, notifikasi, dan audit log.
             </p>
-            <div className="mt-3 rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">
-              <WarningCircle size={16} weight="regular" color="#d97706" className="shrink-0 mt-0.5" />
-              <p className="text-[11px] leading-5 font-bold text-amber-900">Aksi ini tercatat di audit log dan tidak dapat dibatalkan.</p>
+            <div className="mt-3 rounded-[12px] bg-red-50 border-2 border-red-200 p-3 flex gap-2">
+              <WarningCircle size={16} weight="fill" color="#dc2626" className="shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-5 font-bold text-red-900">Skor madrasah terkait akan dihitung ulang. Aksi tercatat di audit log dan tidak dapat dibatalkan.</p>
             </div>
             {deleteErr && (
               <div className="mt-3 rounded-[12px] bg-red-50 border-2 border-red-200 text-red-900 px-4 py-3 text-[12px] font-bold flex gap-2">
