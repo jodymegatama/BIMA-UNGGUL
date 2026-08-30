@@ -37,6 +37,10 @@ router.post('/akun/:id/approve', authController.approveUser);
 router.get('/akun', accountController.list);
 router.post('/akun', accountController.create);
 router.patch('/akun/:id', accountController.update);
+router.delete('/akun/:id', accountController.remove);
+
+// Madrasah dropdown (assign akun) — letak sebelum route periode agar tidak bentrok
+router.get('/madrasah', accountController.madrasahList);
 
 // Periode
 router.get('/periode', periodController.list);

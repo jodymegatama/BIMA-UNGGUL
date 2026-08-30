@@ -61,4 +61,40 @@ export async function updateAkun(id, patch, { userId, ip }) {
   return updated;
 }
 
-export default { listAkun, createAkun, updateAkun };
+export async function deleteAkun(id, { userId, ip }) {
+  const uid = parseInt(id, 10);
+  if (!Number.isFinite(uid)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
+  if (uid === userId) throw new HttpError(400, 'SELF_DELETE', 'Tidak bisa menghapus akun sendiri');
+  const existing = await prisma.user.findUnique({ where: { id: uid } });
+  if (!existing) throw new HttpError(404, 'NOT_FOUND', 'User tidak ditemukan');
+
+  // Guard: user dengan riwayat aktivitas tidak boleh dihapus (validation tidak
+  // punya onDelete; submission/audit cascade akan merusak data audit)
+  const [sub, val, dlc, dlr, notif] = await Promise.all([
+    prisma.submissionItem.count({ where: { createdById: uid } }),
+    prisma.validation.count({ where: { validatorId: uid } }),
+    prisma.deleteRequest.count({ where: { requestedById: uid } }),
+    prisma.deleteRequest.count({ where: { reviewedById: uid } }),
+    prisma.notification.count({ where: { userId: uid } }),
+  ]);
+  const total = sub + val + dlc + dlr + notif;
+  if (total > 0) {
+    throw new HttpError(409, 'ACCOUNT_HAS_DATA',
+      `Akun memiliki riwayat aktivitas (${sub} submission, ${val} validasi, ${dlc + dlr} permintaan hapus, ${notif} notifikasi) — nonaktifkan saja, tidak bisa dihapus`);
+  }
+
+  await recordAuditLog({ userId, action: 'delete_account', entity: 'User', entityId: uid,
+    dataSebelum: { nip: existing.nip, role: existing.role, status: existing.status }, dataSesudah: null, ipAddress: ip });
+  const deleted = await prisma.user.delete({ where: { id: uid },
+    select: { id: true, nip: true, role: true } });
+  return deleted;
+}
+
+export async function listMadrasahDropdown() {
+  return prisma.madrasah.findMany({
+    select: { id: true, namaMadrasah: true, nomorMadrasah: true, jenjang: true },
+    orderBy: { namaMadrasah: 'asc' },
+  });
+}
+
+export default { listAkun, createAkun, updateAkun, deleteAkun, listMadrasahDropdown };

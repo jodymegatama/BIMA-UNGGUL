@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap } from 'phosphor-react';
+import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap, PencilSimple, Trash, PlusCircle, WarningCircle } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import AkunForm from '../../components/admin/AkunForm';
 
 const tabs = ['Semua', 'Menunggu', 'Aktif', 'Nonaktif'];
 
@@ -17,7 +18,8 @@ function mapStatus(s) {
 }
 
 export default function ManajemenAkun() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const myId = user?.id;
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Semua');
@@ -25,6 +27,12 @@ export default function ManajemenAkun() {
   const [toast, setToast] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [madrasahList, setMadrasahList] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editRow, setEditRow] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleteErr, setDeleteErr] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const fetchRows = useCallback(async () => {
     if (!token) { setLoading(false); return; }
@@ -58,6 +66,17 @@ export default function ManajemenAkun() {
 
   useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
+  // fetch list madrasah untuk dropdown AkunForm
+  useEffect(() => {
+    if (!token) return;
+    apiFetch('/api/admin/madrasah', { auth: true })
+      .then((res) => {
+        const list = Array.isArray(res) ? res : (res.data || []);
+        setMadrasahList(list);
+      })
+      .catch(() => { /* dropdown kosong — form tetap bisa submit tanpa madrasah */ });
+  }, [token]);
+
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
@@ -84,13 +103,60 @@ export default function ManajemenAkun() {
     } catch (e) { showToast(e.message || 'Gagal'); }
   };
 
+  const handleCreate = async (data) => {
+    try {
+      const res = await apiFetch('/api/admin/akun', { method: 'POST', body: data, auth: true });
+      const r = res.data || res;
+      showToast(`Akun ${r.nip || data.nip} dibuat`);
+      setShowForm(false);
+      setActiveTab('Semua');
+      fetchRows();
+    } catch (e) {
+      setDeleteErr('');
+      showToast(e.message || 'Gagal buat akun');
+    }
+  };
+
+  const handleEditSubmit = async (data) => {
+    try {
+      const body = { ...data };
+      if (body.status === 'menunggu') body.status = 'aktif'; // form edit tidak punya status menunggu
+      if (!body.password) delete body.password;
+      await apiFetch(`/api/admin/akun/${editRow.id}`, { method: 'PATCH', body, auth: true });
+      showToast('Akun diperbarui');
+      setEditRow(null);
+      fetchRows();
+    } catch (e) { showToast(e.message || 'Gagal update akun'); }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteErr('');
+    try {
+      await apiFetch(`/api/admin/akun/${confirmDelete.id}`, { method: 'DELETE', auth: true });
+      setRows((prev) => prev.filter((r) => String(r.id) !== String(confirmDelete.id)));
+      setConfirmDelete(null);
+      showToast(`Akun ${confirmDelete.nip || ''} dihapus`);
+    } catch (e) {
+      setDeleteErr(e.message || 'Gagal hapus akun');
+    } finally { setDeleting(false); }
+  };
+
   const filtered = rows; // already filtered server-side
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun Operator</h1>
-        <p className="text-[12px] font-medium text-pencil mt-1">Kelola pendaftaran operator — approve otomatis generate <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> jika madrasah belum ada.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun Operator</h1>
+          <p className="text-[12px] font-medium text-pencil mt-1">Kelola pendaftaran operator & admin — tambah, edit, nonaktifkan, atau hapus akun. Approve otomatis generate <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> jika madrasah belum ada.</p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-ink border-2 border-black text-white font-black text-[13px] shadow-[0_4px_0_0_#000437] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
+        >
+          <PlusCircle size={16} weight="bold" color="white" /> Tambah Akun
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -176,6 +242,22 @@ export default function ManajemenAkun() {
                           Aktifkan
                         </button>
                       )}
+                      <button
+                        onClick={() => setEditRow(r)}
+                        aria-label={`Edit akun ${r.nama}`}
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-charcoal hover:text-charcoal active:translate-y-[1px] transition"
+                      >
+                        <PencilSimple size={12} weight="regular" /> Edit
+                      </button>
+                      <button
+                        onClick={() => { setConfirmDelete(r); setDeleteErr(''); }}
+                        disabled={String(myId) === String(r.id)}
+                        title={String(myId) === String(r.id) ? 'Tidak bisa menghapus akun sendiri' : undefined}
+                        aria-label={`Hapus akun ${r.nama}`}
+                        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil hover:border-red-300 hover:text-red-600 active:translate-y-[1px] transition disabled:opacity-40 disabled:pointer-events-none"
+                      >
+                        <Trash size={12} weight="regular" /> Hapus
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -198,6 +280,53 @@ export default function ManajemenAkun() {
         <ShieldCheck size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
         <p className="text-[11px] leading-5 font-medium text-pencil">Approve otomatis generate <b>BMU-XXXXXX</b> berurutan & permanen jika madrasah belum ada — sinkron US1.</p>
       </div>
+
+      {showForm && (
+        <AkunForm
+          onClose={() => setShowForm(false)}
+          onSubmit={handleCreate}
+          madrasahList={madrasahList}
+          submitLabel="Buat Akun"
+        />
+      )}
+      {editRow && (
+        <AkunForm
+          onClose={() => setEditRow(null)}
+          onSubmit={handleEditSubmit}
+          initial={editRow}
+          madrasahList={madrasahList}
+          submitLabel="Simpan Perubahan"
+        />
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30" onClick={() => { setConfirmDelete(null); setDeleteErr(''); }} />
+          <div className="relative w-full max-w-[480px] rounded-[16px] border-2 border-zinc-200 bg-white p-6 shadow-float">
+            <h3 className="font-display font-black text-[16px] text-charcoal">Hapus akun {confirmDelete.nama}?</h3>
+            <p className="text-[13px] font-medium text-pencil mt-2">
+              Akun NIP <span className="font-mono font-black text-charcoal">{confirmDelete.nip}</span> akan dihapus permanen.
+              Akun dengan riwayat aktivitas (submission/validasi/audit) tidak dapat dihapus — <b>nonaktifkan saja</b>.
+            </p>
+            <div className="mt-3 rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">
+              <WarningCircle size={16} weight="regular" color="#d97706" className="shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-5 font-bold text-amber-900">Aksi ini tercatat di audit log dan tidak dapat dibatalkan.</p>
+            </div>
+            {deleteErr && (
+              <div className="mt-3 rounded-[12px] bg-red-50 border-2 border-red-200 text-red-900 px-4 py-3 text-[12px] font-bold flex gap-2">
+                <WarningCircle size={16} weight="fill" color="#dc2626" className="shrink-0 mt-0.5" />
+                <span>{deleteErr}</span>
+              </div>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => { setConfirmDelete(null); setDeleteErr(''); }} className="flex-1 h-10 rounded-full bg-white border-2 border-zinc-200 text-[13px] font-black hover:border-charcoal active:translate-y-[1px] transition">Batal</button>
+              <button onClick={handleDelete} disabled={deleting} className="flex-1 h-10 rounded-full bg-red-600 border-2 border-red-700 text-white text-[13px] font-black shadow-[0_4px_0_0_#991b1b] hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition disabled:opacity-60">
+                {deleting ? 'Menghapus...' : 'Ya, Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
