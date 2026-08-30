@@ -296,7 +296,7 @@ export async function approveUserAndCreateMadrasah(userId, madrasahData) {
     // Prisma transaction: update user + create madrasah atomic
     const result = await prisma.$transaction(async (tx) => {
       // 1. Update user status to aktif
-      const approvedUser = await tx.user.update({
+      await tx.user.update({
         where: { id: userId },
         data: {
           status: 'aktif',

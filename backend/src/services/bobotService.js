@@ -90,15 +90,8 @@ export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
       await recordAuditLog({ userId, action: 'update_bobot', entity: 'BobotIndikator', entityId: up.id, dataSebelum: before, dataSesudah: up, ipAddress: ip }, tx);
     }
 
-    // recalc all madrasah that have submissions in this periode
-    const distinct = await tx.submissionItem.findMany({
-      where: { periodeId: pid, status: 'disetujui', deletedAt: null },
-      select: { madrasahId: true },
-      distinct: ['madrasahId'],
-    });
-    for (const { madrasahId } of distinct) {
-    }
-
+    // Live-compute (scoring refactor): skor dihitung saat dibaca —
+    // tidak ada tbl cache per madrasah yang perlu direcalc setelah update bobot.
     return updated;
   }, TX_OPTS);
 }

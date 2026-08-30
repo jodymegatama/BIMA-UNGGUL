@@ -364,7 +364,6 @@ export async function approveUser(req, res) {
 
   // 3. Extract madrasahData dari database
   const madrasahData = user.madrasahData;
-  const { nama, jenjang, statusKepemilikan, alamat, jumlahSiswa } = madrasahData;
 
   // 4. Approve user & create madrasah
   const result = await authService.approveUserAndCreateMadrasah(userId, madrasahData);

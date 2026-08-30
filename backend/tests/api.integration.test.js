@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
 
@@ -109,7 +109,6 @@ describe('Periode CRUD admin (create → update → delete)', () => {
 
   (hasCreds ? it : it.skip)('create periode overlap -> 409 PERIOD_OVERLAP; non-overlap -> 201', async () => {
     expect(adminToken).toBeTruthy();
-    const ts = Date.now();
     // periode uji non-overlap dulu (di tahun jauh) — idempoten pre-cleanup
     const pre = await request(app)
       .get('/api/admin/periode')
