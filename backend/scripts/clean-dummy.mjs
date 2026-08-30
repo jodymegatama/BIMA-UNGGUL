@@ -2,7 +2,9 @@
  * clean-dummy.mjs — Purge semua data dummy/test dari DB
  * KEEPS: 1 admin (nip 199012312345678901) + 9 Indikator master data
  * PURGES: User dummy lain, Madrasah BMU-TEST / BMU-999001 / BMU-E2E-VAL / BMU-PUBADM,
- *         PeriodePenilaian TEST/2026 | E2E-VAL/2026 | PUBADM/2026, + cascade children
+ *         PeriodePenilaian TEST/2026 | E2E-VAL/2026 | PUBADM/2026, + cascade children.
+ * NOTE: tabel MadrasahScore sudah dihapus (live-compute 432a673) — tidak ada lagi
+ * di purge list; skor selalu dihitung saat dibaca.
  */
 import { prisma } from '../src/db/prisma.js';
 
@@ -94,7 +96,7 @@ async function main() {
     } catch { /* optional */ }
 
     // Children of SubmissionItem tied to dummy periode/madrasah
-    let delValidation = 0, delDeleteRequest = 0, delSubmissionItem = 0, delScore = 0, delBobot = 0;
+    let delValidation = 0, delDeleteRequest = 0, delSubmissionItem = 0, delBobot = 0;
 
     if (dummyPeriodeIds.length || dummyMadrasahIds.length) {
       // find submissionItems linked to either
@@ -110,9 +112,6 @@ async function main() {
       }
       if (dummyPeriodeIds.length) {
         delBobot = (await tx.bobotIndikator.deleteMany({ where: { periodeId: { in: dummyPeriodeIds } } })).count;
-      }
-      if (dummyMadrasahIds.length) {
-        delScore = (await tx.madrasahScore.deleteMany({ where: { madrasahId: { in: dummyMadrasahIds } } })).count;
       }
     }
 
@@ -130,7 +129,7 @@ async function main() {
       delUser = (await tx.user.deleteMany({ where: { id: { in: dummyUserIds } } })).count;
     }
 
-    return { deletedAuditByUser, deletedAuditByIp, delValidation, delDeleteRequest, delSubmissionItem, delBobot, delScore, delPeriode, delMadrasah, delUser };
+    return { deletedAuditByUser, deletedAuditByIp, delValidation, delDeleteRequest, delSubmissionItem, delBobot, delPeriode, delMadrasah, delUser };
   });
 
   console.log('\n=== HASIL PENGHAPUSAN ===');
@@ -147,7 +146,6 @@ async function main() {
     submission: await prisma.submissionItem.count(),
     validation: await prisma.validation.count(),
     bobot: await prisma.bobotIndikator.count(),
-    score: await prisma.madrasahScore.count(),
     audit: await prisma.auditLog.count(),
     notification: await prisma.notification.count(),
   };
