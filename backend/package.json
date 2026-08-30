@@ -10,7 +10,6 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
-    "test:scoring": "node tests/testScoring.js",
     "test:validation": "node tests/testValidationE2E.js",
     "test:e2e": "node tests/testPublicAndAdminE2E.js",
     "smoke:dynamic-form": "node scripts/smoke-dynamic-form.mjs",
