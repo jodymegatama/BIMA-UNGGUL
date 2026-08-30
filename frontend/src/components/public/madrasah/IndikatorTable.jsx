@@ -1,4 +1,5 @@
 import { Trophy, CheckCircle } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IndikatorTable — 9 baris, kolom Indikator + Skor. Pola sama LeaderboardTable tapi sederhana.
@@ -16,7 +17,7 @@ export default function IndikatorTable({ data = [] }) {
           </span>
           <div>
             <div className="text-[13px] font-black text-charcoal leading-none">Rincian skor per indikator</div>
-            <div className="text-[11px] font-bold text-pencil">9 indikator • total {total} poin</div>
+            <div className="text-[11px] font-bold text-pencil">{INDIKATORS.length} indikator • total {total} poin</div>
           </div>
         </div>
         <span className="hidden sm:inline-flex items-center shrink-0 gap-1 text-[11px] font-bold text-faded bg-white border-2 border-zinc-200 rounded-full px-3 h-7 whitespace-nowrap">

@@ -1,5 +1,6 @@
 import LazyChart from '../../shared/LazyChart';
 import { ChartBar } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IndikatorChart — radar 9 indikator (ApexCharts). Fallback bar jika radar tidak cocok di mobile, tapi radar default.
@@ -55,7 +56,7 @@ export default function IndikatorChart({ data = [] }) {
             <ChartBar size={16} weight="regular" color="#777777" />
           </span>
           <div>
-            <div className="text-[13px] font-black text-charcoal leading-none">Skor 9 indikator</div>
+            <div className="text-[13px] font-black text-charcoal leading-none">Skor {INDIKATORS.length} indikator</div>
             <div className="text-[11px] font-bold text-pencil">Radar — distribusi per indikator</div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { FilePdf, FileXls, DownloadSimple, Calendar, CheckCircle, Info, SpinnerG
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../lib/api';
-import { KELOMPOKS } from '../../constants/indikator';
+import { KELOMPOKS, INDIKATORS } from '../../constants/indikator';
 
 export default function ExportLaporan() {
   const { token } = useAuth();
@@ -66,7 +66,7 @@ export default function ExportLaporan() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Export Laporan</h1>
-        <p className="text-[12px] font-medium text-pencil mt-1">Filter periode sebelum export — PDF dengan kop instansi & Excel rincian 9 indikator (hanya Disetujui).</p>
+        <p className="text-[12px] font-medium text-pencil mt-1">Filter periode sebelum export — PDF dengan kop instansi & Excel rincian {INDIKATORS.length} indikator (hanya Disetujui).</p>
       </div>
 
       <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-5 shadow-card">

@@ -1,4 +1,5 @@
 import { Question, Plus, Minus, Chats, ArrowRight } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * FaqSection — persis dari _backup/index.html #faq
@@ -27,7 +28,7 @@ export default function FaqSection() {
               </span>
             </summary>
             <div className="px-5 pb-5 text-[14px] leading-[1.6] text-pencil font-medium">
-              Operator madrasah yang akunnya sudah disetujui Admin Seksi Pendma. Setiap madrasah memiliki satu akun Operator yang mengelola 9 indikator.
+              Operator madrasah yang akunnya sudah disetujui Admin Seksi Pendma. Setiap madrasah memiliki satu akun Operator yang mengelola {INDIKATORS.length} indikator.
               Publik hanya bisa melihat leaderboard tanpa login.
             </div>
           </details>
@@ -81,7 +82,7 @@ export default function FaqSection() {
               </span>
             </summary>
             <div className="px-5 pb-5 text-[14px] leading-[1.6] text-pencil font-medium">
-              Ya. Admin dapat mengekspor PDF dengan kop instansi dan Excel dengan rincian skor 9 indikator per madrasah. Hanya data berstatus Disetujui yang masuk
+              Ya. Admin dapat mengekspor PDF dengan kop instansi dan Excel dengan rincian skor {INDIKATORS.length} indikator per madrasah. Hanya data berstatus Disetujui yang masuk
               laporan.
             </div>
           </details>

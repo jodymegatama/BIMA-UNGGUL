@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IdentificationCard, Lock, Eye, EyeSlash, WarningCircle, CheckCircle, SpinnerGap, Buildings, ShieldCheck } from 'phosphor-react';
 import { useAuth } from '../../context/AuthContext';
+import { INDIKATORS } from '../../constants/indikator';
 
 /**
  * LoginForm — NIP + password (PRD: custom auth, bukan email)
@@ -100,7 +101,7 @@ export default function LoginForm() {
           </button>
         </div>
         <div className="text-[11px] font-medium text-faded mt-1.5">
-          {role === 'operator' ? 'Akun madrasah — kelola 9 indikator' : 'Seksi Pendma — validasi & kelola periode'}
+          {role === 'operator' ? `Akun madrasah — kelola ${INDIKATORS.length} indikator` : 'Seksi Pendma — validasi & kelola periode'}
         </div>
       </div>
 

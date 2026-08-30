@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Trophy, EnvelopeSimple, Phone, MapPin } from 'phosphor-react';
+import { INDIKATORS } from '../../constants/indikator';
 
 /**
  * Footer — ekstrak persis dari _backup/index.html <footer>
@@ -48,7 +49,7 @@ export default function Footer({ activePeriod = '2026/2027' }) {
               </li>
               <li>
                 <Link to="/#indikator" className="text-white hover:text-white/80 transition">
-                  9 Indikator Mutu
+                  {INDIKATORS.length} Indikator Mutu
                 </Link>
               </li>
               <li>

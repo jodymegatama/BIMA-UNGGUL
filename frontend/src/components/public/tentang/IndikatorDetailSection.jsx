@@ -12,6 +12,7 @@ import {
   Stack,
   Info,
 } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IndikatorDetailSection — 9 indikator versi LENGKAP (PRD §11)
@@ -141,11 +142,11 @@ export default function IndikatorDetailSection() {
       <div className="max-w-[1200px] mx-auto px-4 lg:px-6">
         <div className="max-w-[760px]">
           <div className="inline-flex items-center gap-2 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
-            <Stack size={14} weight="fill" color="#4caf00" /> 9 Indikator Mutu — versi lengkap
+            <Stack size={14} weight="fill" color="#4caf00" /> {INDIKATORS.length} Indikator Mutu — versi lengkap
           </div>
           <h2 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[36px] leading-none text-charcoal mt-4">Apa yang dinilai & bagaimana skor dihitung</h2>
           <p className="text-[13px] leading-6 text-pencil font-medium mt-3 max-w-[68ch]">
-            Di bawah ini daftar lengkap 9 indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti, dan
+            Di bawah ini daftar lengkap {INDIKATORS.length} indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti, dan
             dihitung <b>tanpa batas jumlah</b>. Bobot dikonfigurasi Admin per periode dan terkunci saat finalisasi.
           </p>
         </div>

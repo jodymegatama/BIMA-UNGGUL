@@ -12,6 +12,7 @@ import {
   Stack,
   Info,
 } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IndikatorSection — persis dari _backup/index.html #indikator
@@ -27,7 +28,7 @@ export default function IndikatorSection() {
             Kriteria Penilaian
           </div>
           <h2 className="font-display font-black tracking-[-0.02em] text-[32px] lg:text-[42px] leading-[0.95] text-charcoal mt-4">
-            9 indikator mutu yang dinilai
+            {INDIKATORS.length} indikator mutu yang dinilai
           </h2>
           <p className="text-[16px] leading-[1.5] text-pencil font-medium mt-3 max-w-[60ch]">
             Setiap capaian diinput per indikator, dilengkapi bukti fisik, dan dihitung dengan bobot yang dikonfigurasi per periode. Tidak ada batas jumlah

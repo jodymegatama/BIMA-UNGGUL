@@ -309,7 +309,7 @@ export default function InputCapaian() {
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">Periode {periodeNama}</span>
-          <span className="inline-flex h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">9 indikator</span>
+          <span className="inline-flex h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">{INDIKATORS.length} indikator</span>
         </div>
       </div>
 

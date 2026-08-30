@@ -1,6 +1,6 @@
 import { Buildings, Target, Scales, Lightbulb, ShieldCheck, Prohibit, CheckCircle, ArrowRight } from 'phosphor-react';
 import { Link } from 'react-router-dom';
-import { KELOMPOKS } from '../../../constants/indikator';
+import { KELOMPOKS, INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IntroSection — Bagian 1: Tentang BIMA UNGGUL (PRD §1 Overview)
@@ -67,7 +67,7 @@ export default function IntroSection() {
             </div>
             <div className="mt-4 grid gap-3">
               {[
-                { n: 1, title: 'Input Operator', desc: 'Isi capaian per 9 indikator, simpan draft, kirim saat siap. Link bukti wajib.', color: 'bg-eager border-eager-dark text-white' },
+                { n: 1, title: 'Input Operator', desc: `Isi capaian per ${INDIKATORS.length} indikator, simpan draft, kirim saat siap. Link bukti wajib.`, color: 'bg-eager border-eager-dark text-white' },
                 { n: 2, title: 'Validasi Admin', desc: 'Admin cek bukti, approve/reject (alasan wajib) atau revoke jika salah.', color: 'bg-spark border-spark-dark text-white' },
                 { n: 3, title: 'Hitung Skor', desc: 'Backend hitung Σ capaian × bobot per indikator → total skor realtime.', color: 'bg-ink border-black text-white' },
                 { n: 4, title: 'Leaderboard', desc: `Publik lihat peringkat per ${KELOMPOKS.length} kelompok + grafik Top 10 tanpa login.`, color: 'bg-eager border-eager-dark text-white shadow-sticker' },

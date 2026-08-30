@@ -1,5 +1,5 @@
 import { Trophy, ShieldCheck, Buildings, Medal, User } from 'phosphor-react';
-import { KELOMPOKS } from '../../constants/indikator';
+import { KELOMPOKS, INDIKATORS } from '../../constants/indikator';
 
 /**
  * AuthBrandPanel — sisi kanan/dekoratif untuk halaman auth
@@ -33,7 +33,7 @@ export default function AuthBrandPanel() {
             Mutu madrasah terukur dan transparan<span className="text-eager">.</span>
           </h2>
           <p className="text-[13px] leading-5 font-medium text-pencil mt-3 max-w-[32ch]">
-            Masuk dengan NIP untuk mengelola capaian 9 indikator. Skor = Σ capaian disetujui × bobot.
+            Masuk dengan NIP untuk mengelola capaian {INDIKATORS.length} indikator. Skor = Σ capaian disetujui × bobot.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black text-charcoal">
