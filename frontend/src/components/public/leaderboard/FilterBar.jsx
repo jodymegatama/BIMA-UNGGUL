@@ -48,11 +48,11 @@ export default function FilterBar({ periode, kelompok, onPeriode, onKelompok, pe
         {/* info */}
         <div className="hidden lg:flex items-center gap-2 text-[12px] font-bold text-pencil">
           <Funnel size={14} weight="regular" color="#afafaf" />
-          Pilih 1 dari 6 kelompok — ranking dihitung terpisah per kelompok
+          Pilih 1 dari {KELOMPOKS.length} kelompok — ranking dihitung terpisah per kelompok
         </div>
       </div>
 
-      {/* 6 kelompok */}
+      {/* pill kelompok */}
       <div className="mt-5">
         <div className="text-[11px] font-black tracking-wide text-faded uppercase mb-3">Kelompok madrasah</div>
         <div className="flex flex-wrap gap-2">

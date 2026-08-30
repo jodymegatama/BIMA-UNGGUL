@@ -7,11 +7,10 @@
  */
 
 import { prisma } from '../db/prisma.js';
+import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { createNotification } from './notificationService.js';
-
-const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
 // ---------- Helpers ----------
 function parsePagination(query) {

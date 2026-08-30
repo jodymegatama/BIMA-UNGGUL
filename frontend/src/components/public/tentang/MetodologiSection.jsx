@@ -1,4 +1,5 @@
 import { ShieldCheck, GitBranch, Scales, Clock, Flag, WarningCircle, ArrowsLeftRight } from 'phosphor-react';
+import { KELOMPOKS } from '../../../constants/indikator';
 
 /**
  * MetodologiSection — Bagian 3: Metodologi & Cara Kerja (PRD §6 Interaction, §11 formula, §9 lifecycle, 6 kelompok, tie-breaker)
@@ -45,11 +46,11 @@ export default function MetodologiSection() {
           </div>
 
           <div className="space-y-4">
-            {/* 6 kelompok */}
+            {/* pill kelompok */}
             <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-5">
-              <div className="text-[11px] font-black tracking-wide text-faded uppercase">6 kelompok (ranking terpisah)</div>
+              <div className="text-[11px] font-black tracking-wide text-faded uppercase">{KELOMPOKS.length} kelompok (ranking terpisah)</div>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                {['MI Negeri', 'MI Swasta', 'MTs Negeri', 'MTs Swasta', 'MA Negeri', 'MA Swasta'].map((k) => (
+                {KELOMPOKS.map((k) => (
                   <span key={k} className="h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center text-[12px] font-black text-charcoal">
                     {k}
                   </span>

@@ -1,5 +1,6 @@
 import { Buildings, Target, Scales, Lightbulb, ShieldCheck, Prohibit, CheckCircle, ArrowRight } from 'phosphor-react';
 import { Link } from 'react-router-dom';
+import { KELOMPOKS } from '../../../constants/indikator';
 
 /**
  * IntroSection — Bagian 1: Tentang BIMA UNGGUL (PRD §1 Overview)
@@ -69,7 +70,7 @@ export default function IntroSection() {
                 { n: 1, title: 'Input Operator', desc: 'Isi capaian per 9 indikator, simpan draft, kirim saat siap. Link bukti wajib.', color: 'bg-eager border-eager-dark text-white' },
                 { n: 2, title: 'Validasi Admin', desc: 'Admin cek bukti, approve/reject (alasan wajib) atau revoke jika salah.', color: 'bg-spark border-spark-dark text-white' },
                 { n: 3, title: 'Hitung Skor', desc: 'Backend hitung Σ capaian × bobot per indikator → total skor realtime.', color: 'bg-ink border-black text-white' },
-                { n: 4, title: 'Leaderboard', desc: 'Publik lihat peringkat per 6 kelompok + grafik Top 10 tanpa login.', color: 'bg-eager border-eager-dark text-white shadow-sticker' },
+                { n: 4, title: 'Leaderboard', desc: `Publik lihat peringkat per ${KELOMPOKS.length} kelompok + grafik Top 10 tanpa login.`, color: 'bg-eager border-eager-dark text-white shadow-sticker' },
               ].map((s) => (
                 <div key={s.n} className="flex gap-3 rounded-[12px] border-2 border-zinc-100 bg-zinc-50 p-3">
                   <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[12px] font-black shrink-0 ${s.color}`}>{s.n}</span>

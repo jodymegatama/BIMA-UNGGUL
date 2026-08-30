@@ -3,12 +3,11 @@
  * GET/PATCH bobot per periode — lock jika periode finalisasi, recalc skor, audit
  */
 import { prisma } from '../db/prisma.js';
+import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 
 import { deriveStatus } from './periodService.js';
-
-const TX_OPTS = { timeout: 20000, maxWait: 5000 };
 
 export async function listBobot({ periodeId }) {
   if (!periodeId) throw new HttpError(400, 'MISSING_PERIODE', 'periodeId wajib');

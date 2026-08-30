@@ -4,11 +4,10 @@
  * approve akun sudah ada di authService.approveUserAndCreateMadrasah — jangan duplikat
  */
 import { prisma } from '../db/prisma.js';
+import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import bcrypt from 'bcryptjs';
-
-const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
 export async function listAkun({ status, q, page='1', limit='20' }) {
   let p = parseInt(page,10); let l = parseInt(limit,10);

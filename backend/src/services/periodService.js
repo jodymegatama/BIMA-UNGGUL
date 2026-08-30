@@ -4,11 +4,10 @@
  * Prisma 5.18: prisma.$transaction(async (tx)=>{})
  */
 import { prisma } from '../db/prisma.js';
+import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { STATUS_HISTORI_PERIODE } from '../constants/periode.constants.js';
-
-const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
 function parseTahun(namaPeriode) {
   const m = String(namaPeriode).match(/^(\d{4})\//);

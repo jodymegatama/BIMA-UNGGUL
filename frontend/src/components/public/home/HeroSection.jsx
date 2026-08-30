@@ -18,6 +18,7 @@ import {
   CheckCircle,
 } from 'phosphor-react';
 import useMagnetic from '../../../hooks/useMagnetic';
+import { KELOMPOKS, INDIKATORS } from '../../../constants/indikator';
 
 /**
  * HeroSection — persis dari _backup/index.html #beranda
@@ -130,7 +131,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="reveal mt-4 text-[16px] lg:text-[17px] leading-[1.5] text-pencil max-w-[52ch] font-medium" style={{ transitionDelay: '0.26s' }}>
-              Input capaian, validasi berjenjang, dan pemeringkatan real time untuk 6 kelompok madrasah di Kabupaten Pasuruan. Skor dari bukti, bukan
+              Input capaian, validasi berjenjang, dan pemeringkatan real time untuk {stats?.kelompokCount ?? KELOMPOKS.length} kelompok madrasah di Kabupaten Pasuruan. Skor dari bukti, bukan
               asumsi.
             </p>
 
@@ -165,12 +166,12 @@ export default function HeroSection() {
             <div className="reveal grid grid-cols-3 gap-3 mt-8 max-w-[520px]" style={{ transitionDelay: '0.38s' }}>
               <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-3">
                 <div className="text-[11px] font-black tracking-wide text-faded uppercase">Kelompok</div>
-                <div className="font-display font-black text-[22px] leading-none text-charcoal mt-1">6</div>
+                <div className="font-display font-black text-[22px] leading-none text-charcoal mt-1">{stats?.kelompokCount ?? KELOMPOKS.length}</div>
                 <div className="text-[12px] font-bold text-pencil leading-tight mt-0.5">MI / MTs / MA x Negeri Swasta</div>
               </div>
               <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-3">
                 <div className="text-[11px] font-black tracking-wide text-faded uppercase">Indikator</div>
-                <div className="font-display font-black text-[22px] leading-none text-charcoal mt-1">9</div>
+                <div className="font-display font-black text-[22px] leading-none text-charcoal mt-1">{INDIKATORS.length}</div>
                 <div className="text-[12px] font-bold text-pencil leading-tight mt-0.5">Kriteria mutu berbobot</div>
               </div>
               <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-3 relative overflow-hidden">
@@ -191,7 +192,7 @@ export default function HeroSection() {
               className="absolute hidden lg:flex items-center gap-2 top-6 right-4 z-10 rounded-full bg-white border-2 border-zinc-200 px-3 py-2 shadow-float text-[12px] font-black text-charcoal"
               style={{ animation: 'floatA 5s ease-in-out infinite' }}
             >
-              <span className="w-2 h-2 rounded-full bg-eager" /> 9 Kriteria
+              <span className="w-2 h-2 rounded-full bg-eager" /> {INDIKATORS.length} Kriteria
               <span className="w-px h-4 bg-zinc-200 mx-1" />
               <span className="text-pencil font-bold">Bobot transparan</span>
             </div>

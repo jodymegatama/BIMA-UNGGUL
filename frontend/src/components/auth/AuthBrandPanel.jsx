@@ -1,4 +1,5 @@
 import { Trophy, ShieldCheck, Buildings, Medal, User } from 'phosphor-react';
+import { KELOMPOKS } from '../../constants/indikator';
 
 /**
  * AuthBrandPanel — sisi kanan/dekoratif untuk halaman auth
@@ -39,7 +40,7 @@ export default function AuthBrandPanel() {
               <ShieldCheck size={12} weight="fill" color="#4caf00" /> Tervalidasi
             </span>
             <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">
-              <Buildings size={12} weight="regular" /> 6 kelompok
+              <Buildings size={12} weight="regular" /> {KELOMPOKS.length} kelompok
             </span>
           </div>
         </div>

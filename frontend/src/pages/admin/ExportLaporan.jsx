@@ -3,6 +3,7 @@ import { FilePdf, FileXls, DownloadSimple, Calendar, CheckCircle, Info, SpinnerG
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../lib/api';
+import { KELOMPOKS } from '../../constants/indikator';
 
 export default function ExportLaporan() {
   const { token } = useAuth();
@@ -97,7 +98,7 @@ export default function ExportLaporan() {
             </div>
             <div className="rounded-[12px] bg-white border-2 border-zinc-100 p-3">
               <div className="font-black text-charcoal">Periode {periodeInfo?.nama || periode || '-'}</div>
-              <div className="font-medium text-pencil">6 kelompok • Top 3 • Semua ranking</div>
+              <div className="font-medium text-pencil">{KELOMPOKS.length} kelompok • Top 3 • Semua ranking</div>
             </div>
             <div className="rounded-[12px] bg-white border-2 border-zinc-100 p-3">
               <div className="font-black text-charcoal">Tanggal cetak</div>

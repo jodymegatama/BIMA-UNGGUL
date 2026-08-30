@@ -15,11 +15,10 @@
  */
 
 import { prisma } from '../db/prisma.js';
+import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { resolveAktifPeriode, deriveStatus } from './periodService.js';
-
-const TX_OPTS = { timeout: 15000, maxWait: 5000 };
 
 // ==================== Field rules per indikator (PRD §11) ====================
 

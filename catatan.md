@@ -52,4 +52,3 @@
 ### Ditunda (bukan prioritas)
 - **Upgrade Prisma 5 → 6/7**: tertinggal 2 major, ada breaking changes;
   kerjakan terpisah dari pengembangan fitur.
-- **Bug save bobot via UI** (`KonfigurasiBobot.jsx`): patch frontend PENDING — periodeId salah saat fetch listBobot; backend sudah dipatch (`deriveStatus`).

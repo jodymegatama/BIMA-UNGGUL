@@ -1,4 +1,5 @@
 import { Gear, Trophy, ChartBar, Eye, Stack, Check, Medal } from 'phosphor-react';
+import { KELOMPOKS } from '../../../constants/indikator';
 
 /**
  * MetodeSection — persis dari _backup/index.html #metode
@@ -39,7 +40,7 @@ export default function MetodeSection() {
                   <span className="inline-flex h-9 px-3 rounded-full bg-eager text-white border-2 border-eager-dark items-center shadow-sticker">bobot</span>
                 </div>
                 <div className="mt-3 text-[13px] leading-[1.5] text-pencil font-medium">
-                  Diakumulasi per indikator, lalu dijumlah untuk total skor dalam 6 kelompok madrasah. Tie breaker deterministik memastikan ranking unik.
+                  Diakumulasi per indikator, lalu dijumlah untuk total skor dalam {KELOMPOKS.length} kelompok madrasah. Tie breaker deterministik memastikan ranking unik.
                 </div>
               </div>
               <div className="grid grid-cols-3 divide-x-2 divide-zinc-100 border-t-2 border-zinc-100 bg-zinc-50/60">

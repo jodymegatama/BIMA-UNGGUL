@@ -111,7 +111,7 @@ export default function AdminDashboard() {
           </div>
           <div className="font-display font-black text-[28px] leading-none text-charcoal mt-3">{kelompokRows.reduce((a, b) => a + b.total, 0)}</div>
           <div className="text-[11px] font-black tracking-wide text-faded uppercase">Madrasah aktif</div>
-          <div className="text-[11px] font-bold text-pencil">6 kelompok</div>
+          <div className="text-[11px] font-bold text-pencil">{KELOMPOKS.length} kelompok</div>
         </div>
 
         <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 shadow-card">

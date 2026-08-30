@@ -7,6 +7,7 @@ import LeaderboardChart from '../../components/public/leaderboard/LeaderboardCha
 import LeaderboardTable from '../../components/public/leaderboard/LeaderboardTable';
 import useRevealOnScroll from '../../hooks/useRevealOnScroll';
 import { apiGet } from '../../lib/api';
+import { KELOMPOKS } from '../../constants/indikator';
 
 // kelompoks eksplisit untuk fallback auto-latest
 const KELOMPOK_FALLBACK = 'MI Negeri';
@@ -176,7 +177,7 @@ export default function Leaderboard() {
                 <Trophy size={12} weight="fill" color="#4caf00" /> Leaderboard Publik
               </span>
               <span className="hidden sm:inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">
-                <Buildings size={12} weight="regular" /> {madrasahCount ?? '—'} madrasah • 6 kelompok
+                <Buildings size={12} weight="regular" /> {madrasahCount ?? '—'} madrasah • {KELOMPOKS.length} kelompok
               </span>
             </div>
             <h1 className="font-display font-black tracking-[-0.02em] text-[30px] lg:text-[40px] leading-none text-charcoal mt-3">
