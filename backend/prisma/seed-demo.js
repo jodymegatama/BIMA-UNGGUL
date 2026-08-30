@@ -8,6 +8,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import { createPeriode } from '../src/services/periodService.js';
+import { recordAuditLog } from '../src/services/auditService.js';
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,8 @@ async function seedPeriode() {
         tanggalMulai: new Date(now.getTime() - 7 * 86400000).toISOString(), // mulai seminggu lalu
         tanggalCutoff: new Date(now.getTime() + 90 * 86400000).toISOString(), // cutoff 90 hari lagi
       },
+      // ipAddress 'seed-demo' = marker asal-seed (bukan IP asli) — konsisten dgn convention
+      // marker audit di test ('127.0.0.1-e2e'). Audit seed tetap bisa difilter via ipAddress.
       { userId: admin.id, ip: 'seed-demo' },
     );
   } catch (err) {
@@ -142,6 +145,18 @@ async function main() {
             data: { submissionItemId: item.id, aksi: 'approve', validatorId: admin.id, alasan: null },
           });
           await prisma.submissionItem.update({ where: { id: item.id }, data: { status: 'disetujui' } });
+          // Audit konsisten dgn real flow (validationService.approveSubmission) — seed juga tercatat.
+          await recordAuditLog(
+            {
+              userId: admin.id,
+              action: 'approve_submission',
+              entity: 'SubmissionItem',
+              entityId: item.id,
+              dataSesudah: { status: 'disetujui' },
+              ipAddress: 'seed-demo',
+            },
+            prisma,
+          );
         }
         n++;
       }
@@ -153,7 +168,9 @@ async function main() {
 }
 
 async function getAdmin() {
-  const admin = await prisma.user.findFirst({ where: { role: 'admin' } });
+  // Deterministik: admin terlama (createdAt asc, tiebreak id) — dulu findFirst tanpa orderBy
+  // bisa memilih admin acak bila >1 admin → audit misattribution antar-run.
+  const admin = await prisma.user.findFirst({ where: { role: 'admin' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
   if (!admin) throw new Error('Tidak ada user admin — jalankan scripts/create-dummy-accounts.mjs dulu.');
   return admin;
 }
