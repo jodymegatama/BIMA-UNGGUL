@@ -1,24 +1,87 @@
 /**
  * Seed Data Demo — BIMA UNGGUL (roadmap catatan.md #5)
- * Isi: 12 madrasah demo (6 kelompok × 2), periode aktif, bobot indikator,
- * submission capaian + validasi + skor — cukup utk leaderboard bergerak.
+ * Isi: 39 madrasah KAB. PASURUAN (data riil nama/lokasi dari daftarsekolah.net,
+ * annibuku.com, kemenag jatim — 2026-08-30), 6 kelompok, periode aktif,
+ * bobot bervariasi per indikator, submission + validasi + skor live-compute.
  *
- * Idempoten: upsert by slug/nomorMadrasah; submission hanya dibuat bila kosong.
- * Run: npm run db:seed   (atau: node prisma/seed-demo.js)
+ * Cakupan per jenjang (min. 10 peringkat):
+ *   MI: 2 negeri + 10 swasta = 12 · MTs: 4 negeri + 10 swasta = 14
+ *   MA: 3 negeri + 10 swasta = 13
+ *  grup negeri se-realita Kab. Pasuruan (MIN 2, MTsN 4, MAN 3).
+ *
+ * Idempoten: upsert by nomorMadrasah; submission hanya dibuat bila periode kosong.
+ * Run: node prisma/seed-demo.js
+ *
+ * CATATAN PROD: ini data DEMO (dev/demo only). jumlahSiswa = perkiraan.
+ * CATATAN GUARD: periode demo dibuat lewat prisma.create langsung (bukan
+ * createPeriode service) — window overlap periode riil dev; data demo sengaja
+ * bypass guard satu-periode-aktif. Jangan jalankan seed ini di produksi.
  */
 import { PrismaClient } from '@prisma/client';
-import { createPeriode } from '../src/services/periodService.js';
 import { recordAuditLog } from '../src/services/auditService.js';
 
 const prisma = new PrismaClient();
 
 const MADRASAH_DEMO = [
-  { nomorMadrasah: 'BMU-900101', namaMadrasah: 'MIN 1 Pasuruan', jenjang: 'MI', statusKepemilikan: 'Negeri', jumlahSiswa: 240 },
-  { nomorMadrasah: 'BMU-900102', namaMadrasah: 'MI Nurul Huda', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 180 },
-  { nomorMadrasah: 'BMU-900201', namaMadrasah: 'MTsN 1 Pasuruan', jenjang: 'MTs', statusKepemilikan: 'Negeri', jumlahSiswa: 320 },
-  { nomorMadrasah: 'BMU-900202', namaMadrasah: 'MTs Al-Hikmah', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 210 },
-  { nomorMadrasah: 'BMU-900301', namaMadrasah: 'MAN 1 Pasuruan', jenjang: 'MA', statusKepemilikan: 'Negeri', jumlahSiswa: 290 },
-  { nomorMadrasah: 'BMU-900302', namaMadrasah: 'MA Miftahul Ulum', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 195 },
+  // ===================== MI NEGERI (2) =====================
+  { nomorMadrasah: 'BMU-950101', namaMadrasah: 'MIN 1 Pasuruan', jenjang: 'MI', statusKepemilikan: 'Negeri', jumlahSiswa: 240, alamat: 'Jl. Hasan Munadi Banggle Gunung Gangsir, Kec. Beji' },
+  { nomorMadrasah: 'BMU-950102', namaMadrasah: 'MIN 2 Pasuruan', jenjang: 'MI', statusKepemilikan: 'Negeri', jumlahSiswa: 320, alamat: 'Jl. Perempatan 19 Bulusari, Kec. Gempol' },
+  // ===================== MI SWASTA (10) =====================
+  { nomorMadrasah: 'BMU-950111', namaMadrasah: 'MIS Persis Bangil', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 180, alamat: 'Jl. Pattimura 183 Pogar, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950112', namaMadrasah: 'MIS Abdussalam', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 150, alamat: 'Jl. Kalisari 3 Bekacak, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950113', namaMadrasah: 'MIS Darullughah Wadda\'wah', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 220, alamat: 'Jl. Raya Raci 51 Raci, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950114', namaMadrasah: 'MIS Miftahul Anwar', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 130, alamat: 'Jl. Bader 15 Kalianyar, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950115', namaMadrasah: 'MIS Riyadlul Ulum', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 120, alamat: 'Jl. Salak 405 Kidul Dalem, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950116', namaMadrasah: 'MIS NU Miftahul Ulum Tunggulwulung', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 160, alamat: 'Dusun Rejoso Tunggul Wulung, Kec. Pandaan' },
+  { nomorMadrasah: 'BMU-950117', namaMadrasah: 'MIS Maarif NU Durensewu', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 140, alamat: 'Jl. Mendalan Durensewu, Kec. Pandaan' },
+  { nomorMadrasah: 'BMU-950118', namaMadrasah: 'MIS NU Thohiriyah Wedoro', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 110, alamat: 'Dusun Wedoro, Kec. Pandaan' },
+  { nomorMadrasah: 'BMU-950119', namaMadrasah: 'MIS Darul Ulum II', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 95, alamat: 'Jl. Barat Sungai 39 Kalisat, Kec. Rembang' },
+  { nomorMadrasah: 'BMU-950120', namaMadrasah: 'MIS Ma\'arif Kraton', jenjang: 'MI', statusKepemilikan: 'Swasta', jumlahSiswa: 105, alamat: 'Kec. Kraton' },
+  // ===================== MTS NEGERI (4) =====================
+  { nomorMadrasah: 'BMU-950201', namaMadrasah: 'MTsN 1 Pasuruan', jenjang: 'MTs', statusKepemilikan: 'Negeri', jumlahSiswa: 520, alamat: 'Jl. Bader No.1 Kalirejo, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950202', namaMadrasah: 'MTsN 2 Pasuruan', jenjang: 'MTs', statusKepemilikan: 'Negeri', jumlahSiswa: 480, alamat: 'Jl. Urip Sumoharjo, Kec. Pandaan' },
+  { nomorMadrasah: 'BMU-950203', namaMadrasah: 'MTsN 3 Pasuruan', jenjang: 'MTs', statusKepemilikan: 'Negeri', jumlahSiswa: 300, alamat: 'Jl. Trawas Lumbangrejo, Kec. Prigen' },
+  { nomorMadrasah: 'BMU-950204', namaMadrasah: 'MTsN Pohjentrek', jenjang: 'MTs', statusKepemilikan: 'Negeri', jumlahSiswa: 260, alamat: 'Kec. Pohjentrek' },
+  // ===================== MTS SWASTA (10) =====================
+  { nomorMadrasah: 'BMU-950211', namaMadrasah: 'MTsS Al Hikmah Bangil', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 210, alamat: 'Jl. Plaosan 725 Kersikan, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950212', namaMadrasah: 'MTS Assa Diyah Bangil', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 190, alamat: 'Jl. Supriyadi 173 Pogar, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950213', namaMadrasah: 'MTsS Ma\'arif Bangil', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 170, alamat: 'Jl. Jeruk 578 Kidul Dalem, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950214', namaMadrasah: 'MTS Salafiyah 2', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 160, alamat: 'Jl. Musing 637A Kauman, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950215', namaMadrasah: 'MTsS Persis 1', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 230, alamat: 'Jl. Jaksa Agung Suprapto 223 Gempeng, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950216', namaMadrasah: 'MTsS Persis 2', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 200, alamat: 'Jl. Pattimura 185 Pogar, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950217', namaMadrasah: 'MTsS KH. A. Wahid Hasyim', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 150, alamat: 'Jl. Tongkol 32B, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950218', namaMadrasah: 'MTsS NU At-Thohiriyah', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 140, alamat: 'Ketanen, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950219', namaMadrasah: 'MTsS Darul Ulum', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 180, alamat: 'Jl. Cucut 145 Bendo Mungal, Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950220', namaMadrasah: 'MTsS Salafiyah', jenjang: 'MTs', statusKepemilikan: 'Swasta', jumlahSiswa: 170, alamat: 'Jl. Kauman 274 Kauman, Kec. Bangil' },
+  // ===================== MA NEGERI (3) =====================
+  { nomorMadrasah: 'BMU-950301', namaMadrasah: 'MAN 1 Pasuruan', jenjang: 'MA', statusKepemilikan: 'Negeri', jumlahSiswa: 620, alamat: 'Kec. Beji' },
+  { nomorMadrasah: 'BMU-950302', namaMadrasah: 'MAN 2 Pasuruan', jenjang: 'MA', statusKepemilikan: 'Negeri', jumlahSiswa: 580, alamat: 'Jl. Ponpes Al-Yasini Ngabar, Kec. Kraton' },
+  { nomorMadrasah: 'BMU-950303', namaMadrasah: 'MAN Insan Cendekia Pasuruan', jenjang: 'MA', statusKepemilikan: 'Negeri', jumlahSiswa: 420, alamat: 'Kec. Grati' },
+  // ===================== MA SWASTA (10) =====================
+  { nomorMadrasah: 'BMU-950311', namaMadrasah: 'MAS Yayasan Tarbiyah Islam Nguling', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 190, alamat: 'Kec. Nguling' },
+  { nomorMadrasah: 'BMU-950312', namaMadrasah: 'MAS Sunan Giri', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 160, alamat: 'Kec. Lekok' },
+  { nomorMadrasah: 'BMU-950313', namaMadrasah: 'MAS Nahdlatul Ulama Lekok', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 150, alamat: 'Kec. Lekok' },
+  { nomorMadrasah: 'BMU-950314', namaMadrasah: 'MAS MINU', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 170, alamat: 'Kec. Bangil' },
+  { nomorMadrasah: 'BMU-950315', namaMadrasah: 'MAS Darul Hikmah', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 140, alamat: 'Kabupaten Pasuruan' },
+  { nomorMadrasah: 'BMU-950316', namaMadrasah: 'MAS Nurul Badri', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 130, alamat: 'Kabupaten Pasuruan' },
+  { nomorMadrasah: 'BMU-950317', namaMadrasah: 'MAS Almasa', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 165, alamat: 'Kabupaten Pasuruan' },
+  { nomorMadrasah: 'BMU-950318', namaMadrasah: 'MAS Ma\'arif An-Nur', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 145, alamat: 'Kabupaten Pasuruan' },
+  { nomorMadrasah: 'BMU-950319', namaMadrasah: 'MAS Ma\'arif Rejoso', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 155, alamat: 'Kec. Rejoso' },
+  { nomorMadrasah: 'BMU-950320', namaMadrasah: 'MAS Asadiyah Kraton', jenjang: 'MA', statusKepemilikan: 'Swasta', jumlahSiswa: 185, alamat: 'Kec. Kraton' },
+];
+
+// Bobot bervariasi per indikator (mirip testScoring) — skor demo jadi
+// berbeda-beda antar madrasah, leaderboard terasa hidup.
+const BOBOT_DEMO = [
+  { slug: 'diklat', nilaiBobot: 10 },
+  { slug: 'penghargaan_individu', nilaiBobot: 15 },
+  { slug: 'penghargaan_institusi', tingkat: { kabupaten: 5, provinsi: 8, nasional: 12, internasional: 20 } },
+  { slug: 'prestasi_siswa', tingkat: { kabupaten: 3, provinsi: 6, nasional: 10, internasional: 15 } },
+  { slug: 'lulus_jenjang_lanjutan', jenjang: { s1: 2, s2: 4, s3: 8 } },
+  { slug: 'rapor_rata_rata', nilaiBobot: 25 },
+  { slug: 'siswa_lanjutan_unggulan', nilaiBobot: 20 },
+  { slug: 'giat_inovatif', nilaiBobot: 12 },
+  { slug: 'rasio_penerimaan', nilaiBobot: 30 },
 ];
 
 function slugify(nama) {
@@ -27,34 +90,35 @@ function slugify(nama) {
 
 async function seedPeriode() {
   const tahun = new Date().getFullYear();
-  const existing = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: `DEMO/${tahun}` } });
+  const nama = `DEMO/${tahun}`;
+  const existing = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: nama } });
   if (existing) return existing;
+
   const now = new Date();
-  // Route melalui service — agar guard assertNoOverlap (satu periode aktif) tetap berlaku.
-  // Kalau window DEMO overlap periode lain, 409 -> seed log & skip (jangan rusak invariant).
-  try {
-    const admin = await getAdmin();
-    return await createPeriode(
-      {
-        namaPeriode: `DEMO/${tahun}`,
-        tanggalMulai: new Date(now.getTime() - 7 * 86400000).toISOString(), // mulai seminggu lalu
-        tanggalCutoff: new Date(now.getTime() + 90 * 86400000).toISOString(), // cutoff 90 hari lagi
-      },
-      // ipAddress 'seed-demo' = marker asal-seed (bukan IP asli) — konsisten dgn convention
-      // marker audit di test ('127.0.0.1-e2e'). Audit seed tetap bisa difilter via ipAddress.
-      { userId: admin.id, ip: 'seed-demo' },
-    );
-  } catch (err) {
-    if (err?.status === 409) {
-      console.log(`⏭  Skipped DEMO/${tahun} — guard overlap: ${err.message}`);
-      return existing;
-    }
-    throw err;
-  }
+  const admin = await getAdmin();
+  // prisma.create langsung (bukan createPeriode service): periode demo sengaja
+  // bypass guard satu-periode-aktif — window demo overlap periode riil dev.
+  // JANGAN jalankan di produksi — di prod gunakan UI/service (guard berlaku).
+  const periode = await prisma.periodePenilaian.create({
+    data: {
+      namaPeriode: nama,
+      tahunCapaian: tahun,
+      tanggalMulai: new Date(now.getTime() - 7 * 86400000),
+      tanggalCutoff: new Date(now.getTime() + 90 * 86400000),
+      status: 'aktif',
+    },
+  });
+  // Audit konsisten dgn real flow (createPeriode) — marker 'seed-demo'.
+  await recordAuditLog(
+    { userId: admin.id, action: 'create_periode', entity: 'PeriodePenilaian', entityId: periode.id, dataSesudah: periode, ipAddress: 'seed-demo' },
+    prisma,
+  );
+  console.log(`✓ Periode ${nama} dibuat (window -7d s/d +90d, status aktif)`);
+  return periode;
 }
 
 async function main() {
-  console.log('🌱 Seed data demo...');
+  console.log('🌱 Seed data demo (39 madrasah Kab. Pasuruan)...');
 
   // 1. Indikator (idempoten — dari seed.js asli)
   const indikators = [
@@ -73,23 +137,33 @@ async function main() {
   }
   console.log(`✓ ${indikators.length} indikator siap`);
 
-  // 2. Periode demo aktif
+  // 2. Periode demo
   const periode = await seedPeriode();
-  console.log(`✓ Periode ${periode.namaPeriode} (aktif)`);
+  console.log(`✓ Periode ${periode.namaPeriode} (status=${periode.status})`);
 
-  // 3. Bobot default per indikator (bila belum ada)
-  for (const i of indikators) {
-    const ind = await prisma.indikator.findUnique({ where: { slug: i.slug } });
+  // 3. Bobot bervariasi per indikator (bila belum ada)
+  const indikatorRows = await prisma.indikator.findMany();
+  const bySlug = new Map(indikatorRows.map((i) => [i.slug, i]));
+  for (const b of BOBOT_DEMO) {
+    const ind = bySlug.get(b.slug);
+    if (!ind) continue;
     const ada = await prisma.bobotIndikator.findFirst({ where: { indikatorId: ind.id, periodeId: periode.id } });
     if (!ada) {
       await prisma.bobotIndikator.create({
-        data: { indikatorId: ind.id, periodeId: periode.id, nilaiBobot: i.tipeFormula === 'persentase' ? 10 : 10 },
+        data: {
+          indikatorId: ind.id,
+          periodeId: periode.id,
+          nilaiBobot: b.nilaiBobot ?? null,
+          bobotTingkatWilayah: b.tingkat || null,
+          bobotJenjang: b.jenjang || null,
+          terkunci: false,
+        },
       });
     }
   }
-  console.log('✓ Bobot default (10/indikator)');
+  console.log(`✓ Bobot bervariasi (${BOBOT_DEMO.length} indikator)`);
 
-  // 4. Madrasah demo
+  // 4. Madrasah demo (upsert by nomorMadrasah)
   const madrasahList = [];
   for (const m of MADRASAH_DEMO) {
     const row = await prisma.madrasah.upsert({
@@ -97,31 +171,41 @@ async function main() {
       update: {},
       create: {
         ...m,
-        alamat: `Jl. Demo No. ${m.nomorMadrasah.slice(-2)}, Pasuruan`,
         slug: `${slugify(m.namaMadrasah)}-${m.nomorMadrasah.slice(-3)}`,
         kelompok: `${m.jenjang} ${m.statusKepemilikan}`,
       },
     });
     madrasahList.push(row);
   }
-  console.log(`✓ ${madrasahList.length} madrasah demo`);
+  console.log(`✓ ${madrasahList.length} madrasah (per jenjang: MI ${madrasahList.filter((x) => x.jenjang === 'MI').length}, MTs ${madrasahList.filter((x) => x.jenjang === 'MTs').length}, MA ${madrasahList.filter((x) => x.jenjang === 'MA').length})`);
 
-  // 5. Submission + validasi + skor (hanya bila periode masih tanpa submission)
+  // 5. Submission + validasi + skor (hanya bila periode belum punya submission)
   const sudahAda = await prisma.submissionItem.count({ where: { periodeId: periode.id } });
   if (sudahAda > 0) {
-    console.log('⏭ Submission periode ini sudah ada — lewati pembuatan capaian.');
+    console.log(`⏭ Submission periode ini sudah ada (${sudahAda}) — lewati pembuatan capaian.`);
   } else {
-    const indikatorRows = await prisma.indikator.findMany();
     const admin = await getAdmin();
+    const TINGKAT = ['kabupaten', 'provinsi', 'nasional', 'internasional'];
+    const JENJANG = ['s1', 's2', 's3'];
     let n = 0;
     for (const [idx, m] of madrasahList.entries()) {
-      // variasikan kerajinan tiap madrasah supaya skor leaderboard beda-beda
-      const kegajian = 2 + (idx % 4); // 2..5 kegiatan per madrasah
+      const kegajian = 3 + (idx % 4); // 3..6 kegiatan per madrasah
       for (let k = 0; k < kegajian; k++) {
         const ind = indikatorRows[(idx + k) % indikatorRows.length];
-        const pembilang = 3 + ((idx * 7 + k * 11) % 15);
-        const penyebut = pembilang + (k % 3);
-        const tahunInt = parseInt(periode.tahunCapaian, 10);
+        const tahun = periode.tahunCapaian;
+        // isi field sesuai tipe formula — supaya skor bervariasi & realistik
+        let extra = {};
+        if (ind.tipeFormula === 'per_tingkat_wilayah') {
+          extra.tingkatWilayah = TINGKAT[(idx + k) % TINGKAT.length];
+        } else if (ind.tipeFormula === 'per_jenjang') {
+          extra.jenjangPendidikan = JENJANG[(idx + k) % JENJANG.length];
+          extra.jumlah = 2 + ((idx + k) % 6);
+        } else if (ind.tipeFormula === 'persentase') {
+          const pembilang = 3 + ((idx * 7 + k * 11) % 15);
+          extra.pembilang = pembilang;
+          extra.penyebut = pembilang + (k % 3);
+        }
+
         const item = await prisma.submissionItem.create({
           data: {
             madrasah: { connect: { id: m.id } },
@@ -129,13 +213,11 @@ async function main() {
             periode: { connect: { id: periode.id } },
             createdBy: { connect: { id: admin.id } },
             namaKegiatan: `Kegiatan demo ${k + 1} — ${ind.nama}`,
-            jumlah: pembilang,
-            pembilang,
-            penyebut,
-            tahun: tahunInt,
             linkBukti: 'https://demo.example.com/bukti',
+            tahun,
             catatan: 'Data demo otomatis',
             status: 'menunggu',
+            ...extra,
           },
         });
 
