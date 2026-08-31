@@ -1,26 +1,31 @@
 /**
  * Seed Data Demo — BIMA UNGGUL (roadmap catatan.md #5)
  * Isi: 39 madrasah KAB. PASURUAN (data riil nama/lokasi dari daftarsekolah.net,
- * annibuku.com, kemenag jatim — 2026-08-30), 6 kelompok, periode aktif,
- * bobot bervariasi per indikator, submission + validasi + skor live-compute.
+ * annibuku.com, kemenag jatim — 2026-08-30), 6 kelompok, bobot bervariasi,
+ * submission + validasi + skor live-compute — SEMUA di periode target
+ * yang SUDAH ADA (TARGET_PERIODE, default '2026/2027').
+ *
+ * Penting (keputusan user 2026-08-30): seed TIDAK membuat periode baru —
+ * periode target harus sudah dibuat via UI (atau migration). Dengan begitu
+ * guard "satu periode aktif" tidak pernah dilanggar oleh seed.
  *
  * Cakupan per jenjang (min. 10 peringkat):
  *   MI: 2 negeri + 10 swasta = 12 · MTs: 4 negeri + 10 swasta = 14
  *   MA: 3 negeri + 10 swasta = 13
  *  grup negeri se-realita Kab. Pasuruan (MIN 2, MTsN 4, MAN 3).
  *
- * Idempoten: upsert by nomorMadrasah; submission hanya dibuat bila periode kosong.
- * Run: node prisma/seed-demo.js
- *
- * CATATAN PROD: ini data DEMO (dev/demo only). jumlahSiswa = perkiraan.
- * CATATAN GUARD: periode demo dibuat lewat prisma.create langsung (bukan
- * createPeriode service) — window overlap periode riil dev; data demo sengaja
- * bypass guard satu-periode-aktif. Jangan jalankan seed ini di produksi.
+ * Idempoten: upsert by nomorMadrasah; submission hanya dibuat bila periode
+ * target belum punya submission; bobot di-upsert ke nilai varian demo
+ * (nilai di periode target adalah data demo dev — bukan set riil admin).
+ * Run: node prisma/seed-demo.js | JANGAN di produksi.
  */
 import { PrismaClient } from '@prisma/client';
 import { recordAuditLog } from '../src/services/auditService.js';
 
 const prisma = new PrismaClient();
+
+// Periode target — periode RIIL aktif di DB dev (user sengaja menghapus DEMO/2026).
+const TARGET_PERIODE = '2026/2027';
 
 const MADRASAH_DEMO = [
   // ===================== MI NEGERI (2) =====================
@@ -88,32 +93,13 @@ function slugify(nama) {
   return nama.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
-async function seedPeriode() {
-  const tahun = new Date().getFullYear();
-  const nama = `DEMO/${tahun}`;
-  const existing = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: nama } });
-  if (existing) return existing;
-
-  const now = new Date();
-  const admin = await getAdmin();
-  // prisma.create langsung (bukan createPeriode service): periode demo sengaja
-  // bypass guard satu-periode-aktif — window demo overlap periode riil dev.
-  // JANGAN jalankan di produksi — di prod gunakan UI/service (guard berlaku).
-  const periode = await prisma.periodePenilaian.create({
-    data: {
-      namaPeriode: nama,
-      tahunCapaian: tahun,
-      tanggalMulai: new Date(now.getTime() - 7 * 86400000),
-      tanggalCutoff: new Date(now.getTime() + 90 * 86400000),
-      status: 'aktif',
-    },
-  });
-  // Audit konsisten dgn real flow (createPeriode) — marker 'seed-demo'.
-  await recordAuditLog(
-    { userId: admin.id, action: 'create_periode', entity: 'PeriodePenilaian', entityId: periode.id, dataSesudah: periode, ipAddress: 'seed-demo' },
-    prisma,
-  );
-  console.log(`✓ Periode ${nama} dibuat (window -7d s/d +90d, status aktif)`);
+async function resolveTargetPeriode() {
+  // Seed TIDAK membuat periode (guard satu-periode-aktif dijaga) — periode
+  // target harus sudah dibuat via UI/migration. Cari & pul.
+  const periode = await prisma.periodePenilaian.findFirst({ where: { namaPeriode: TARGET_PERIODE } });
+  if (!periode) {
+    throw new Error(`Periode target '${TARGET_PERIODE}' tidak ditemukan — buat dulu via UI Admin (Manajemen Periode).`);
+  }
   return periode;
 }
 
@@ -137,31 +123,36 @@ async function main() {
   }
   console.log(`✓ ${indikators.length} indikator siap`);
 
-  // 2. Periode demo
-  const periode = await seedPeriode();
-  console.log(`✓ Periode ${periode.namaPeriode} (status=${periode.status})`);
+  // 2. Periode target (existing — seed TIDAK membuat periode)
+  const periode = await resolveTargetPeriode();
+  console.log(`✓ Periode target ${periode.namaPeriode} (namaPeriode=${periode.namaPeriode})`);
 
-  // 3. Bobot bervariasi per indikator (bila belum ada)
+  // 3. Bobot varian demo — upsert per (indikatorId, periodeId); nilai demo dev
+  //    menggantikan sisa bobot default lama di periode target (bukan set riil admin).
   const indikatorRows = await prisma.indikator.findMany();
   const bySlug = new Map(indikatorRows.map((i) => [i.slug, i]));
   for (const b of BOBOT_DEMO) {
     const ind = bySlug.get(b.slug);
     if (!ind) continue;
-    const ada = await prisma.bobotIndikator.findFirst({ where: { indikatorId: ind.id, periodeId: periode.id } });
-    if (!ada) {
-      await prisma.bobotIndikator.create({
-        data: {
-          indikatorId: ind.id,
-          periodeId: periode.id,
-          nilaiBobot: b.nilaiBobot ?? null,
-          bobotTingkatWilayah: b.tingkat || null,
-          bobotJenjang: b.jenjang || null,
-          terkunci: false,
-        },
-      });
-    }
+    await prisma.bobotIndikator.upsert({
+      where: { indikatorId_periodeId: { indikatorId: ind.id, periodeId: periode.id } },
+      update: {
+        nilaiBobot: b.nilaiBobot ?? null,
+        bobotTingkatWilayah: b.tingkat || null,
+        bobotJenjang: b.jenjang || null,
+        terkunci: false,
+      },
+      create: {
+        indikatorId: ind.id,
+        periodeId: periode.id,
+        nilaiBobot: b.nilaiBobot ?? null,
+        bobotTingkatWilayah: b.tingkat || null,
+        bobotJenjang: b.jenjang || null,
+        terkunci: false,
+      },
+    });
   }
-  console.log(`✓ Bobot bervariasi (${BOBOT_DEMO.length} indikator)`);
+  console.log(`✓ Bobot varian demo di-upsert (${BOBOT_DEMO.length} indikator)`);
 
   // 4. Madrasah demo (upsert by nomorMadrasah)
   const madrasahList = [];
