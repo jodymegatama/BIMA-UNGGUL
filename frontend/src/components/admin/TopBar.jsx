@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { List, Bell, CaretRight } from 'phosphor-react';
 import { Link, useLocation } from 'react-router-dom';
 import NotificationDropdown from '../shared/NotificationDropdown';
+import ThemeToggle from '../shared/ThemeToggle';
 import { apiFetch } from '../../lib/api';
 
 const titleMap = {
@@ -93,6 +94,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
           <span className="w-2 h-2 rounded-full bg-eager animate-pulse" style={{ animation: 'pulse-live 1.6s ease infinite' }} />
           Periode {periode}
         </span>
+        <ThemeToggle />
         <div className="relative">
           <button
             onClick={() => setOpen((v) => !v)}

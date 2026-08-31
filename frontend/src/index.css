@@ -11,6 +11,45 @@
   --charcoal: #4b4b4b;
   --pencil: #777777;
   --faded: #afafaf;
+
+  /* Token semantik netral — light default (dark di-override di blok .dark) */
+  --bg-body: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --surface-3: #f4f4f5;
+  --line: #e4e4e7;      /* border-zinc-200 */
+  --line-soft: #f4f4f5; /* border-zinc-100 */
+  --line-2: #d4d4d8;    /* border-zinc-300 */
+  --text-1: #4b4b4b;    /* text-charcoal */
+  --text-2: #777777;    /* text-pencil */
+  --text-3: #afafaf;    /* text-faded */
+  --scroll-thumb: #afafaf;
+  --scroll-track: #f5f5f5;
+  --shadow-card: 0 2px 0 0 rgba(175, 175, 175, 0.3), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 20px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   DARK MODE — class .dark di <html> (toggle via useTheme; index.html inisialisasi
+   sebelum paint). Strategi: override terpusat atas kelas netral Tailwind —
+   SEMUA zona (publik/operator/admin) ter-theme otomatis, satu sumber kontrol.
+   Token brand (eager/story/spark/fresh/ink) TIDAK diubah di dark.
+   ========================================================================== */
+.dark {
+  --bg-body: #0b1024;
+  --surface: #141a33;
+  --surface-2: #1a2140;
+  --surface-3: #222a4d;
+  --line: #2b3560;
+  --line-soft: #20284a;
+  --line-2: #3a4677;
+  --text-1: #e7eaf8;
+  --text-2: #a6afcc;
+  --text-3: #7e88ab;
+  --scroll-thumb: #3a4677;
+  --scroll-track: #161c36;
+  --shadow-card: 0 2px 0 0 rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 20px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -23,8 +62,8 @@ html {
 
 body {
   font-family: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
-  background: #fff;
-  color: #4b4b4b;
+  background: var(--bg-body);
+  color: var(--text-1);
   overflow-x: hidden;
 }
 
@@ -34,6 +73,11 @@ body {
 
 ::selection {
   background: #d7ffb8;
+}
+
+.dark ::selection {
+  background: #223058;
+  color: #e7eaf8;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -49,11 +93,11 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #afafaf;
+  background: var(--scroll-thumb);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: var(--scroll-track);
 }
 
 /* Keyframes — persis dari _backup/index.html <style> */
@@ -108,8 +152,79 @@ body {
 }
 .btn-secondary:hover { filter: brightness(0.95); }
 .card {
-  background: #fff;
-  border: 2px solid #e4e4e7; /* zinc-200 */
+  background: var(--surface);
+  border: 2px solid var(--line);
   border-radius: 12px;
   padding: 1rem;
 }
+
+/* ==========================================================================
+   DARK OVERRIDE — kelas netral Tailwind (bg-white/zinc, text-*, border-zinc-*)
+   Ditangkap lewat selector class + attribute (varian opacity). Aturan umum
+   dulu, varian spesifik SETELAH-nya (specificity sama, urutan menang).
+   ========================================================================== */
+
+/* --- Permukaan --- */
+.dark .bg-white,
+.dark [class*="bg-white/"] {
+  background-color: var(--surface);
+}
+/* varian transparan: overlay di atas gambar/hero/tombol — tetap semi-transparan putih */
+.dark [class*="bg-white/10"],
+.dark [class*="bg-white/20"],
+.dark [class*="bg-white/50"] {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+/* dropzone input (InputCapaian) — semi gelap, border dashed tetap terlihat */
+.dark [class*="bg-white/60"] {
+  background-color: rgba(20, 26, 51, 0.75);
+}
+/* navbar sticky & sticky save bar — blur + gelap tembus pandang */
+.dark [class*="bg-white/90"],
+.dark [class*="bg-white/95"] {
+  background-color: rgba(11, 16, 36, 0.9);
+}
+.dark .bg-zinc-50,
+.dark [class*="bg-zinc-50/"] {
+  background-color: var(--surface-2);
+}
+.dark .bg-zinc-100,
+.dark [class*="bg-zinc-100/"] {
+  background-color: var(--surface-3);
+}
+.dark .bg-zinc-200,
+.dark [class*="bg-zinc-200/"] {
+  background-color: var(--line);
+}
+.dark .bg-zinc-300 { background-color: var(--line-2); }
+.dark .bg-zinc-800 { background-color: #1a2140; }
+.dark .bg-zinc-900 { background-color: #101630; }
+.dark .bg-slate-50 { background-color: var(--surface-2); }
+.dark .bg-slate-100 { background-color: var(--surface-3); }
+
+/* --- Teks --- */
+.dark .text-charcoal { color: var(--text-1); }
+.dark .text-pencil { color: var(--text-2); }
+.dark .text-faded { color: var(--text-3); }
+.dark .text-slate-400 { color: #8b96b5; }
+.dark .text-slate-500 { color: #8b96b5; }
+.dark .text-zinc-400 { color: #8b96b5; }
+.dark .text-zinc-500 { color: #a6afcc; }
+
+/* --- Border --- */
+.dark .border-zinc-100,
+.dark [class*="border-zinc-100/"] { border-color: var(--line-soft); }
+.dark .border-zinc-200,
+.dark [class*="border-zinc-200/"] { border-color: var(--line); }
+.dark .border-zinc-300,
+.dark [class*="border-zinc-300/"] { border-color: var(--line-2); }
+.dark .border-slate-200 { border-color: var(--line); }
+.dark .border-white { border-color: rgba(255, 255, 255, 0.08); }
+
+/* --- Bayangan --- */
+.dark .shadow-card { box-shadow: var(--shadow-card); }
+.dark .shadow-float { box-shadow: var(--shadow-float); }
+.dark .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
+
+/* --- Pemilu & chart card dalam dark: hero/leaderboard cards tetap permukaan --- */
+.dark input::placeholder { color: var(--text-3); }

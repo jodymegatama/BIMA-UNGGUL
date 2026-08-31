@@ -5,9 +5,11 @@ import 'sonner/dist/styles.css';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
 import { DotPattern } from './components/ui/DotPattern';
+import useTheme from './hooks/useTheme';
 import AppRoutes from './router';
 
 function App() {
+  const { theme } = useTheme();
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -21,6 +23,7 @@ function App() {
           richColors
           closeButton
           duration={4000}
+          theme={theme === 'dark' ? 'dark' : 'light'}
           offset={{ bottom: 96 }}
           toastOptions={{
             style: { fontFamily: "'Nunito Sans', ui-sans-serif, system-ui, sans-serif", borderRadius: '12px' },

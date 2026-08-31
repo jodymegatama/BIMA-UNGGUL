@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, } from 'react-router-dom';
 import { Trophy, List, X, ArrowRight } from 'phosphor-react';
+import ThemeToggle from '../shared/ThemeToggle';
 
 /**
  * Navbar — ekstrak persis dari _backup/index.html#navbar
@@ -146,6 +147,7 @@ export default function Navbar() {
 
         {/* CTAs */}
         <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+          <ThemeToggle />
           <Link
             to="/login"
             className="hidden sm:inline-flex items-center justify-center h-10 px-5 rounded-[12px] border-2 border-faded text-charcoal font-extrabold text-[14px] hover:border-charcoal hover:bg-zinc-50 transition"

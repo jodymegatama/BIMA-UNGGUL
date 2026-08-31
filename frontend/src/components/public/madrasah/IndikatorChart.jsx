@@ -1,16 +1,20 @@
 import LazyChart from '../../shared/LazyChart';
 import { ChartBar } from 'phosphor-react';
 import { INDIKATORS } from '../../../constants/indikator';
+import useTheme from '../../../hooks/useTheme';
 
 /**
  * IndikatorChart — radar 9 indikator (ApexCharts). Fallback bar jika radar tidak cocok di mobile, tapi radar default.
  * Warna eager #58cc02 (fill), spark #1cb0f6 untuk stroke alternatif? Kita pakai eager solid + story wash.
  */
 export default function IndikatorChart({ data = [] }) {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
   const categories = data.map((d) => d.short);
   const scores = data.map((d) => d.skor);
 
   const options = {
+    theme: { mode: dark ? 'dark' : 'light' },
     chart: {
       type: 'radar',
       toolbar: { show: false },
@@ -25,7 +29,7 @@ export default function IndikatorChart({ data = [] }) {
       categories,
       labels: {
         show: true,
-        style: { fontSize: '10px', fontWeight: 800, colors: '#4b4b4b' },
+        style: { fontSize: '10px', fontWeight: 800, colors: dark ? '#a6afcc' : '#4b4b4b' },
       },
     },
     yaxis: { show: false, min: 0 },
@@ -36,8 +40,8 @@ export default function IndikatorChart({ data = [] }) {
     plotOptions: {
       radar: {
         polygons: {
-          strokeColors: '#e4e4e7',
-          fill: { colors: ['#ffffff', '#f9fafb'] },
+          strokeColors: dark ? '#2b3560' : '#e4e4e7',
+          fill: { colors: dark ? ['#161c36', '#141a33'] : ['#ffffff', '#f9fafb'] },
         },
       },
     },
@@ -65,7 +69,7 @@ export default function IndikatorChart({ data = [] }) {
         </span>
       </div>
       <div className="p-4 lg:p-5">
-        <LazyChart options={options} series={series} type="radar" height={360} />
+        <LazyChart key={theme} options={options} series={series} type="radar" height={360} />
         <div className="mt-2 text-[11px] font-bold text-faded text-center">Semakin luas area hijau, semakin merata capaian. Skor = Σ capaian disetujui × bobot.</div>
       </div>
     </div>

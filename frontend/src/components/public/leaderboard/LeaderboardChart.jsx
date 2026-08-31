@@ -1,17 +1,21 @@
 import LazyChart from '../../shared/LazyChart';
 import { ChartBar, Info } from 'phosphor-react';
 import { formatSkor } from '../../../lib/format';
+import useTheme from '../../../hooks/useTheme';
 
 /**
  * LeaderboardChart — horizontal bar Top 10 (ApexCharts, pilihan Phase 1)
  * Warna eager #58cc02 untuk bar, spark #1cb0f6 untuk aksen, story wash tidak dipakai di chart
  */
 export default function LeaderboardChart({ data = [] }) {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
   const top10 = data.slice(0, 10);
   const categories = top10.map((d) => d.nama);
   const scores = top10.map((d) => d.skor);
 
   const options = {
+    theme: { mode: dark ? 'dark' : 'light' },
     chart: {
       type: 'bar',
       toolbar: { show: false },
@@ -37,21 +41,21 @@ export default function LeaderboardChart({ data = [] }) {
     },
     grid: {
       show: true,
-      borderColor: '#f4f4f5',
+      borderColor: dark ? '#2b3560' : '#f4f4f5',
       strokeDashArray: 0,
       xaxis: { lines: { show: true } },
       yaxis: { lines: { show: false } },
     },
     xaxis: {
       categories,
-      labels: { style: { fontSize: '11px', fontWeight: 700, colors: '#777777' } },
+      labels: { style: { fontSize: '11px', fontWeight: 700, colors: dark ? '#a6afcc' : '#777777' } },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: {
       labels: {
         show: true,
-        style: { fontSize: '11px', fontWeight: 800, colors: '#4b4b4b' },
+        style: { fontSize: '11px', fontWeight: 800, colors: dark ? '#e7eaf8' : '#4b4b4b' },
         formatter: (val) => {
           const s = String(val);
           return s.length > 18 ? s.slice(0, 18) + '…' : s;
@@ -84,7 +88,7 @@ export default function LeaderboardChart({ data = [] }) {
       </div>
 
       <div className="p-4 lg:p-5">
-        <LazyChart options={options} series={series} type="bar" height={360} />
+        <LazyChart key={theme} options={options} series={series} type="bar" height={360} />
         <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-faded border-t-2 border-dashed border-zinc-100 pt-3">
           <Info size={14} weight="regular" color="#afafaf" />
           Tie-breaker: skor → jumlah approved → waktu capai skor → BMU ID. Grafik hanya visual; urutan tabel adalah sumber kebenaran.
