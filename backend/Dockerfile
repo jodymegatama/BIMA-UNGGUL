@@ -3,7 +3,7 @@ WORKDIR /app
 
 # deps
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev 2>&1 | tail -5
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 # prisma schema + source
 COPY prisma ./prisma

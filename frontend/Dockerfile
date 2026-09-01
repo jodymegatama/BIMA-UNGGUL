@@ -2,7 +2,7 @@
 FROM node:20-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci 2>&1 | tail -5
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 # same-origin proxy: kosong = /api relative
 ARG VITE_API_URL=""
