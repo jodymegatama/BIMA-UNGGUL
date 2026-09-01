@@ -2,6 +2,8 @@ services:
   db:
     image: mysql:8.0
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3307:3306"   # hanya localhost, akses phpMyAdmin/host
     environment:
       MYSQL_DATABASE: ${DB_NAME:-bima_unggul}
       MYSQL_USER: ${DB_USER:-bima_user}
