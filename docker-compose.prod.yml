@@ -1,0 +1,58 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-bima_unggul}
+      MYSQL_USER: ${DB_USER:-bima_user}
+      MYSQL_PASSWORD: ${DB_PASS:?set DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:?set DB_ROOT_PASS}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASS}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bima-net
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # override DATABASE_URL agar pakai service db (jangan localhost)
+      DATABASE_URL: "mysql://${DB_USER:-bima_user}:${DB_PASS}@db:3306/${DB_NAME:-bima_unggul}"
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bima-net
+    # tidak expose port publik — hanya internal untuk frontend nginx
+    expose:
+      - "3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""   # same-origin /api → proxy nginx ke backend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:80"   # hanya localhost, aaPanel Nginx yang expose HTTPS
+    networks:
+      - bima-net
+
+volumes:
+  mysql_data:
+
+networks:
+  bima-net:
+    driver: bridge
