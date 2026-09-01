@@ -10,6 +10,7 @@ COPY prisma ./prisma
 COPY src ./src
 COPY ecosystem.config.js* ./
 
+RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN npx prisma generate
 
 EXPOSE 3000
