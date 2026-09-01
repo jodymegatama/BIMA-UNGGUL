@@ -52,3 +52,11 @@ frontend/public/qa-auth.html
 # lint report artefak
 frontend/lint-report.json
 frontend/warn-plan.json
+
+# Dokumen internal — tidak deploy ke server
+catatan.md
+PRD.md
+DESIGN.md
+IDEA.md
+SETUP.md
+dogfood-output/
