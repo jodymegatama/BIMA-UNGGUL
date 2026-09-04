@@ -10,6 +10,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
+    "seed:leaderboard": "node prisma/seed-leaderboard-60.mjs",
     "smoke:dynamic-form": "node scripts/smoke-dynamic-form.mjs",
     "dummy:create": "node scripts/create-dummy-accounts.mjs",
     "dummy:clean": "node scripts/clean-dummy.mjs",

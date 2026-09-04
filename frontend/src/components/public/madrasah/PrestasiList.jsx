@@ -75,19 +75,47 @@ export default function PrestasiList({ prestasi = [] }) {
               </div>
 
               <div className="grid gap-3">
-                {list.map((p) => (
+                {list.map((p) => {
+                  const isRasio = p.indikatorKode === 'rapor_rata_rata' || p.indikatorKode === 'rasio_penerimaan';
+                  const isLulus = p.indikatorKode === 'lulus_jenjang_lanjutan';
+                  const pct = isRasio && p.pembilang != null && p.penyebut ? Math.round((p.pembilang / p.penyebut) * 100) : null;
+                  return (
                   <div key={p.id} className="rounded-[12px] border-2 border-zinc-200 bg-white p-4 hover:border-zinc-300 transition">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <div className="font-display font-black text-[14px] leading-tight text-charcoal">{p.nama}</div>
-                        <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
-                          <Buildings size={12} weight="regular" color="#777777" /> {p.institusi}
-                        </div>
-                        {p.siswa && <div className="text-[12px] font-medium text-pencil">Siswa: <span className="font-bold text-charcoal">{p.siswa}</span></div>}
+                        {isRasio ? (
+                          <>
+                            <div className="font-display font-black text-[14px] leading-tight text-charcoal">
+                              {p.pembilang} dari {p.penyebut} {p.indikatorKode === 'rapor_rata_rata' ? 'siswa >85' : 'pendaftar diterima'} {pct != null ? `= ${pct}%` : ''}
+                            </div>
+                            <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
+                              <ChartBar size={12} weight="regular" color="#777777" /> {p.indikatorKode === 'rapor_rata_rata' ? 'Rapor Rata-rata' : 'Rasio Penerimaan'}
+                            </div>
+                          </>
+                        ) : isLulus ? (
+                          <>
+                            <div className="font-display font-black text-[14px] leading-tight text-charcoal">
+                              Lulus {String(p.jenjangPendidikan || '').toUpperCase()} — {p.jumlah ?? '-'} ASN
+                            </div>
+                            <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
+                              <GraduationCap size={12} weight="regular" color="#777777" /> Jenjang {String(p.jenjangPendidikan || '').toUpperCase()}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-display font-black text-[14px] leading-tight text-charcoal">{p.nama}</div>
+                            <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
+                              <Buildings size={12} weight="regular" color="#777777" /> {p.institusi}
+                            </div>
+                            {p.siswa && <div className="text-[12px] font-medium text-pencil">Siswa: <span className="font-bold text-charcoal">{p.siswa}</span></div>}
+                          </>
+                        )}
                       </div>
+                      {!isRasio && !isLulus && (
                       <span className={`inline-flex items-center justify-center h-7 px-3 rounded-full border-2 text-[11px] font-black shrink-0 ${tingkatStyle[p.tingkat] || 'bg-white border-zinc-200'}`}>
                         {p.tingkat}
                       </span>
+                      )}
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-faded">
                       <Calendar size={12} weight="regular" /> Tahun {p.tahun}
@@ -97,7 +125,8 @@ export default function PrestasiList({ prestasi = [] }) {
                       </span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );

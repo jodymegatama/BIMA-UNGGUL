@@ -60,3 +60,9 @@ DESIGN.md
 IDEA.md
 SETUP.md
 dogfood-output/
+
+# Dev-only — seed & local tooling (jangan commit ke master)
+backend/prisma/seed-leaderboard-60.mjs
+backend/scripts/clean-demo-keep-admin.mjs
+backend/b_start.log
+backend/b_start.err

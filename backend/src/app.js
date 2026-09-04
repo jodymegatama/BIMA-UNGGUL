@@ -25,9 +25,17 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// 3. Middleware
+// 3. Middleware — CORS: allow localhost + LAN 192.168.x.x untuk dev (bima LAN)
+// prod tetap via env.frontendUrl (domain)
+const allowedOrigins = [env.frontendUrl, 'http://localhost:5173', 'http://192.168.1.90:5173'].filter(Boolean);
 app.use(cors({
-  origin: env.frontendUrl,
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // curl/postman
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    if (/^http:\/\/192\.168\.\d+\.\d+:5173$/.test(origin)) return cb(null, true);
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
+    return cb(null, false);
+  },
   credentials: true,
 }));
 app.use(express.json());

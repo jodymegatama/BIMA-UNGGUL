@@ -36,17 +36,27 @@ function mapPrestasi(apiList) {
       tingkat: capitalizeTingkat(p.tingkatWilayah || p.tingkat),
       tahun: p.tahun || new Date(p.createdAt).getFullYear(),
       siswa: p.namaPeserta || p.siswa || null,
+      pembilang: p.pembilang ?? null,
+      penyebut: p.penyebut ?? null,
+      jenjangPendidikan: p.jenjangPendidikan || null,
+      jumlah: p.jumlah ?? null,
       // catatan intentionally not showing linkBukti
     };
   });
 }
 
+function formatSkor(v) {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '0';
+  if (Number.isInteger(v)) return String(v);
+  return v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, '');
+}
+
 function mapIndikatorSkor(breakdown) {
-  if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0 }));
-  return INDIKATORS.map((ind) => ({
-    ...ind,
-    skor: typeof breakdown[ind.kode] === 'number' ? Math.round(breakdown[ind.kode]) : 0,
-  }));
+  if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0, skorRaw: 0 }));
+  return INDIKATORS.map((ind) => {
+    const raw = typeof breakdown[ind.kode] === 'number' && Number.isFinite(breakdown[ind.kode]) ? breakdown[ind.kode] : 0;
+    return { ...ind, skor: raw, skorRaw: raw, skorDisplay: formatSkor(raw) };
+  });
 }
 
 export default function MadrasahDetail() {
