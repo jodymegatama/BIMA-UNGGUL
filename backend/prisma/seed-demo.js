@@ -106,20 +106,25 @@ async function resolveTargetPeriode() {
 async function main() {
   console.log('🌱 Seed data demo (39 madrasah Kab. Pasuruan)...');
 
-  // 1. Indikator (idempoten — dari seed.js asli)
+  // 1. Indikator (idempoten — dari seed.js asli; nama revisi 2026-09-14)
   const indikators = [
-    { kode: '1', slug: 'diklat', nama: 'Diklat Tenaga Pendidik', tipeFormula: 'per_capaian' },
-    { kode: '2', slug: 'penghargaan_individu', nama: 'Penghargaan Individu Tenaga Pendidik', tipeFormula: 'per_capaian' },
+    { kode: '1', slug: 'diklat', nama: 'Diklat Pendidik dan Tenaga Kependidikan', tipeFormula: 'per_capaian' },
+    { kode: '2', slug: 'penghargaan_individu', nama: 'Penghargaan Individu Pendidik dan Tenaga Kependidikan', tipeFormula: 'per_capaian' },
     { kode: '3', slug: 'penghargaan_institusi', nama: 'Penghargaan Institusi', tipeFormula: 'per_tingkat_wilayah' },
     { kode: '4', slug: 'prestasi_siswa', nama: 'Prestasi Siswa', tipeFormula: 'per_tingkat_wilayah' },
-    { kode: '5', slug: 'lulus_jenjang_lanjutan', nama: 'Jumlah Tenaga Pendidik Lulus Jenjang Lanjutan', tipeFormula: 'per_jenjang' },
-    { kode: '6', slug: 'rapor_rata_rata', nama: 'Rapor Rata-rata Murid >85', tipeFormula: 'persentase' },
-    { kode: '7', slug: 'siswa_lanjutan_unggulan', nama: 'Siswa Lanjutan Unggulan', tipeFormula: 'per_capaian' },
-    { kode: '8', slug: 'giat_inovatif', nama: 'Giat Inovatif', tipeFormula: 'per_capaian' },
-    { kode: '9', slug: 'rasio_penerimaan', nama: 'Rasio Penerimaan', tipeFormula: 'persentase' },
+    { kode: '5', slug: 'lulus_jenjang_lanjutan', nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan', tipeFormula: 'per_jenjang' },
+    { kode: '6', slug: 'rapor_rata_rata', nama: 'Nilai Rata-rata Murid > 85', tipeFormula: 'persentase' },
+    { kode: '7', slug: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan', tipeFormula: 'per_capaian' },
+    { kode: '8', slug: 'giat_inovatif', nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah', tipeFormula: 'per_capaian' },
+    { kode: '9', slug: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', tipeFormula: 'persentase' },
   ];
   for (const i of indikators) {
-    await prisma.indikator.upsert({ where: { slug: i.slug }, update: {}, create: i });
+    // update nama/tipeFormula → master ikut sinkron saat rename (bukan hanya saat create)
+    await prisma.indikator.upsert({
+      where: { slug: i.slug },
+      update: { nama: i.nama, tipeFormula: i.tipeFormula },
+      create: i,
+    });
   }
   console.log(`✓ ${indikators.length} indikator siap`);
 

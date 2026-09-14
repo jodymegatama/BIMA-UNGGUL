@@ -40,3 +40,21 @@ lagi — tempatnya di Vitest suite.
 - Frontend rendering (belum ada komponen test — hanya 2 test util; UI diverifikasi via smoke manual/browser)
 
 Script aman (tooling, bukan test): `scripts/smoke-*.mjs`, `scripts/create-dummy-accounts.mjs`, `scripts/clean-dummy.mjs` (purge hanya data dummy/test, KEEP admin + operator asli).
+
+## Kontrak & QA manual — revisi 9 indikator (2026-09-14)
+
+`unit.services.test.js` memuat guard kontrak `FIELD_RULES`: tepat 9 slug, `linkBukti` wajib (type url)
+di semua indikator, `catatan` opsional, **tidak ada field `tahun`** di kontrak API
+(tahun bukti diisi otomatis dari periode aktif), dan `penyebut.min === 0` untuk
+`rapor_rata_rata`/`rasio_penerimaan` (format "0 dari 0 = 0%" diizinkan).
+
+QA manual kebijakan **"bukti wajib tahun berjalan"**: chip **Tahun {tahun}** tampil di kolom Indikator
+Antrian Validasi + modal detail. Admin memverifikasi isi link bukti; jika bukan tahun berjalan →
+**Reject** dengan alasan (mekanisme reject + alasan sudah ada).
+
+| Skenario | Langkah | Hasil diharapkan |
+|---|---|---|
+| QB-1 | Operator submit capaian dengan bukti tahun lama → Admin buka detail | Chip "Tahun {tahun}" tampil; reject + alasan → status Ditolak, operator perbaiki via US4 |
+| QB-2 | Operator input ratio `0 dari 0` (indikator 6/9) | Tersimpan, preview `0%`, skor indikator 0 — tidak error validasi |
+| QB-3 | Draft parsial tanpa link bukti → klik Kirim | Draft boleh; submit ditolak `linkBukti wajib diisi` |
+| QB-4 | Semua indikator: submit tanpa link bukti | Ditolak (linkBukti wajib di 9 indikator) |

@@ -17,8 +17,8 @@ import { INDIKATORS } from '../../../constants/indikator';
 /**
  * IndikatorDetailSection — 9 indikator versi LENGKAP (PRD §11)
  * Reuse card style dari Home IndikatorSection, ditambah: daftar field input + cara hitung per tipe formula
- * Catatan: PRD hanya merinci field input & tipe formula, tidak ada definisi narasi panjang per indikator — maka kita pakai
- * deskripsi ringkas dari Home + tambahan "Cara hitung" sesuai tipe formula PRD.
+ * Revisi 2026-09-14: nama/label/deskripsi mengikuti spesifikasi baru (istilah "Murid", bukti tahun berjalan,
+ * basis nilai TKA/ANBK untuk indikator 6). Badge tingkat/jenjang tanpa angka pengali — bobot riil per periode.
  */
 
 const DETAILS = [
@@ -27,10 +27,10 @@ const DETAILS = [
     icon: GraduationCap,
     iconBg: 'bg-eager border-eager-dark shadow-sticker',
     iconColor: 'white',
-    nama: 'Diklat Tenaga Pendidik',
+    nama: 'Diklat Pendidik dan Tenaga Kependidikan',
     kode: 'diklat',
-    desc: 'Keikutsertaan diklat bersertifikat oleh institusi penerbit terverifikasi.',
-    fields: ['Nama Diklat', 'Nama Institusi Penerbit', 'Nama ASN/non-ASN Pelaksana', 'Status Pegawai (ASN/non-ASN)', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Keikutsertaan diklat oleh institusi penyelenggara, dengan bukti diklat tahun berjalan.',
+    fields: ['Nama Diklat', 'Nama Institusi Penyelenggara Diklat', 'Nama ASN/non-ASN Pelaksana Diklat', 'Status Pegawai (ASN/non-ASN)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
     tone: 'Bobot dinamis',
@@ -40,10 +40,10 @@ const DETAILS = [
     icon: Medal,
     iconBg: 'bg-spark border-spark-dark shadow-sticker-blue',
     iconColor: 'white',
-    nama: 'Penghargaan Individu Tenaga Pendidik',
+    nama: 'Penghargaan Individu Pendidik dan Tenaga Kependidikan',
     kode: 'penghargaan_individu',
-    desc: 'Penghargaan tenaga pendidik tingkat institusi dengan bukti sah.',
-    fields: ['Nama Penghargaan', 'Nama Institusi Penerbit', 'Nama ASN/non-ASN Penerima', 'Status Pegawai', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Penghargaan yang diterima pendidik/tenaga kependidikan, dengan bukti tahun berjalan.',
+    fields: ['Nama Penghargaan', 'Nama Institusi Penyelenggara Penghargaan', 'Nama ASN/non-ASN Penerima', 'Status Pegawai', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
   },
@@ -54,10 +54,10 @@ const DETAILS = [
     iconColor: '#1cb0f6',
     nama: 'Penghargaan Institusi',
     kode: 'penghargaan_institusi',
-    desc: 'Prestasi lembaga dengan bobot berjenjang wilayah.',
-    fields: ['Nama Penghargaan', 'Institusi Penerbit', 'Tingkat Wilayah (Kab/Prov/Nas/Inter)', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Penghargaan madrasah dengan bobot berjenjang wilayah dan bukti fisik tahun berjalan.',
+    fields: ['Nama Penghargaan', 'Institusi Penerbit Penghargaan', 'Tingkat Wilayah (Kab/Prov/Nas/Inter)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Σ(Jumlah per tingkat × Bobot tingkat)',
-    badges: ['Kab 1x', 'Prov 2x', 'Nasional 3x'],
+    badges: ['Kabupaten', 'Provinsi', 'Nasional'],
     cardBg: 'bg-[#f0f9ff]',
   },
   {
@@ -67,8 +67,8 @@ const DETAILS = [
     iconColor: 'white',
     nama: 'Prestasi Siswa',
     kode: 'prestasi_siswa',
-    desc: 'Capaian siswa di kompetisi resmi dengan tingkat wilayah.',
-    fields: ['Nama Penghargaan/Prestasi', 'Nama Institusi Penerbit', 'Nama Siswa', 'Tingkat Wilayah', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Capaian murid di kompetisi resmi dengan tingkat wilayah (bukti tahun berjalan).',
+    fields: ['Nama Penghargaan/Prestasi', 'Nama Institusi Penerbit', 'Nama Murid', 'Tingkat Wilayah', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Σ(Jumlah per tingkat × Bobot tingkat)',
     badge: 'per tingkat x bobot',
   },
@@ -77,12 +77,12 @@ const DETAILS = [
     icon: Student,
     iconBg: 'bg-white border-[#b8eb8a]',
     iconColor: '#58cc02',
-    nama: 'Jumlah Tenaga Pendidik Lulus Jenjang Lanjutan',
+    nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan',
     kode: 'lulus_jenjang_lanjutan',
-    desc: 'Jumlah guru lulus S1/S2/S3 dengan bobot berbeda per jenjang.',
-    fields: ['Jenjang Pendidikan (S1/S2/S3)', 'Jumlah ASN', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Jumlah pendidik/tenaga kependidikan lulus S1/S2/S3 — bukti ijazah tahun berjalan.',
+    fields: ['Jenjang Pendidikan (S1/S2/S3)', 'Jumlah ASN', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Σ(Jumlah × Bobot per jenjang)',
-    jenjang: ['S1', 'S2 x1.5', 'S3 x2'],
+    jenjang: ['S1', 'S2', 'S3'],
     cardBg: 'bg-story',
   },
   {
@@ -90,10 +90,10 @@ const DETAILS = [
     icon: ChartLineUp,
     iconBg: 'bg-ink border-black',
     iconColor: 'white',
-    nama: 'Rapor Rata-rata Murid >85',
+    nama: 'Nilai Rata-rata Murid > 85',
     kode: 'rapor_rata_rata',
-    desc: 'Persentase siswa dengan nilai rapor rata-rata di atas 85.',
-    fields: ['Jumlah Siswa >85 (format X dari Y = Z%)', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Persentase murid dengan nilai TKA/ANBK di atas 85 (bukti tahun berjalan).',
+    fields: ['Hasil TKA/ANBK Murid > 85 (X dari Y = Z%)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Persentase × Bobot',
     badge: 'persentase x bobot',
   },
@@ -102,10 +102,10 @@ const DETAILS = [
     icon: PaperPlaneTilt,
     iconBg: 'bg-[#ffe4e6] border-[#fecdd3]',
     iconColor: '#e11d48',
-    nama: 'Siswa Lanjutan Unggulan',
+    nama: 'Murid Lanjutan Unggulan',
     kode: 'siswa_lanjutan_unggulan',
-    desc: 'Lulusan diterima di universitas/sekolah unggulan.',
-    fields: ['Nama Universitas/Sekolah Unggulan', 'Nama Siswa', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Murid lulus yang diterima di universitas/sekolah unggulan (bukti kelulusan).',
+    fields: ['Nama Universitas/Sekolah Unggulan', 'Nama Murid', 'Link Bukti Fisik (bukti kelulusan)', 'Catatan Tambahan'],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
   },
@@ -114,10 +114,10 @@ const DETAILS = [
     icon: Lightbulb,
     iconBg: 'bg-[#fef9c3] border-[#fde68a]',
     iconColor: '#ca8a04',
-    nama: 'Giat Inovatif',
+    nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah',
     kode: 'giat_inovatif',
-    desc: 'Kegiatan inovatif madrasah yang terdokumentasi dan berdampak.',
-    fields: ['Nama Giat Inovatif', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Kegiatan inovatif pengembangan mutu madrasah dengan laporan kegiatan.',
+    fields: ['Nama Giat Inovatif', 'Link Bukti Fisik (laporan kegiatan)', 'Catatan Tambahan'],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per giat x bobot',
   },
@@ -126,10 +126,10 @@ const DETAILS = [
     icon: UsersThree,
     iconBg: 'bg-[#e0e7ff] border-[#c7d2fe]',
     iconColor: '#4f46e5',
-    nama: 'Rasio Penerimaan',
+    nama: 'Rasio Penerimaan Murid Baru',
     kode: 'rasio_penerimaan',
-    desc: 'Daya tarik madrasah dari pendaftar dibanding daya tampung.',
-    fields: ['Siswa Diterima dari Pendaftar (X dari Y = Z%)', 'Link Bukti Fisik', 'Catatan Tambahan'],
+    desc: 'Murid diterima dibanding jumlah pendaftar tahun berjalan.',
+    fields: ['Murid Diterima dari Pendaftar (X dari Y = Z%)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
     hitung: 'Persentase × Bobot',
     badge: 'persentase x bobot',
     badgeTone: 'bg-[#e0e7ff] border-[#c7d2fe] text-[#4f46e5]',
@@ -146,8 +146,8 @@ export default function IndikatorDetailSection() {
           </div>
           <h2 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[36px] leading-none text-charcoal mt-4">Apa yang dinilai & bagaimana skor dihitung</h2>
           <p className="text-[13px] leading-6 text-pencil font-medium mt-3 max-w-[68ch]">
-            Di bawah ini daftar lengkap {INDIKATORS.length} indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti, dan
-            dihitung <b>tanpa batas jumlah</b>. Bobot dikonfigurasi Admin per periode dan terkunci saat finalisasi.
+            Di bawah ini daftar lengkap {INDIKATORS.length} indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti
+            tahun berjalan, dan dihitung <b>tanpa batas jumlah</b>. Bobot dikonfigurasi Admin per periode dan terkunci saat finalisasi.
           </p>
         </div>
 

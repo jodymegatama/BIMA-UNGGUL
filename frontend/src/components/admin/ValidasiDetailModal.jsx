@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Link as LinkIcon, CheckCircle, XCircle, ArrowClockwise, WarningCircle } from 'phosphor-react';
+import { X, Link as LinkIcon, CheckCircle, XCircle, ArrowClockwise, WarningCircle, Calendar } from 'phosphor-react';
 import StatusBadge from '../shared/StatusBadge';
 
 export default function ValidasiDetailModal({ item, onClose, onApprove, onReject, onRevoke }) {
@@ -36,6 +36,12 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             </div>
             <div className="text-[12px] font-bold text-pencil mt-1">{item.madrasahNama} • {item.madrasahKelompok} • {item.indikatorNama}</div>
             <div className="text-[11px] font-medium text-faded mt-1">ID {item.id} • {new Date(item.tanggalSubmit).toLocaleString('id-ID')} • Periode {item.periode} {item.skor ? `• Skor ${item.skor}` : ''}</div>
+            {/* Chip tahun bukti — dasar verifikasi "bukti wajib tahun berjalan" */}
+            {item.tahun != null && (
+              <div className="mt-2 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
+                <Calendar size={12} weight="fill" color="#4caf00" /> Tahun bukti {item.tahun} — pastikan bukti tahun berjalan
+              </div>
+            )}
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center hover:bg-zinc-50 hover:border-zinc-300 active:translate-y-[1px] transition">
             <X size={16} weight="bold" />
@@ -48,7 +54,7 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             <div className="grid sm:grid-cols-2 gap-3 text-[12px]">
               {item.namaKegiatan && <div><span className="font-bold text-faded">Nama Kegiatan/Penghargaan</span><div className="font-black text-charcoal">{item.namaKegiatan}</div></div>}
               {item.institusi && <div><span className="font-bold text-faded">Institusi Penerbit</span><div className="font-black text-charcoal">{item.institusi}</div></div>}
-              {item.namaPeserta && <div><span className="font-bold text-faded">Nama Peserta/Siswa</span><div className="font-black text-charcoal">{item.namaPeserta}</div></div>}
+              {item.namaPeserta && <div><span className="font-bold text-faded">Nama Peserta/Murid</span><div className="font-black text-charcoal">{item.namaPeserta}</div></div>}
               {item.statusPegawai && <div><span className="font-bold text-faded">Status Pegawai</span><div className="font-black text-charcoal">{item.statusPegawai === 'non_asn' ? 'non-ASN' : 'ASN'}</div></div>}
               {item.tingkatWilayah && <div><span className="font-bold text-faded">Tingkat Wilayah</span><div className="font-black text-charcoal">{item.tingkatWilayah.charAt(0).toUpperCase() + item.tingkatWilayah.slice(1)}</div></div>}
               {item.jenjangPendidikan && <div><span className="font-bold text-faded">Jenjang Pendidikan</span><div className="font-black text-charcoal">{item.jenjangPendidikan.toUpperCase()}</div></div>}
@@ -58,10 +64,11 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
                   <span className="font-bold text-faded">Rasio</span>
                   <div className="font-black text-charcoal">
                     {item.pembilang} dari {item.penyebut}
-                    {Number(item.penyebut) > 0 ? ` = ${((Number(item.pembilang) / Number(item.penyebut)) * 100).toFixed(1).replace(/\.0$/, '')}%` : ''}
+                    {Number(item.penyebut) > 0 ? ` = ${((Number(item.pembilang) / Number(item.penyebut)) * 100).toFixed(1).replace(/\.0$/, '')}%` : ' = 0%'}
                   </div>
                 </div>
               )}
+              {item.tahun != null && <div><span className="font-bold text-faded">Tahun Bukti</span><div className="font-black text-charcoal">{item.tahun}</div></div>}
               <div className="sm:col-span-2"><span className="font-bold text-faded">Catatan</span><div className="font-medium text-charcoal">{item.catatan || '-'}</div></div>
             </div>
             {item.alasan && <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 text-[12px]"><span className="font-black text-red-900">Alasan penolakan sebelumnya:</span> <span className="font-medium text-red-800">{item.alasan}</span></div>}
@@ -105,7 +112,7 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
                 aria-label={mode === 'reject' ? 'Alasan penolakan (wajib)' : 'Alasan revoke (wajib)'}
                 value={alasan}
                 onChange={(e) => { setAlasan(e.target.value); setErr(''); }}
-                placeholder={mode === 'reject' ? 'Jelaskan mengapa ditolak...' : 'Jelaskan mengapa revoke...'}
+                placeholder={mode === 'reject' ? 'Contoh: bukti bukan tahun berjalan, link tidak bisa diakses publik...' : 'Jelaskan mengapa revoke...'}
                 rows={3}
                 className={`w-full px-3 py-2 rounded-[12px] border-2 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 transition resize-none ${err ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`}
               />

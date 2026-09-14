@@ -70,7 +70,7 @@ export const FIELD_RULES = {
   },
   rapor_rata_rata: {
     pembilang: { required: true, type: 'int', min: 0, max: 1000000 },
-    penyebut: { required: true, type: 'int', min: 1, max: 1000000 },
+    penyebut: { required: true, type: 'int', min: 0, max: 1000000 }, // min 0 → "0 dari 0 = 0%" diizinkan (revisi 2026-09-14)
     linkBukti: { required: true, type: 'url' },
     catatan: { required: false, type: 'string', maxLen: 2000 },
   },
@@ -87,7 +87,7 @@ export const FIELD_RULES = {
   },
   rasio_penerimaan: {
     pembilang: { required: true, type: 'int', min: 0, max: 1000000 },
-    penyebut: { required: true, type: 'int', min: 1, max: 1000000 },
+    penyebut: { required: true, type: 'int', min: 0, max: 1000000 }, // min 0 → "0 dari 0 = 0%" diizinkan (revisi 2026-09-14)
     linkBukti: { required: true, type: 'url' },
     catatan: { required: false, type: 'string', maxLen: 2000 },
   },

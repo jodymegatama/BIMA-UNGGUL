@@ -329,7 +329,7 @@ export default function InputCapaian() {
         <div>
           <div className="font-display font-black text-[15px] text-charcoal leading-tight">{activeInd?.nama}</div>
           <div className="text-[11px] font-mono font-bold text-faded">{activeInd?.kode}</div>
-          <p className="text-[12px] font-medium text-pencil mt-1">Tambah baris tanpa batas. Link bukti wajib akses publik. Draft tidak masuk skor.</p>
+          <p className="text-[12px] font-medium text-pencil mt-1">Tambah baris tanpa batas. Link bukti wajib akses publik &amp; wajib bukti tahun berjalan. Draft tidak masuk skor.</p>
         </div>
         <span className="ml-auto hidden sm:inline-flex h-7 px-3 rounded-full bg-zinc-50 border-2 border-zinc-100 text-[11px] font-black text-pencil">{rows.length} baris</span>
       </div>
@@ -458,7 +458,7 @@ export default function InputCapaian() {
 
       <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 flex gap-2 text-[11px] font-medium text-pencil">
         <Info size={14} weight="regular" color="#afafaf" className="shrink-0 mt-0.5" />
-        <span>Link bukti wajib diisi dan harus bisa dibuka Admin di tab baru. Draft tersimpan di server dan bisa dilanjutkan.</span>
+        <span>Link bukti wajib diisi, wajib bukti tahun berjalan, dan harus bisa dibuka Admin di tab baru. Draft tersimpan di server dan bisa dilanjutkan.</span>
       </div>
     </div>
     </MotionConfig>

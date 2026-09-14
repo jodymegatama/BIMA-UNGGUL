@@ -23,6 +23,7 @@ const indikatorIcon = {
  * PrestasiList — daftar prestasi terverifikasi TANPA link bukti
  * Hanya menampilkan: nama, institusi, tingkat (badge), tahun/siswa — sesuai PRD US9
  * Props: { prestasi: Array<{id, indikatorKode, indikatorNama, nama, institusi, tingkat, tahun, siswa}> }
+ * Revisi 2026-09-14: label rasio = "Nilai Rata-rata TKA/ANBK", istilah "Murid".
  */
 export default function PrestasiList({ prestasi = [] }) {
   if (prestasi.length === 0) {
@@ -86,10 +87,10 @@ export default function PrestasiList({ prestasi = [] }) {
                         {isRasio ? (
                           <>
                             <div className="font-display font-black text-[14px] leading-tight text-charcoal">
-                              {p.pembilang} dari {p.penyebut} {p.indikatorKode === 'rapor_rata_rata' ? 'siswa >85' : 'pendaftar diterima'} {pct != null ? `= ${pct}%` : ''}
+                              {p.pembilang} dari {p.penyebut} {p.indikatorKode === 'rapor_rata_rata' ? 'murid >85' : 'pendaftar diterima'} {pct != null ? `= ${pct}%` : ''}
                             </div>
                             <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
-                              <ChartBar size={12} weight="regular" color="#777777" /> {p.indikatorKode === 'rapor_rata_rata' ? 'Rapor Rata-rata' : 'Rasio Penerimaan'}
+                              <ChartBar size={12} weight="regular" color="#777777" /> {p.indikatorKode === 'rapor_rata_rata' ? 'Nilai Rata-rata TKA/ANBK' : 'Rasio Penerimaan Murid Baru'}
                             </div>
                           </>
                         ) : isLulus ? (
@@ -107,7 +108,11 @@ export default function PrestasiList({ prestasi = [] }) {
                             <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
                               <Buildings size={12} weight="regular" color="#777777" /> {p.institusi}
                             </div>
-                            {p.siswa && <div className="text-[12px] font-medium text-pencil">Siswa: <span className="font-bold text-charcoal">{p.siswa}</span></div>}
+                            {p.siswa && (
+                              <div className="text-[12px] font-medium text-pencil">
+                                {p.indikatorKode === 'prestasi_siswa' || p.indikatorKode === 'siswa_lanjutan_unggulan' ? 'Murid' : p.indikatorKode === 'diklat' ? 'Pelaksana' : p.indikatorKode === 'penghargaan_individu' ? 'Penerima' : 'Peserta'}: <span className="font-bold text-charcoal">{p.siswa}</span>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>

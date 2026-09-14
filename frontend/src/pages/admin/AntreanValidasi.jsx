@@ -19,6 +19,7 @@ function mapApiRow(r) {
     indikatorKode: r.indikator?.slug || r.indikator?.kode || r.indikatorKode || '-',
     namaKegiatan: r.namaKegiatan || r.nama || '-',
     institusi: r.institusi || '-',
+    tahun: r.tahun ?? null, // tahun bukti (auto dari periode saat submit) — dipakai chip verifikasi admin
     tingkat: r.tingkatWilayah ? String(r.tingkatWilayah).charAt(0).toUpperCase() + String(r.tingkatWilayah).slice(1) : (r.tingkat || '-'),
     catatan: r.catatan || '',
     linkBukti: r.linkBukti || '#',
@@ -239,7 +240,12 @@ export default function AntreanValidasi() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-[12px] font-bold text-charcoal">{r.indikatorNama}</div>
-                        <div className="text-[11px] font-mono text-faded">{r.indikatorKode}</div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                          <span className="text-[11px] font-mono text-faded">{r.indikatorKode}</span>
+                          {r.tahun != null && (
+                            <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-story border-2 border-[#b8eb8a] text-[10px] font-black text-eager-dark">Tahun {r.tahun}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-[12px] font-black text-charcoal">{r.skor ?? '-'}</td>
                       <td className="px-4 py-3 text-[11px] font-bold text-pencil whitespace-nowrap">{new Date(r.tanggalSubmit).toLocaleDateString('id-ID')}</td>

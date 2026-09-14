@@ -5,18 +5,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting seed for 9 Indikator Mutu...');
 
-  // Data 9 Indikator sesuai PRD Section 11
+  // Data 9 Indikator sesuai PRD Section 11 — revisi 2026-09-14 (spesifikasi baru: nama + istilah "Murid")
   const indikators = [
     {
       kode: '1',
       slug: 'diklat',
-      nama: 'Diklat Tenaga Pendidik',
+      nama: 'Diklat Pendidik dan Tenaga Kependidikan',
       tipeFormula: 'per_capaian',
     },
     {
       kode: '2',
       slug: 'penghargaan_individu',
-      nama: 'Penghargaan Individu Tenaga Pendidik',
+      nama: 'Penghargaan Individu Pendidik dan Tenaga Kependidikan',
       tipeFormula: 'per_capaian',
     },
     {
@@ -34,31 +34,31 @@ async function main() {
     {
       kode: '5',
       slug: 'lulus_jenjang_lanjutan',
-      nama: 'Jumlah Tenaga Pendidik Lulus Jenjang Lanjutan',
+      nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan',
       tipeFormula: 'per_jenjang',
     },
     {
       kode: '6',
       slug: 'rapor_rata_rata',
-      nama: 'Rapor Rata-rata Murid >85',
+      nama: 'Nilai Rata-rata Murid > 85',
       tipeFormula: 'persentase',
     },
     {
       kode: '7',
       slug: 'siswa_lanjutan_unggulan',
-      nama: 'Siswa Lanjutan Unggulan',
+      nama: 'Murid Lanjutan Unggulan',
       tipeFormula: 'per_capaian',
     },
     {
       kode: '8',
       slug: 'giat_inovatif',
-      nama: 'Giat Inovatif',
+      nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah',
       tipeFormula: 'per_capaian',
     },
     {
       kode: '9',
       slug: 'rasio_penerimaan',
-      nama: 'Rasio Penerimaan',
+      nama: 'Rasio Penerimaan Murid Baru',
       tipeFormula: 'persentase',
     },
   ];
