@@ -9,7 +9,13 @@ import { formatSkor } from '../../../lib/format';
  */
 export default function ProfileHeader({ madrasah, periode = '2026/2027' }) {
   const kelompokColor = madrasah.status === 'Negeri' ? 'bg-[#e0f2ff] border-[#cde9ff] text-[#0b5cab]' : 'bg-white border-zinc-200 text-pencil';
-  const rankLabel = madrasah.rank <= 3 ? `Peringkat #${madrasah.rank}` : `Peringkat #${madrasah.rank} dari ${madrasah.kelompok}`;
+  const isRanked = Number.isFinite(Number(madrasah.rank));
+  const rankLabel = !isRanked
+    ? `Belum ada peringkat • ${madrasah.approved} capaian`
+    : madrasah.rank <= 3
+      ? `Peringkat #${madrasah.rank} dari ${madrasah.rankTotal ?? madrasah.kelompok} • ${madrasah.approved} capaian disetujui`
+      : `Peringkat #${madrasah.rank} dari ${madrasah.kelompok} • ${madrasah.approved} capaian disetujui`;
+  const rankBadge = isRanked ? `#${madrasah.rank}` : '#—';
 
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white overflow-hidden shadow-card">
@@ -73,10 +79,10 @@ export default function ProfileHeader({ madrasah, periode = '2026/2027' }) {
                 <span className="font-display font-black text-[36px] leading-none text-eager">{formatSkor(madrasah.skor)}</span>
                 <span className="text-[12px] font-black text-pencil">poin</span>
                 <span className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark shadow-sticker text-[12px] font-black">
-                  <Trophy size={12} weight="fill" color="white" /> #{madrasah.rank}
+                  <Trophy size={12} weight="fill" color="white" /> {rankBadge}
                 </span>
               </div>
-              <div className="mt-2 text-[12px] font-bold text-pencil leading-tight">{rankLabel} • {madrasah.approved} capaian disetujui</div>
+              <div className="mt-2 text-[12px] font-bold text-pencil leading-tight">{rankLabel}</div>
               <div className="mt-3 flex gap-2">
                 <Link
                   to={`/leaderboard?kelompok=${encodeURIComponent(madrasah.kelompok)}`}

@@ -50,6 +50,7 @@ export async function madrasahDetail(req,res){
   if (!periode) periode = await prisma.periodePenilaian.findFirst({ orderBy:{ tanggalMulai:'desc' } });
   let skor = null;
   let prestasi = [];
+  let ranking = null;
   if (periode) {
     skor = await calculateSkorMadrasah(madrasah.id, periode.id);
     // prestasi terverifikasi: hanya disetujui, deletedAt null, tanpa linkBukti
@@ -63,8 +64,16 @@ export async function madrasahDetail(req,res){
       orderBy:{ createdAt:'desc' },
     });
     prestasi = items;
+    // ranking dalam kelompok untuk periode ini — pakai logic yang sama dengan leaderboard
+    try {
+      const list = await calculateRanking(madrasah.kelompok, periode.id);
+      const idx = list.findIndex((r) => r.madrasah.id === madrasah.id);
+      if (idx !== -1) ranking = { rank: list[idx].ranking, total: list.length, kelompok: madrasah.kelompok };
+    } catch {
+      ranking = null;
+    }
   }
-  res.json({ madrasah, periode, skor, prestasi });
+  res.json({ madrasah, periode, skor, prestasi, ranking });
 }
 
 export default { leaderboard, madrasahDetail, listPeriodePublik, statsPublik };

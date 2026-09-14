@@ -1,12 +1,13 @@
 import { Trophy, CheckCircle } from 'phosphor-react';
 import { INDIKATORS } from '../../../constants/indikator';
+import { formatSkor } from '../../../lib/format';
 
 /**
  * IndikatorTable — 9 baris, kolom Indikator + Skor. Pola sama LeaderboardTable tapi sederhana.
  */
 export default function IndikatorTable({ data = [] }) {
   const total = data.reduce((a, b) => a + (typeof b.skor === 'number' ? b.skor : 0), 0);
-  const totalDisplay = Number.isInteger(total) ? String(total) : total.toFixed(2).replace(/\.?0+$/, '');
+  const totalDisplay = formatSkor(total);
   const max = Math.max(...data.map((d) => (typeof d.skor === 'number' ? d.skor : 0)), 1);
 
   return (
@@ -38,7 +39,7 @@ export default function IndikatorTable({ data = [] }) {
           <tbody className="divide-y divide-zinc-100">
             {data.map((row) => {
               const skorNum = typeof row.skor === 'number' ? row.skor : 0;
-              const skorDisplay = row.skorDisplay ?? (Number.isInteger(skorNum) ? String(skorNum) : skorNum.toFixed(2).replace(/\.?0+$/, ''));
+              const skorDisplay = row.skorDisplay ?? formatSkor(skorNum);
               const pct = Math.round((skorNum / max) * 100);
               return (
                 <tr key={row.kode} className="hover:bg-zinc-50/70">

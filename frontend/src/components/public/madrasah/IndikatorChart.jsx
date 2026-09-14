@@ -1,6 +1,7 @@
 import LazyChart from '../../shared/LazyChart';
 import { ChartBar } from 'phosphor-react';
 import { INDIKATORS } from '../../../constants/indikator';
+import { formatSkor } from '../../../lib/format';
 import useTheme from '../../../hooks/useTheme';
 
 /**
@@ -34,7 +35,7 @@ export default function IndikatorChart({ data = [] }) {
     },
     yaxis: { show: false, min: 0 },
     grid: { show: true },
-    tooltip: { y: { formatter: (val) => `${val} poin` } },
+    tooltip: { y: { formatter: (val) => `${formatSkor(val)} poin` } },
     legend: { show: false },
     dataLabels: { enabled: false },
     plotOptions: {
@@ -65,7 +66,7 @@ export default function IndikatorChart({ data = [] }) {
           </div>
         </div>
         <span className="hidden sm:inline-flex items-center shrink-0 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark whitespace-nowrap">
-          Total {scores.reduce((a, b) => a + b, 0)} poin
+          Total {formatSkor(scores.reduce((a, b) => a + b, 0))} poin
         </span>
       </div>
       <div className="p-4 lg:p-5">

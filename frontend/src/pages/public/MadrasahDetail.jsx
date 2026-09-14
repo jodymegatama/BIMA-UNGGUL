@@ -8,6 +8,7 @@ import PrestasiList from '../../components/public/madrasah/PrestasiList';
 import useRevealOnScroll from '../../hooks/useRevealOnScroll';
 import { apiGet } from '../../lib/api';
 import { INDIKATORS } from '../../constants/indikator';
+import { formatSkor } from '../../lib/format';
 
 /**
  * MadrasahDetail — /madrasah/:slug (PRD US9)
@@ -43,12 +44,6 @@ function mapPrestasi(apiList) {
       // catatan intentionally not showing linkBukti
     };
   });
-}
-
-function formatSkor(v) {
-  if (typeof v !== 'number' || !Number.isFinite(v)) return '0';
-  if (Number.isInteger(v)) return String(v);
-  return v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, '');
 }
 
 function mapIndikatorSkor(breakdown) {
@@ -96,8 +91,8 @@ export default function MadrasahDetail() {
           jumlahSiswa: m.jumlahSiswa ?? 0,
           alamat: m.alamat || '-',
           slug: m.slug,
-          // rank/score derived from skor — if ranking not available, show "-" but keep skor
-          rank: '-', // ranking per kelompok bisa di-fetch terpisah jika perlu; untuk Zona 1 tampilkan skor saja
+          rank: data.ranking?.rank ?? '-',
+          rankTotal: data.ranking?.total ?? null,
           // skor raw — format tampilan via formatSkor di ProfileHeader (konsisten dgn leaderboard)
           skor: skor ? (skor.totalScore ?? 0) : 0,
           approved: Array.isArray(data.prestasi) ? data.prestasi.length : skor?.indikatorCount ?? 0,
