@@ -102,7 +102,7 @@ export default function Footer({ activePeriod = '2026/2027' }) {
               <br />
               Kabupaten Pasuruan
               <br />
-              <span className="text-white/80 font-medium">Jl. Raya Pasuruan No. 1, Pasuruan</span>
+              <span className="text-white/80 font-medium">Jl. Dokter Wahidin Sudiro Husodo No.5, Pekuncen, Kec. Panggungrejo, Kota Pasuruan, Jawa Timur</span>
             </div>
             <div className="mt-4 flex gap-2">
               <a
