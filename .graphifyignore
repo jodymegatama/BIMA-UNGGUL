@@ -1,0 +1,7 @@
+# graphify: re-include dokumen internal yang di-ignore git tapi mau dipetakan
+!PRD.md
+!DESIGN.md
+!IDEA.md
+!SETUP.md
+!catatan.md
+!dogfood-output/report.md

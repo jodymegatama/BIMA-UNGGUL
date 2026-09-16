@@ -36,13 +36,12 @@ export default function NotificationDropdown({ items = [], onRead, onReadAll, on
 
   const handleItemClick = (item) => {
     onRead?.(item.id);
-    // navigasi berdasarkan status/tipe
-    const status = item.status || item.tipe;
-    if (status === 'Ditolak' || status === 'ditolak') navigate('/operator/riwayat');
-    else if (status === 'Menunggu' || status === 'menunggu' || status === 'validasi') navigate('/operator/riwayat');
-    else if (status === 'Disetujui' || status === 'disetujui') navigate('/operator/riwayat');
-    else if (item.tipe?.includes('validasi') || item.title?.toLowerCase().includes('validasi')) navigate('/admin/validasi');
-    else if (item.status === 'Menunggu' && window.location.pathname.startsWith('/admin')) navigate('/admin/validasi');
+    onClose?.();
+  };
+
+  const handleViewAll = () => {
+    const path = window.location.pathname.startsWith('/admin') ? '/admin/notifikasi' : '/operator/notifikasi';
+    navigate(path);
     onClose?.();
   };
 
@@ -98,8 +97,8 @@ export default function NotificationDropdown({ items = [], onRead, onReadAll, on
 
       <div className="h-10 px-4 flex items-center justify-between border-t-2 border-zinc-100 bg-zinc-50/60 shrink-0">
         <span className="text-[11px] font-bold text-faded">{items.length} notifikasi</span>
-        <button onClick={onClose} className="inline-flex items-center gap-1 text-[11px] font-black text-charcoal hover:text-spark">
-          Tutup <ArrowRight size={12} weight="bold" />
+        <button onClick={handleViewAll} className="inline-flex items-center gap-1 text-[11px] font-black text-charcoal hover:text-spark">
+          Lihat semua <ArrowRight size={12} weight="bold" />
         </button>
       </div>
     </div>

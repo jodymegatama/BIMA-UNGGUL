@@ -66,3 +66,8 @@ backend/prisma/seed-leaderboard-60.mjs
 backend/scripts/clean-demo-keep-admin.mjs
 backend/b_start.log
 backend/b_start.err
+
+# Graphify — lokal only, 0 LLM (jangan commit)
+graphify-out/
+graph.json
+.graphify/
