@@ -35,7 +35,7 @@ export default function NotifikasiAdmin() {
         judul: NOTIF_TITLE[n.tipe] || (n.tipe || 'Notifikasi'),
         desc: n.pesan || '',
         time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
-        status: /tolak|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
+        status: /tolak|reject|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
         read: n.statusBaca === 'sudah_dibaca',
         tipe: n.tipe,
       })));
@@ -122,7 +122,7 @@ export default function NotifikasiAdmin() {
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'all'
               ? 'bg-charcoal text-white'
-              : 'bg-zinc-100 text-charcoal hover:bg-zinc-150'
+              : 'bg-zinc-100 text-charcoal hover:bg-zinc-200'
           }`}
         >
           Semua ({items.length})
@@ -132,7 +132,7 @@ export default function NotifikasiAdmin() {
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'unread'
               ? 'bg-charcoal text-white'
-              : 'bg-zinc-100 text-charcoal hover:bg-zinc-150'
+              : 'bg-zinc-100 text-charcoal hover:bg-zinc-200'
           }`}
         >
           Belum dibaca ({unread})

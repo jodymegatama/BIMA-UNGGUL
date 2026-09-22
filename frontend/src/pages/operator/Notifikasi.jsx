@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
 
 const iconMap = {
-  Disetujui: { Icon: CheckCircle, color: '#58cc02' },
-  Menunggu: { Icon: Clock, color: '#1cb0f6' },
-  Ditolak: { Icon: XCircle, color: '#000437' },
-  Draft: { Icon: FileText, color: '#afafaf' },
+  disetujui: { Icon: CheckCircle, color: '#58cc02' },
+  validasi: { Icon: Clock, color: '#1cb0f6' },
+  ditolak: { Icon: XCircle, color: '#000437' },
+  draft: { Icon: FileText, color: '#afafaf' },
 };
 
 const NOTIF_TITLE = {
@@ -35,7 +35,7 @@ export default function Notifikasi() {
         judul: NOTIF_TITLE[n.tipe] || (n.tipe || 'Notifikasi'),
         desc: n.pesan || '',
         time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
-        status: /tolak|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
+        status: /tolak|reject|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
         read: n.statusBaca === 'sudah_dibaca',
       })));
     } catch (e) {
@@ -111,7 +111,7 @@ export default function Notifikasi() {
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'all'
               ? 'bg-charcoal text-white'
-              : 'bg-zinc-100 text-charcoal hover:bg-zinc-150'
+              : 'bg-zinc-100 text-charcoal hover:bg-zinc-200'
           }`}
         >
           Semua ({items.length})
@@ -121,7 +121,7 @@ export default function Notifikasi() {
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'unread'
               ? 'bg-charcoal text-white'
-              : 'bg-zinc-100 text-charcoal hover:bg-zinc-150'
+              : 'bg-zinc-100 text-charcoal hover:bg-zinc-200'
           }`}
         >
           Belum dibaca ({unread})
@@ -149,7 +149,7 @@ export default function Notifikasi() {
         ) : (
           <div className="divide-y divide-zinc-100">
             {filtered.map((item) => {
-              const cfg = iconMap[item.status] || iconMap.Draft;
+              const cfg = iconMap[item.status] || iconMap.draft;
               const Icon = cfg.Icon;
               const isUnread = !item.read;
               return (

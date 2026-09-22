@@ -41,7 +41,7 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
         judul: NOTIF_TITLE[n.tipe] || (n.tipe || 'Notifikasi'),
         desc: n.pesan || '',
         time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
-        status: /tolak|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
+        status: /tolak|reject|revoked/i.test(n.tipe || '') ? 'ditolak' : (/setujui|approved/i.test(n.tipe || '') ? 'disetujui' : 'validasi'),
         read: n.statusBaca === 'sudah_dibaca',
       })));
     } catch  { /* polling gagal — biarkan senyap */ }
