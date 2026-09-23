@@ -200,36 +200,39 @@ export function validatePassword(password) {
 }
 
 /**
- * Validate NIP format & uniqueness
- * Reference: PRD Section 5 (US1 AC: NIP unik, 8-18 digit)
- * 
- * @param {string} nip
+ * Validate email format & uniqueness
+ * Identitas login Operator: email unik (trim + lowercase)
+ *
+ * @param {string} email
  * @returns {Promise<object>} — { valid: boolean, error?: string }
  */
-export async function validateNIP(nip) {
-  if (!nip || nip.length < 8 || nip.length > 18) {
+export async function validateEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+
+  if (!normalized) {
     return {
       valid: false,
-      error: 'NIP harus 8-18 karakter',
+      error: 'Email wajib diisi',
     };
   }
 
-  if (!/^\d+$/.test(nip)) {
+  const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$/;
+  if (!EMAIL_RE.test(normalized)) {
     return {
       valid: false,
-      error: 'NIP hanya boleh berisi angka',
+      error: 'Format email tidak valid',
     };
   }
 
   // Check duplikat di database
   const existingUser = await prisma.user.findUnique({
-    where: { nip },
+    where: { email: normalized },
   });
 
   if (existingUser) {
     return {
       valid: false,
-      error: 'NIP sudah terdaftar',
+      error: 'Email sudah terdaftar',
     };
   }
 
@@ -241,7 +244,7 @@ export async function validateNIP(nip) {
  * Simpan madrasah data temporer di user metadata JSON
  * Reference: PRD Section 5 (US1: register dengan data madrasah)
  * 
- * @param {object} userData — { nip, name, email, password, madrasahData: { nama, jenjang, statusKepemilikan, alamat, jumlahSiswa } }
+ * @param {object} userData — { name, email, password, telepon, madrasahData: { nama, jenjang, statusKepemilikan, alamat, jumlahSiswa } }
  * @returns {Promise<object>} — created user (tanpa password)
  */
 export async function createPendingUser(userData) {
@@ -251,9 +254,8 @@ export async function createPendingUser(userData) {
     // Store madrasah data as JSON metadata di user record
     const user = await prisma.user.create({
       data: {
-        nip: userData.nip,
         name: userData.name,
-        email: userData.email,
+        email: String(userData.email || '').trim().toLowerCase(),
         password: passwordHash,
         telepon: userData.telepon || null,
         role: 'operator',
@@ -262,7 +264,6 @@ export async function createPendingUser(userData) {
       },
       select: {
         id: true,
-        nip: true,
         name: true,
         email: true,
         telepon: true,
@@ -346,16 +347,23 @@ export async function approveUserAndCreateMadrasah(userId, madrasahData) {
 
 /**
  * Find active user untuk login
+ * Identitas: email (Operator & fallback umum) ATAU nip (Admin)
  * Reference: PRD Section 5 (US3: hanya status "aktif" boleh login)
- * 
- * @param {string} nip
+ *
+ * @param {object} creds — { email?: string, nip?: string }
  * @returns {Promise<object|null>} — user jika ada & aktif
  */
-export async function findActiveUser(nip) {
+export async function findActiveUser({ email, nip }) {
   try {
+    if (!email && !nip) return null;
+
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : undefined;
     const user = await prisma.user.findFirst({
       where: {
-        nip,
+        OR: [
+          ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+          ...(nip ? [{ nip }] : []),
+        ],
         status: 'aktif', // Only active users can login
       },
     });
@@ -375,7 +383,7 @@ export default {
   generateSlug,
   deriveKelompok,
   validatePassword,
-  validateNIP,
+  validateEmail,
   createPendingUser,
   approveUserAndCreateMadrasah,
   findActiveUser,

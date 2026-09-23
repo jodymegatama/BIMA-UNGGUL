@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { IdentificationCard, Lock, Eye, EyeSlash, WarningCircle, CheckCircle, SpinnerGap, Buildings, ShieldCheck } from 'phosphor-react';
+import { IdentificationCard, Envelope, Lock, Eye, EyeSlash, WarningCircle, CheckCircle, SpinnerGap, Buildings, ShieldCheck } from 'phosphor-react';
 import { useAuth } from '../../context/AuthContext';
 import { INDIKATORS } from '../../constants/indikator';
 
 /**
- * LoginForm — NIP + password (PRD: custom auth, bukan email)
- * Validasi dasar frontend, submit dummy dengan delay, simulasi error untuk testing tampilan
- * Props: { onSuccess? } — dipanggil setelah dummy sukses (untuk redirect role-based di parent)
+ * LoginForm - identitas + password, kondisional per role pill:
+ * Operator Madrasah -> Email + password. Admin Seksi Pendma -> NIP + password.
  */
 export default function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [role, setRole] = useState('operator'); // 'operator' | 'admin'
-  const [nip, setNip] = useState('');
+  const [identity, setIdentity] = useState(''); // email (operator) atau NIP (admin)
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
@@ -21,47 +20,53 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const isOperator = role === 'operator';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!nip.trim()) return setError('NIP wajib diisi.');
-    if (!/^[0-9]{8,18}$/.test(nip.trim())) return setError('NIP harus 8–18 digit angka.');
+    const ident = identity.trim();
+    if (!ident) return setError(isOperator ? 'Email wajib diisi.' : 'NIP wajib diisi.');
+    if (isOperator) {
+if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$/.test(ident)) return setError('Format email tidak valid.');
+    } else if (!/^[0-9]{8,18}$/.test(ident)) {
+      return setError('NIP harus 8-18 digit angka.');
+    }
     if (!password) return setError('Password wajib diisi.');
     if (password.length < 6) return setError('Password minimal 6 karakter.');
 
     setLoading(true);
     try {
-      const { user } = await login(nip.trim(), password);
+      const creds = isOperator ? { email: ident } : { nip: ident };
+      const { user } = await login(creds, password);
       // precise success by returned role (ignore pill, trust backend)
       const isAdmin = user?.role === 'admin';
       if (role === 'admin' && !isAdmin) {
-        setError('Akun ini bukan Admin. Pilih “Operator”.');
+        setError('Akun ini bukan Admin. Pilih pill Operator.');
         return;
       }
       if (role === 'operator' && isAdmin) {
-        setError('Akun Admin — pilih “Admin” untuk masuk.');
+        setError('Akun Admin - pilih pill Admin untuk masuk.');
         return;
       }
-      setSuccess(`Login berhasil sebagai ${isAdmin ? 'Admin' : 'Operator'} — mengalihkan...`);
+      setSuccess('Login berhasil sebagai ' + (isAdmin ? 'Admin' : 'Operator') + ' - mengalihkan...');
       setTimeout(() => {
         if (isAdmin) navigate('/admin', { replace: true });
         else navigate('/operator', { replace: true });
       }, 100);
     } catch (err) {
-      // Preserve dummy triggers for local dev without backend: fallback
-      const nipT = nip.trim();
-      if (nipT === '00000000' || password.toLowerCase() === 'salah123') {
+      // dummy trigger utk dev tanpa backend (khusus pill admin)
+      if (!isOperator && ident === '00000000') {
         setError('NIP atau password salah. Periksa kembali.');
       } else if (err.code === 'ACCOUNT_NOT_APPROVED' || err.status === 403) {
-        setError('Akun Anda masih “Menunggu Persetujuan” Admin. Hubungi Seksi Pendma.');
+        setError('Akun Anda masih Menunggu Persetujuan Admin. Hubungi Seksi Pendma.');
       } else if (err.status === 401) {
-        setError(err.message || 'NIP atau password salah. Periksa kembali.');
+        setError(err.message || (isOperator ? 'Email atau password salah. Periksa kembali.' : 'NIP atau password salah. Periksa kembali.'));
       } else if (err.status === 429) {
         setError(err.message);
       } else {
-        // if backend not reachable, show network hint but keep error
         setError(err.message || 'Gagal login. Periksa koneksi atau coba lagi.');
       }
     } finally {
@@ -83,7 +88,7 @@ export default function LoginForm() {
           />
           <button
             type="button"
-            onClick={() => setRole('operator')}
+            onClick={() => { setRole('operator'); setIdentity(''); }}
             aria-pressed={role === 'operator'}
             className={`relative z-10 flex-1 h-8 rounded-full flex items-center justify-center gap-1.5 text-[13px] font-black transition-colors ${role === 'operator' ? 'text-white' : 'text-pencil hover:text-charcoal'}`}
           >
@@ -92,7 +97,7 @@ export default function LoginForm() {
           </button>
           <button
             type="button"
-            onClick={() => setRole('admin')}
+            onClick={() => { setRole('admin'); setIdentity(''); }}
             aria-pressed={role === 'admin'}
             className={`relative z-10 flex-1 h-8 rounded-full flex items-center justify-center gap-1.5 text-[13px] font-black transition-colors ${role === 'admin' ? 'text-white' : 'text-pencil hover:text-charcoal'}`}
           >
@@ -101,7 +106,7 @@ export default function LoginForm() {
           </button>
         </div>
         <div className="text-[11px] font-medium text-faded mt-1.5">
-          {role === 'operator' ? `Akun madrasah — kelola ${INDIKATORS.length} indikator` : 'Seksi Pendma — validasi & kelola periode'}
+          {isOperator ? `Akun madrasah — kelola ${INDIKATORS.length} indikator` : 'Seksi Pendma — validasi & kelola periode'}
         </div>
       </div>
 
@@ -118,27 +123,30 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* NIP */}
+      {/* Identitas: Email (Operator) / NIP (Admin) */}
       <div>
-        <label htmlFor="nip" className="block text-[12px] font-black tracking-wide text-charcoal uppercase">
-          NIP
+        <label htmlFor="identity" className="block text-[12px] font-black tracking-wide text-charcoal uppercase">
+          {isOperator ? 'Email' : 'NIP'}
         </label>
         <div className="relative mt-1.5">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-pencil">
-            <IdentificationCard size={18} weight="regular" color="#777777" />
+            {isOperator ? <Envelope size={18} weight="regular" color="#777777" /> : <IdentificationCard size={18} weight="regular" color="#777777" />}
           </span>
           <input
-            id="nip"
-            name="nip"
-            inputMode="numeric"
+            id="identity"
+            name="identity"
+            type={isOperator ? 'email' : 'text'}
+            inputMode={isOperator ? 'email' : 'numeric'}
             autoComplete="username"
-            placeholder="Contoh: 197812345678900001"
-            value={nip}
-            onChange={(e) => setNip(e.target.value.replace(/\D/g, '').slice(0, 18))}
+            placeholder={isOperator ? 'nama@madrasah.sch.id' : 'Contoh: 197812345678900001'}
+            value={identity}
+            onChange={(e) => setIdentity(isOperator ? e.target.value : e.target.value.replace(/\D/g, '').slice(0, 18))}
             className="w-full h-11 pl-10 pr-4 rounded-[12px] border-2 border-zinc-200 bg-white text-[14px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:border-eager focus:ring-2 focus:ring-eager/20 transition"
           />
         </div>
-        <div className="text-[11px] font-medium text-faded mt-1.5">Hanya angka, 8–18 digit. Bukan email.</div>
+        <div className="text-[11px] font-medium text-faded mt-1.5">
+          {isOperator ? 'Email yang didaftarkan saat pengajuan akun.' : 'Hanya angka, 8-18 digit. Khusus Admin Seksi Pendma.'}
+        </div>
       </div>
 
       {/* Password */}
@@ -190,7 +198,7 @@ export default function LoginForm() {
         <span className="text-[11px] font-medium text-faded">di perangkat ini</span>
       </label>
 
-      {/* Submit — style sama CTA hijau "Lihat Peringkat" */}
+      {/* Submit - style sama CTA hijau */}
       <button
         type="submit"
         disabled={loading}
@@ -210,10 +218,6 @@ export default function LoginForm() {
         <Link to="/daftar" className="font-black text-spark hover:underline">
           Daftar sebagai Operator
         </Link>
-      </div>
-
-      <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 text-[11px] leading-5 font-medium text-pencil">
-        <span className="font-black text-charcoal">Tips uji error:</span> NIP <code className="px-1 py-0.5 rounded bg-white border border-zinc-200 font-mono">00000000</code> + password apa saja → gagal. NIP mengandung <code className="px-1 py-0.5 rounded bg-white border">999</code> → “Menunggu Persetujuan”. Pill di atas menentukan redirect: <b>Operator → /operator</b>, <b>Admin → /admin</b>.
       </div>
     </form>
   );

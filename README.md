@@ -164,6 +164,12 @@ Lihat `.hermes/plans/` (tidak ter-push) atau buat `docker-compose.yml` dengan se
 
 Auth: `Authorization: Bearer <accessToken>` + refresh via httpOnly cookie, auto-refresh di `lib/api.js`.
 
+## Autentikasi
+
+- **Operator Madrasah**: daftar via `/daftar` (nama, **email**, telepon, password, data madrasah) → approve Admin → login pakai **email + password**.
+- **Admin Seksi Pendma**: dibuat via Manajemen Akun (NIP wajib) → login pakai **NIP + password**.
+- `User.nip` nullable: hanya admin yang ber-NIP. Operator lama dimigrasi otomatis ke email legacy `<nip>@operator.legacy.local` (migrasi `operator_email_login`); ganti ke email asli via Manajemen Akun atau script `backend/scripts/backfill-operator-emails.mjs` (--list / --map mapping.json / --verify) yang dijalankan SEBELUM migrasi.
+
 ## Lisensi
 
 Internal — Kantor Kementerian Agama Kabupaten Pasuruan. Tidak untuk distribusi publik tanpa izin.

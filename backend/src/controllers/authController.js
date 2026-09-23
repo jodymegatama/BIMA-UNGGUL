@@ -14,7 +14,6 @@ import { AUTH_CONFIG } from '../constants/auth.constants.js';
  * 
  * Request body:
  * {
- *   nip: "12345678",
  *   name: "Kepala Sekolah",
  *   email: "kepala@school.com",
  *   password: "SecurePass123",
@@ -28,26 +27,26 @@ import { AUTH_CONFIG } from '../constants/auth.constants.js';
  * }
  * 
  * Response: { status: "menunggu_persetujuan" }
- * Reference: PRD Section 5 (US1, AC: NIP unik, field validation)
+ * Reference: PRD Section 5 (US1 AC: email unik), alur login email Operator
  */
 export async function register(req, res) {
-  const { nip, name, email, password, madrasahData, telepon } = req.body;
+  const { name, email, password, madrasahData, telepon } = req.body;
 
   // 1. Validate input
-  if (!nip || !name || !email || !password || !madrasahData) {
+  if (!name || !email || !password || !madrasahData) {
     return res.status(400).json({
       error: 'Field wajib tidak lengkap',
       code: 'MISSING_FIELDS',
-      required: ['nip', 'name', 'email', 'password', 'madrasahData'],
+      required: ['name', 'email', 'password', 'madrasahData'],
     });
   }
 
-  // 2. Validate NIP format & uniqueness
-  const nipValidation = await authService.validateNIP(nip);
-  if (!nipValidation.valid) {
+  // 2. Validate email format & uniqueness (identitas login Operator)
+  const emailValidation = await authService.validateEmail(email);
+  if (!emailValidation.valid) {
     return res.status(400).json({
-      error: nipValidation.error,
-      code: 'INVALID_NIP',
+      error: emailValidation.error,
+      code: emailValidation.error === 'Email sudah terdaftar' ? 'DUPLICATE_EMAIL' : 'INVALID_EMAIL',
     });
   }
 
@@ -122,7 +121,6 @@ export async function register(req, res) {
 
   // 5. Create user dengan status "menunggu" & madrasahData disimpan di database
   const user = await authService.createPendingUser({
-    nip,
     name,
     email,
     password,
@@ -146,38 +144,39 @@ export async function register(req, res) {
     message: 'Pendaftaran berhasil. Menunggu persetujuan admin.',
     user: {
       id: user.id,
-      nip: user.nip,
       name: user.name,
+      email: user.email,
     },
   });
 }
 
 /**
  * POST /api/auth/login
- * Login NIP + password → access token + refresh token (httpOnly cookie)
+ * Login identitas + password → access token + refresh token (httpOnly cookie)
+ * Identitas: email (Operator Madrasah) ATAU nip (Admin Seksi Pendma)
  * 
- * Request body: { nip: "12345678", password: "SecurePass123" }
- * Response: { accessToken: "...", user: { id, nip, name, role, madrasahId } }
+ * Request body: { email?: "nama@madrasah.sch.id", nip?: "1978...", password: "SecurePass123" }
+ * Response: { accessToken: "...", user: { id, name, email, role, madrasahId } }
  * Cookie: refreshToken (httpOnly, secure, sameSite: strict)
  * 
  * Reference: PRD Section 5 (US3: only status "aktif" can login), Section 3 (JWT constraint)
  */
 export async function login(req, res) {
-  const { nip, password } = req.body;
+  const { email, nip, password } = req.body;
 
-  // 1. Validate input
-  if (!nip || !password) {
+  // 1. Validate input — wajib salah satu identitas (email untuk Operator, nip untuk Admin)
+  if ((!email && !nip) || !password) {
     return res.status(400).json({
-      error: 'NIP dan password wajib',
+      error: 'Email/NIP dan password wajib',
       code: 'MISSING_CREDENTIALS',
     });
   }
 
-  // 2. Find active user
-  const user = await authService.findActiveUser(nip);
+  // 2. Find active user by email ATAU nip
+  const user = await authService.findActiveUser({ email, nip });
   if (!user) {
     return res.status(401).json({
-      error: 'NIP atau password salah',
+      error: 'Email/NIP atau password salah',
       code: 'INVALID_CREDENTIALS',
     });
   }
@@ -186,7 +185,7 @@ export async function login(req, res) {
   const isPasswordValid = await authService.comparePassword(password, user.password);
   if (!isPasswordValid) {
     return res.status(401).json({
-      error: 'NIP atau password salah',
+      error: 'Email/NIP atau password salah',
       code: 'INVALID_CREDENTIALS',
     });
   }
@@ -221,7 +220,7 @@ export async function login(req, res) {
     accessToken,
     user: {
       id: user.id,
-      nip: user.nip,
+      nip: user.nip || null,
       name: user.name,
       email: user.email,
       telepon: user.telepon || null,
@@ -323,7 +322,6 @@ export async function approveUser(req, res) {
     where: { id: userId },
     select: {
       id: true,
-      nip: true,
       name: true,
       email: true,
       role: true,

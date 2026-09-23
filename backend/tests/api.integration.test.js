@@ -3,7 +3,7 @@ import request from 'supertest';
 import app from '../src/app.js';
 
 // Kredensial demo dibaca dari env — JANGAN hardcode di file test.
-// Set BACKEND_TEST_NIP / BACKEND_TEST_PASS di backend/.env atau environment.
+// Set BACKEND_TEST_NIP / BACKEND_TEST_PASS (akun ADMIN — login tetap via NIP) di backend/.env atau environment.
 const NIP = process.env.BACKEND_TEST_NIP;
 const PASS = process.env.BACKEND_TEST_PASS;
 const hasCreds = Boolean(NIP && PASS);

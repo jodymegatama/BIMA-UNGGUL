@@ -35,14 +35,19 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem('token');
   }, []);
 
-  const login = useCallback(async (nip, password) => {
+  const login = useCallback(async (creds, password) => {
     setLoading(true);
     try {
+      // creds: { email } untuk Operator ATAU { nip } untuk Admin
+      const ident = typeof creds === 'string' ? { nip: creds.trim() } : {
+        ...(creds?.email ? { email: String(creds.email).trim() } : {}),
+        ...(creds?.nip ? { nip: String(creds.nip).trim() } : {}),
+      };
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ nip: nip.trim(), password }),
+        body: JSON.stringify({ ...ident, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -52,7 +57,7 @@ export function AuthProvider({ children }) {
         if (res.status === 403 || code === 'ACCOUNT_NOT_APPROVED' || /menunggu/i.test(msg)) {
           throw Object.assign(new Error('Akun Anda masih “Menunggu Persetujuan” Admin. Hubungi Seksi Pendma.'), { code: 'ACCOUNT_NOT_APPROVED', status: 403 });
         }
-        if (res.status === 401) throw Object.assign(new Error(msg || 'NIP atau password salah.'), { code: data.code || 'INVALID_CREDENTIALS', status: 401 });
+        if (res.status === 401) throw Object.assign(new Error(msg || 'Email/NIP atau password salah.'), { code: data.code || 'INVALID_CREDENTIALS', status: 401 });
         throw Object.assign(new Error(msg), { code, status: res.status });
       }
       const nextToken = data.accessToken;
@@ -66,11 +71,11 @@ export function AuthProvider({ children }) {
     }
   }, [persist]);
 
-  const register = useCallback(async ({ nip, name, email, password, madrasahData }) => {
+  const register = useCallback(async ({ name, email, password, telepon, madrasahData }) => {
     const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nip, name, email, password, madrasahData }),
+      body: JSON.stringify({ name, email: String(email || '').trim().toLowerCase(), password, telepon, madrasahData }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {

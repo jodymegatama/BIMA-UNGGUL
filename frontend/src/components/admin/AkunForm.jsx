@@ -6,7 +6,7 @@ const inputCls = (hasErr) => `mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg
 
 /**
  * AkunForm — modal create/edit akun operator/admin.
- * Mode create: NIP + password wajib. Mode edit: NIP readonly, password opsional.
+ * Mode create: password wajib. NIP hanya utk role admin (wajib). Operator = email.
  * Props: { onClose, onSubmit, initial = null, madrasahList = [], submitLabel }
  */
 export default function AkunForm({ onClose, onSubmit, initial = null, madrasahList = [], submitLabel = 'Buat Akun' }) {
@@ -22,8 +22,10 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
 
   const handle = () => {
     const e = {};
-    if (!nip.trim()) e.nip = 'NIP wajib';
-    else if (!/^\d{8,18}$/.test(nip.trim())) e.nip = 'NIP harus 8–18 digit angka';
+    if (role === 'admin') {
+      if (!nip.trim()) e.nip = 'NIP wajib untuk Admin (login via NIP)';
+      else if (!/^[0-9]{8,18}$/.test(nip.trim())) e.nip = 'NIP harus 8-18 digit angka';
+    }
     if (!name.trim()) e.name = 'Nama wajib';
     if (!email.trim()) e.email = 'Email wajib';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = 'Format email tidak valid';
@@ -32,7 +34,8 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
     setErr(e);
     if (Object.keys(e).length) return;
 
-    const payload = { nip: nip.trim(), name: name.trim(), email: email.trim(), role, status };
+    const payload = { name: name.trim(), email: email.trim().toLowerCase(), role, status };
+    if (role === 'admin') payload.nip = nip.trim();
     if (password) payload.password = password;
     if (madrasahId) payload.madrasahId = String(madrasahId);
     onSubmit(payload);
@@ -49,6 +52,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+{role === 'admin' && (
             <div>
               <label htmlFor="akun-nip" className="block text-[11px] font-black tracking-wide text-charcoal uppercase">NIP <span className="text-red-600">*</span></label>
               <input
@@ -60,6 +64,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
               />
               {err.nip && <div className="text-[11px] font-bold text-red-600 mt-1">{err.nip}</div>}
             </div>
+)}
             <div>
               <label htmlFor="akun-name" className="block text-[11px] font-black tracking-wide text-charcoal uppercase">Nama <span className="text-red-600">*</span></label>
               <input
@@ -144,7 +149,7 @@ export default function AkunForm({ onClose, onSubmit, initial = null, madrasahLi
             <ShieldCheck size={16} weight="regular" color="#777777" className="shrink-0 mt-0.5" />
             <p className="text-[11px] leading-5 font-medium text-pencil">
               {isEdit
-                ? 'NIP dapat diubah — wajib unik. Password kosong = tetap. Status nonaktif akan menolak login.'
+                ? 'NIP utk admin wajib unik. Email wajib unik. Password kosong = tetap. Operator login via email.'
                 : 'Akun baru berstatus <b>Aktif</b> langsung (admin membuat). Nonaktif hanya via data akun.'}
             </p>
           </div>

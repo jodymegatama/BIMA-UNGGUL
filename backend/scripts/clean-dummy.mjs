@@ -10,9 +10,8 @@ import { prisma } from '../src/db/prisma.js';
 
 const KEEP_ADMIN_NIP = '199012312345678901';
 const DUMMY_USER_NIPS = [
-  '197812345678900010',
-  '199099990000000001',
-  '19700101199203001', // testScoring admin
+  '19700101199203001', // testScoring admin (admin tetap ber-NIP)
+  // operator dummy kini tanpa nip — dicocokkan via email di bawah
 ];
 const DUMMY_PERIODE_NAMES = ['TEST/2026', 'E2E-VAL/2026', 'PUBADM/2026', '2099/2100'];
 const DUMMY_MADRASAH_BMUS = ['BMU-999001'];

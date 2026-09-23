@@ -50,6 +50,7 @@ export default function ManajemenAkun() {
       const mapped = data.map((r) => ({
         id: r.id,
         nip: r.nip,
+        email: r.email,
         nama: r.name || r.nama || '-',
         madrasah: r.madrasah?.namaMadrasah || r.madrasah || '-',
         madrasahId: r.madrasahId,
@@ -110,7 +111,7 @@ export default function ManajemenAkun() {
     try {
       const res = await apiFetch('/api/admin/akun', { method: 'POST', body: data, auth: true });
       const r = res.data || res;
-      showToast(`Akun ${r.nip || data.nip} dibuat`);
+      showToast(`Akun ${r.email || data.email} dibuat`);
       setShowForm(false);
       setActiveTab('Semua');
       fetchRows();
@@ -141,8 +142,8 @@ export default function ManajemenAkun() {
       setConfirmDelete(null);
       const c = info?.deletedCounts;
       showToast(c && (c.submissions || c.validations || c.deleteRequests || c.notifications)
-        ? `Akun ${confirmDelete.nip || ''} dihapus — ${c.submissions} submission, ${c.validations} validasi, ${c.notifications} notifikasi ikut terhapus${c.madrasahAffected ? ` (skor ${c.madrasahAffected} madrasah dihitung ulang)` : ''}`
-        : `Akun ${confirmDelete.nip || ''} dihapus`);
+        ? `Akun ${confirmDelete.email || ''} dihapus — ${c.submissions} submission, ${c.validations} validasi, ${c.notifications} notifikasi ikut terhapus${c.madrasahAffected ? ` (skor ${c.madrasahAffected} madrasah dihitung ulang)` : ''}`
+: `Akun ${confirmDelete.email || ''} dihapus`);
     } catch (e) {
       setDeleteErr(e.message || 'Gagal hapus akun');
     } finally { setDeleting(false); }
@@ -198,10 +199,10 @@ export default function ManajemenAkun() {
             name="akun-search"
             type="search"
             autoComplete="off"
-            aria-label="Cari NIP, nama, atau madrasah"
+            aria-label="Cari nama, email, atau madrasah"
             value={q}
             onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            placeholder="Cari NIP / nama / madrasah..."
+            placeholder="Cari nama / email / madrasah..."
             className="w-full h-9 pl-9 pr-3 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-medium text-charcoal placeholder:text-faded focus:outline-none focus:border-ink"
           />
         </div>
@@ -216,7 +217,7 @@ export default function ManajemenAkun() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b-2 border-zinc-100">
-                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">NIP / Nama</th>
+                <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Nama / Email</th>
                 <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Madrasah</th>
                 <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">Status</th>
                 <th className="px-4 py-3 text-[11px] font-black tracking-wide text-faded uppercase">BMU</th>
@@ -227,7 +228,8 @@ export default function ManajemenAkun() {
               {filtered.map((r) => (
                 <tr key={r.id} className="hover:bg-zinc-50/70">
                   <td className="px-4 py-3">
-                    <div className="text-[12px] font-mono font-black text-charcoal">{r.nip}</div>
+                    <div className="text-[12px] font-bold text-charcoal">{r.nama}</div>
+                    <div className="text-[11px] font-mono font-medium text-pencil">{r.email}{r.nip ? <span className="text-faded"> - NIP {r.nip}</span> : null}</div>
                     <div className="text-[12px] font-bold text-charcoal">{r.nama}</div>
                   </td>
                   <td className="px-4 py-3">
@@ -327,7 +329,7 @@ export default function ManajemenAkun() {
           <div className="relative w-full max-w-[480px] rounded-[16px] border-2 border-zinc-200 bg-white p-6 shadow-float">
             <h3 className="font-display font-black text-[16px] text-charcoal">Hapus akun {confirmDelete.nama}?</h3>
             <p className="text-[13px] font-medium text-pencil mt-2">
-              Akun NIP <span className="font-mono font-black text-charcoal">{confirmDelete.nip}</span> akan dihapus permanen.
+              Akun <span className="font-mono font-black text-charcoal">{confirmDelete.email}</span> akan dihapus permanen.
               <b className="text-red-600"> SEMUA data terkait ikut terhapus</b>: submission yang dibuat, riwayat validasi, notifikasi, dan audit log.
             </p>
             <div className="mt-3 rounded-[12px] bg-red-50 border-2 border-red-200 p-3 flex gap-2">

@@ -19,7 +19,7 @@ router.post('/register', authController.register);
 
 /**
  * POST /api/auth/login
- * Login dengan NIP + password
+ * Login dengan email (Operator Madrasah) ATAU NIP (Admin Seksi Pendma) + password
  * Public endpoint (no auth required)
  */
 router.post('/login', authController.login);

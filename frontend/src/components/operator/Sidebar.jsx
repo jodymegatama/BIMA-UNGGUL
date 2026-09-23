@@ -42,7 +42,7 @@ export default function Sidebar({ madrasah, operator, onNavigate, onLogout }) {
             </div>
             <div className="min-w-0">
               <div className="text-[13px] font-black text-charcoal leading-none truncate">{operator.nama}</div>
-              <div className="text-[11px] font-bold text-faded truncate">{operator.nip}</div>
+              <div className="text-[11px] font-bold text-faded truncate">{operator.email}</div>
             </div>
           </div>
           <div className="mt-3 space-y-1.5">

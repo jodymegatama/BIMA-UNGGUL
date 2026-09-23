@@ -34,7 +34,7 @@ async function main() {
     return;
   }
   const indikator = await prisma.indikator.findUnique({ where: { slug: 'diklat' } });
-  console.log('operator:', user.nip, '| madrasah:', user.madrasah?.namaMadrasah, '| indikator:', indikator?.slug);
+  console.log('operator:', user.email, '| madrasah:', user.madrasah?.namaMadrasah, '| indikator:', indikator?.slug);
 
   try {
     const res = await submissionService.saveItems({

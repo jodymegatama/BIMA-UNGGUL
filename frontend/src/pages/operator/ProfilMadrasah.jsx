@@ -344,7 +344,7 @@ export default function ProfilMadrasah() {
           <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3">
             <div className="text-[11px] font-black tracking-wide text-faded uppercase">Nama lengkap</div>
             <div className="text-[13px] font-black text-charcoal mt-1">{user?.name || user?.namaLengkap || '—'}</div>
-            <div className="text-[11px] font-bold text-pencil">NIP {user?.nip || '—'}</div>
+            <div className="text-[11px] font-bold text-pencil">{user?.email || '—'}</div>
           </div>
           <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3">
             <div className="text-[11px] font-black tracking-wide text-faded uppercase flex items-center gap-1">

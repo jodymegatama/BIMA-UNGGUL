@@ -26,12 +26,17 @@ export async function listAkun({ status, q, page='1', limit='20' }) {
 }
 
 export async function createAkun({ nip,name,email,password,role='operator', madrasahId }, { userId, ip }) {
-  if (!nip||!name||!email||!password) throw new HttpError(400,'MISSING_FIELDS','nip,name,email,password wajib');
+  // Operator: login via email (nip tidak dipakai). Admin: nip wajib (login via nip).
+  const isOperator = role === 'operator';
+  if (!name||!email||!password) throw new HttpError(400,'MISSING_FIELDS','name,email,password wajib');
+  if (!isOperator && !nip) throw new HttpError(400,'MISSING_FIELDS','nip wajib untuk role admin');
   if (String(password).length < 8) throw new HttpError(400,'WEAK_PASSWORD','Password minimal 8 karakter');
-  const exists = await prisma.user.findFirst({ where:{ OR:[{nip},{email}] } });
-  if (exists) throw new HttpError(409,'DUPLICATE','NIP atau email sudah terdaftar');
+  const emailNorm = String(email).trim().toLowerCase();
+  const dupWhere = isOperator ? { email: emailNorm } : { OR:[{nip},{email: emailNorm}] };
+  const exists = await prisma.user.findFirst({ where: dupWhere });
+  if (exists) throw new HttpError(409,'DUPLICATE', isOperator ? 'Email sudah terdaftar' : 'NIP atau email sudah terdaftar');
   const hash = await bcrypt.hash(String(password), 10);
-  const created = await prisma.user.create({ data:{ nip, name, email, password:hash, role, status:'aktif', madrasahId: madrasahId ? parseInt(madrasahId,10): null } , select:{id:true,nip:true,name:true,email:true,role:true,status:true,madrasahId:true,createdAt:true}});
+  const created = await prisma.user.create({ data:{ nip: isOperator ? null : nip, name, email: emailNorm, password:hash, role, status:'aktif', madrasahId: madrasahId ? parseInt(madrasahId,10): null } , select:{id:true,nip:true,name:true,email:true,role:true,status:true,madrasahId:true,createdAt:true}});
   await recordAuditLog({ userId, action:'create_account', entity:'User', entityId:created.id, dataSesudah:created, ipAddress:ip});
   return created;
 }
@@ -51,7 +56,14 @@ export async function updateAkun(id, patch, { userId, ip }) {
     }
   }
   if (patch.name!==undefined) data.name = String(patch.name);
-  if (patch.email!==undefined) data.email = String(patch.email);
+  if (patch.email!==undefined) {
+    const emailVal = String(patch.email).trim().toLowerCase();
+    if (emailVal !== existing.email) {
+      const dupEmail = await prisma.user.findFirst({ where:{ email: emailVal, NOT:{ id: uid } } });
+      if (dupEmail) throw new HttpError(409,'DUPLICATE_EMAIL','Email sudah terdaftar di akun lain');
+    }
+    data.email = emailVal;
+  }
   if (patch.role!==undefined) {
     if (!['operator','admin'].includes(patch.role)) throw new HttpError(400,'INVALID_ROLE','role harus operator/admin');
     data.role = patch.role;

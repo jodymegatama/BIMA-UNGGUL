@@ -26,7 +26,7 @@ function OperatorLayoutInner() {
   };
   const operator = {
     nama: user?.name || user?.namaLengkap || '—',
-    nip: user?.nip || '—',
+    email: user?.email || '—',
   };
   const handleLogout = async () => { await logout(); navigate('/login'); };
 

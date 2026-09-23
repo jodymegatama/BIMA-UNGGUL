@@ -26,8 +26,8 @@ export default function DaftarSuccessState({ data, onReset }) {
             </div>
             <div className="grid gap-1.5 text-[13px]">
               <div className="flex justify-between">
-                <span className="font-bold text-pencil">NIP</span>
-                <span className="font-mono font-black text-charcoal">{data.nip}</span>
+                <span className="font-bold text-pencil">Email</span>
+                <span className="font-mono font-black text-charcoal">{data.email}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-bold text-pencil">Nama</span>
@@ -49,7 +49,7 @@ export default function DaftarSuccessState({ data, onReset }) {
             <div className="text-[13px] font-black text-charcoal leading-tight">Apa selanjutnya?</div>
             <p className="text-[12px] leading-5 font-medium text-pencil mt-1">
               Admin Seksi Pendma akan memverifikasi data madrasah Anda. Jika disetujui, sistem otomatis membuat kode{' '}
-              <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> permanen dan Anda dapat login dengan NIP + password yang
+              <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> permanen dan Anda dapat login dengan Email + password yang
               didaftarkan. Estimasi 1–2 hari kerja — Anda akan dihubungi via WhatsApp di nomor yang terdaftar bila perlu klarifikasi.
             </p>
           </div>
@@ -58,7 +58,7 @@ export default function DaftarSuccessState({ data, onReset }) {
         <div className="rounded-[12px] bg-amber-50 border-2 border-amber-200 p-3 flex gap-2">
           <ShieldCheck size={16} weight="fill" color="#d97706" className="shrink-0 mt-0.5" />
           <p className="text-[11px] leading-5 font-bold text-amber-900">
-            Jangan membuat akun duplikat dengan NIP sama selama menunggu. Jika NIP sudah terdaftar, Anda akan lihat error “NIP sudah terdaftar” saat mencoba daftar lagi.
+            Jangan membuat akun duplikat dengan email sama selama menunggu. Jika email sudah terdaftar, Anda akan lihat error “Email sudah terdaftar” saat mencoba daftar lagi.
           </p>
         </div>
 

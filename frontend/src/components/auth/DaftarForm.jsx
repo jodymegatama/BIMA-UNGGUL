@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  IdentificationCard,
+  IdentificationCard, Envelope,
   User,
   Phone,
   Lock,
@@ -20,12 +20,12 @@ import { useAuth } from '../../context/AuthContext';
 
 /**
  * DaftarForm — single-page grouped (Data Akun + Data Madrasah)
- * Validasi per-field spesifik, NIP 18 digit numerik (asumsi), password min 8, konfirmasi, checkbox wajib
+ * Validasi per-field spesifik, email = identitas login operator, password min 8, konfirmasi, checkbox wajib
  * Props: { onSuccess: (payload) => void }
  */
 export default function DaftarForm({ onSuccess }) {
   const [f, setF] = useState({
-    nip: '',
+    email: '',
     namaLengkap: '',
     telepon: '',
     password: '',
@@ -47,8 +47,8 @@ export default function DaftarForm({ onSuccess }) {
 
   const validate = () => {
     const e = {};
-    if (!f.nip.trim()) e.nip = 'NIP wajib diisi.';
-    else if (!/^[0-9]{18}$/.test(f.nip.trim())) e.nip = 'NIP harus 18 digit angka (format NIP PNS).';
+    if (!f.email.trim()) e.email = 'Email wajib diisi.';
+    else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$/.test(f.email.trim())) e.email = 'Format email tidak valid.';
     if (!f.namaLengkap.trim()) e.namaLengkap = 'Nama lengkap wajib diisi.';
     else if (f.namaLengkap.trim().length < 3) e.namaLengkap = 'Minimal 3 karakter.';
     if (!f.telepon.trim()) e.telepon = 'No. telepon/WhatsApp wajib diisi.';
@@ -83,12 +83,11 @@ export default function DaftarForm({ onSuccess }) {
 
     setLoading(true);
     try {
-      // Map form to backend contract: DaftarForm has namaLengkap/telepon vs API expects name/email + madrasahData
-      const email = `${f.nip}@madrasah.local`; // fallback if email not collected; backend requires email
+      // Map form ke kontrak backend: namaLengkap/telepon -> name/telepon + madrasahData
+      // Email dikumpulkan langsung dari form - identitas login operator
       const payload = {
-        nip: f.nip.trim(),
         name: f.namaLengkap.trim(),
-        email,
+        email: f.email.trim().toLowerCase(),
         password: f.password,
         telepon: f.telepon.replace(/[\s-]/g, ''), // No. Telepon/WhatsApp — disimpan di kolom User.telepon
         madrasahData: {
@@ -105,11 +104,8 @@ export default function DaftarForm({ onSuccess }) {
     } catch (err) {
       const msg = err.message || 'Registrasi gagal';
       const code = err.code;
-      if (code === 'INVALID_NIP' || code === 'DUPLICATE' || /sudah terdaftar/i.test(msg)) {
-        setErrors((s) => ({ ...s, nip: msg }));
-      }
-      if (/NIP/i.test(msg) && f.nip === '197812345678900001') {
-        setErrors((s) => ({ ...s, nip: 'NIP sudah terdaftar.' }));
+      if (code === 'DUPLICATE_EMAIL' || code === 'INVALID_EMAIL' || /email sudah terdaftar/i.test(msg)) {
+        setErrors((s) => ({ ...s, email: msg }));
       }
       setGlobalErr(msg);
       // keep mock trigger for dev without backend: if network fails, fallback to mock success for 111...? no, show error
@@ -152,26 +148,27 @@ export default function DaftarForm({ onSuccess }) {
         </div>
 
         <div className="mt-4 grid gap-4">
-          {/* NIP */}
+          {/* Email */}
           <div>
-            <label htmlFor="nip" className="block text-[11px] font-black tracking-wide text-charcoal uppercase">
-              NIP <span className="text-red-600">*</span>
+            <label htmlFor="email" className="block text-[11px] font-black tracking-wide text-charcoal uppercase">
+              Email <span className="text-red-600">*</span>
             </label>
             <div className="relative mt-1.5">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-pencil">
-                <IdentificationCard size={18} weight="regular" color="#777777" />
+                <Envelope size={18} weight="regular" color="#777777" />
               </span>
               <input
-                id="nip"
-                inputMode="numeric"
-                placeholder="18 digit, contoh: 197812345678900002"
-                value={f.nip}
-                onChange={(e) => set('nip', e.target.value.replace(/\D/g, '').slice(0, 18))}
-                className={inputCls(!!errors.nip)}
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="nama@madrasah.sch.id"
+                value={f.email}
+                onChange={(e) => set('email', e.target.value)}
+                className={inputCls(!!errors.email)}
               />
             </div>
-            {fieldErr('nip')}
-            <div className="text-[11px] font-medium text-faded mt-1">Asumsi: NIP PNS 18 digit numerik. BMU-XXXXXX dibuat Admin saat approve.</div>
+            {fieldErr('email')}
+            <div className="text-[11px] font-medium text-faded mt-1">Dipakai untuk login setelah akun disetujui Admin. BMU-XXXXXX dibuat saat approve.</div>
           </div>
 
           {/* Nama lengkap */}

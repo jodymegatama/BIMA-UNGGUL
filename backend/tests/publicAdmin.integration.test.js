@@ -42,7 +42,7 @@ async function cleanup() {
     await prisma.periodePenilaian.deleteMany({ where: { id: per.id } }).catch(() => {});
   }
   await prisma.madrasah.deleteMany({ where: { nomorMadrasah: { startsWith: `BMU-${NS}` } } }).catch(() => {});
-  await prisma.user.deleteMany({ where: { nip: { startsWith: NS } } }).catch(() => {});
+  await prisma.user.deleteMany({ where: { OR: [{ nip: { startsWith: NS } }, { email: { contains: '@test.local' } }] } }).catch(() => {});
   await prisma.auditLog.deleteMany({ where: { ipAddress: ip } }).catch(() => {});
 }
 
@@ -63,7 +63,7 @@ async function setup() {
     },
   });
   const operator = await prisma.user.create({
-    data: { nip: `${NS}-OP-01`, password: 'hash', name: 'Op Final', email: `op-${Date.now()}@test.local`, role: 'operator', status: 'aktif', madrasahId: madrasah.id },
+    data: { password: 'hash', name: 'Op Final', email: `op-${Date.now()}@test.local`, role: 'operator', status: 'aktif', madrasahId: madrasah.id },
   });
   // bersihkan periode aktif lain dari test sebelumnya agar madrasahDetail auto-select tidak salah periode
   await prisma.periodePenilaian.deleteMany({ where: { namaPeriode: { startsWith: 'E2E-' } } }).catch(() => {});
@@ -198,21 +198,27 @@ describe('Publik & Admin (PUBADM)', () => {
     await periodService.reopenPeriode(ctx.periode.id, { alasan: 'unlock for cleanup', userId: ctx.admin.id, ip });
   });
 
-  it('Akun GET/POST/PATCH + duplicate NIP 409', async () => {
+  it('Akun GET/POST/PATCH + duplicate email 409 + admin wajib nip', async () => {
     const list = await accountService.listAkun({ page: '1', limit: '5' });
     expect(list.total).toBeGreaterThanOrEqual(2);
+    // operator: tanpa nip (login via email)
     const created = await accountService.createAkun(
-      { nip: `${NS}-NEW-01`, name: 'New User', email: `new-${Date.now()}@test.local`, password: 'Password123', role: 'operator' },
+      { name: 'New User', email: `new-${Date.now()}@test.local`, password: 'Password123', role: 'operator' },
       { userId: ctx.admin.id, ip },
     );
-    expect(created.nip).toBe(`${NS}-NEW-01`);
+    expect(created.nip).toBeNull();
     const patched = await accountService.updateAkun(created.id, { status: 'nonaktif' }, { userId: ctx.admin.id, ip });
     expect(patched.status).toBe('nonaktif');
     const audit = await prisma.auditLog.findFirst({ where: { action: 'update_account', entityId: String(created.id) } });
     expect(audit).toBeTruthy();
+    // duplikat email operator -> 409
     await expect(
-      accountService.createAkun({ nip: `${NS}-NEW-01`, name: 'Dup', email: `dup-${Date.now()}@test.local`, password: 'Password123' }, { userId: ctx.admin.id, ip }),
+      accountService.createAkun({ name: 'Dup', email: created.email, password: 'Password123' }, { userId: ctx.admin.id, ip }),
     ).rejects.toMatchObject({ status: 409 });
+    // admin tanpa nip -> 400
+    await expect(
+      accountService.createAkun({ name: 'No Nip Admin', email: `nonip-${Date.now()}@test.local`, password: 'Password123', role: 'admin' }, { userId: ctx.admin.id, ip }),
+    ).rejects.toMatchObject({ status: 400 });
   });
 
   it('Export PDF — buffer %PDF', async () => {

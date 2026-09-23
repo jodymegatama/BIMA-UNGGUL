@@ -86,7 +86,7 @@ enum StatusUser {
 
 model User {
   id                   Int                @id @default(autoincrement())
-  nip                  String             @unique
+  nip                  String?             @unique // nullable — hanya Admin yang ber-NIP; Operator login via email
   password             String
   name                 String
   email                String             @unique

@@ -24,7 +24,7 @@ async function cleanup() {
     await prisma.periodePenilaian.deleteMany({ where: { id: per.id } }).catch(() => {});
   }
   await prisma.madrasah.deleteMany({ where: { nomorMadrasah: { startsWith: `BMU-${NS}` } } }).catch(() => {});
-  await prisma.user.deleteMany({ where: { nip: { startsWith: NS } } }).catch(() => {});
+  await prisma.user.deleteMany({ where: { OR: [{ nip: { startsWith: NS } }, { email: { contains: '@test.local' } }] } }).catch(() => {});
   await prisma.auditLog.deleteMany({ where: { action: { contains: 'submission' }, ipAddress: ip } }).catch(() => {});
 }
 
@@ -56,7 +56,7 @@ async function setup() {
     data: { nip: `${NS}-ADMIN-001`, password: 'hash', name: 'E2E Admin', email: `e2e-admin-${Date.now()}@test.local`, role: 'admin', status: 'aktif' },
   });
   const operator = await prisma.user.create({
-    data: { nip: `${NS}-OP-001`, password: 'hash', name: 'E2E Operator', email: `e2e-op-${Date.now()}@test.local`, role: 'operator', status: 'aktif' },
+    data: { password: 'hash', name: 'E2E Operator', email: `e2e-op-${Date.now()}@test.local`, role: 'operator', status: 'aktif' },
   });
 
   const madrasah = await prisma.madrasah.create({

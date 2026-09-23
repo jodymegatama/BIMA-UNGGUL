@@ -30,7 +30,7 @@ export default function Login() {
         <div className="px-4 lg:px-8 xl:px-10 py-6 lg:py-8 flex flex-col justify-center">
           <div className="max-w-[440px] w-full mx-auto lg:mx-0">
             <div className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
-              <ShieldCheck size={12} weight="fill" color="#4caf00" /> Masuk • NIP + Password
+              <ShieldCheck size={12} weight="fill" color="#4caf00" /> Masuk • Email / NIP + Password
             </div>
             <h1 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[32px] leading-none text-charcoal mt-4">Masuk ke akun Anda</h1>
             <p className="text-[13px] leading-5 font-medium text-pencil mt-2">

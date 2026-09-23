@@ -71,3 +71,9 @@ backend/b_start.err
 graphify-out/
 graph.json
 .graphify/
+
+# Freebuff runtime (log/pid/script launcher)
+.freebuff/
+
+# Agent skill lokal (tidak untuk repo)
+.agents/

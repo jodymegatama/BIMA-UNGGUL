@@ -8,3 +8,6 @@
 
 # tooling itu sendiri jangan jadi node (noise): skill docs graphify 41KB + config
 .agents/
+
+# runtime Freebuff: log/pid watcher & preview - noise, jangan picu update semantik
+.freebuff/
