@@ -6,10 +6,9 @@ import ThemeToggle from '../shared/ThemeToggle';
 /**
  * Navbar — ekstrak persis dari _backup/index.html#navbar
  * - Logo trophy box eager-green rounded-[12px] shadow-sticker dipertahankan
- * - Menu desktop: Beranda, Indikator, Tentang, Lihat Peringkat
+ * - Menu desktop: Beranda, Indikator, Tentang
  *   Saat di "/" → anchor scroll (#beranda/#indikator/#metode) via smooth offset
  *   Saat bukan "/" → Link to="/#..." agar kembali ke Home lalu scroll
- * - "Lihat Peringkat" selalu Link to="/leaderboard" + highlight eager pill saat aktif
  * - Mobile: React state (bukan DOM classList), hamburger ↔ X via phosphor-react
  * - Sticky shadow: useEffect + rAF throttle, bukan manipulasi classList vanilla
  */
@@ -19,7 +18,6 @@ export default function Navbar() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
-  const isLeaderboard = location.pathname === '/leaderboard';
   const prefersReduced = typeof window !== 'undefined'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
@@ -76,7 +74,7 @@ export default function Navbar() {
     }
   }, [location.pathname, location.hash, scrollToId]);
 
-  // Tutup menu saat route berubah (mis. klik Lihat Peringkat) — pola "storing info from
+  // Tutup menu saat route berubah — pola "storing info from
   // previous renders" (docs react.dev): setState langsung saat render, tanpa effect.
   const [prevPath, setPrevPath] = useState(location.pathname);
   if (prevPath !== location.pathname) {
@@ -84,8 +82,7 @@ export default function Navbar() {
     setIsOpen(false);
   }
 
-  const activePill = 'bg-eager border-eager-dark text-white shadow-sticker';
-  const inactivePill = 'hover:bg-zinc-50 text-charcoal';
+  const inactivePill = 'hover:bg-eager/10 hover:text-eager-dark text-charcoal';
 
   return (
     <nav
@@ -136,13 +133,6 @@ export default function Navbar() {
             </Link>
           )}
 
-          <Link
-            to="/leaderboard"
-            className={`px-4 py-2 rounded-full border-2 transition ${isLeaderboard ? `${activePill} border-2` : 'border-transparent hover:bg-zinc-50 text-charcoal'}`}
-            aria-current={isLeaderboard ? 'page' : undefined}
-          >
-            Lihat Peringkat
-          </Link>
         </div>
 
         {/* CTAs */}
@@ -189,35 +179,28 @@ export default function Navbar() {
           </Link>
         )}
         {isHome ? (
-          <a href="#indikator" onClick={(e) => handleAnchorClick(e, '#indikator')} className="block px-4 py-3 rounded-[12px] hover:bg-zinc-50 font-bold text-charcoal">
+          <a href="#indikator" onClick={(e) => handleAnchorClick(e, '#indikator')} className="block px-4 py-3 rounded-[12px] hover:bg-eager/10 hover:text-eager-dark font-bold text-charcoal">
             Indikator
           </a>
         ) : (
-          <Link to="/#indikator" onClick={(e) => handleAnchorClick(e, '#indikator')} className="block px-4 py-3 rounded-[12px] hover:bg-zinc-50 font-bold text-charcoal">
+          <Link to="/#indikator" onClick={(e) => handleAnchorClick(e, '#indikator')} className="block px-4 py-3 rounded-[12px] hover:bg-eager/10 hover:text-eager-dark font-bold text-charcoal">
             Indikator
           </Link>
         )}
         {isHome ? (
-          <a href="#metode" onClick={(e) => handleAnchorClick(e, '#metode')} className="block px-4 py-3 rounded-[12px] hover:bg-zinc-50 font-bold text-charcoal">
+          <a href="#metode" onClick={(e) => handleAnchorClick(e, '#metode')} className="block px-4 py-3 rounded-[12px] hover:bg-eager/10 hover:text-eager-dark font-bold text-charcoal">
             Tentang
           </a>
         ) : (
-          <Link to="/#metode" onClick={(e) => handleAnchorClick(e, '#metode')} className="block px-4 py-3 rounded-[12px] hover:bg-zinc-50 font-bold text-charcoal">
+          <Link to="/#metode" onClick={(e) => handleAnchorClick(e, '#metode')} className="block px-4 py-3 rounded-[12px] hover:bg-eager/10 hover:text-eager-dark font-bold text-charcoal">
             Tentang
           </Link>
         )}
-        <Link
-          to="/leaderboard"
-          onClick={() => setIsOpen(false)}
-          className={`block px-4 py-3 rounded-[12px] font-bold border-2 ${isLeaderboard ? `${activePill} text-center` : 'hover:bg-zinc-50 text-charcoal border-transparent'}`}
-        >
-          Lihat Peringkat
-        </Link>
-        <Link
-          to="/login"
-          onClick={() => setIsOpen(false)}
-          className="block px-4 py-3 rounded-[12px] border-2 border-zinc-200 font-bold text-center hover:border-charcoal hover:bg-zinc-50 transition"
-        >
+          <Link
+            to="/login"
+            onClick={() => setIsOpen(false)}
+            className="block px-4 py-3 rounded-[12px] border-2 border-zinc-200 font-bold text-center hover:border-charcoal hover:bg-zinc-50 transition"
+          >
           Masuk sebagai Operator
         </Link>
       </div>

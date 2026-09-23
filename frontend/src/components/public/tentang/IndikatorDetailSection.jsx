@@ -147,7 +147,7 @@ export default function IndikatorDetailSection() {
           <h2 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[36px] leading-none text-charcoal mt-4">Apa yang dinilai & bagaimana skor dihitung</h2>
           <p className="text-[13px] leading-6 text-pencil font-medium mt-3 max-w-[68ch]">
             Di bawah ini daftar lengkap {INDIKATORS.length} indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti
-            tahun berjalan, dan dihitung <b>tanpa batas jumlah</b>. Bobot dikonfigurasi Admin per periode dan terkunci saat finalisasi.
+            tahun berjalan, dan dihitung <b>tanpa batas jumlah</b>.
           </p>
         </div>
 

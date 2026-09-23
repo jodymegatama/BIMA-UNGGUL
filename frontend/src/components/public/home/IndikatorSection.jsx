@@ -50,12 +50,12 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight pr-8">Diklat Pendidik dan Tenaga Kependidikan</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Keikutsertaan diklat oleh institusi penyelenggara, dengan bukti diklat tahun berjalan.</p>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
-                <Calculator size={12} weight="regular" color="#777777" />
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
+                <Calculator size={14} weight="fill" color="#525252" />
                 per capaian x bobot
               </span>
-              <span className="inline-flex h-7 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black">Bobot dinamis</span>
+              <span className="inline-flex items-center justify-center h-7 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black">Bobot dinamis</span>
             </div>
           </article>
 
@@ -66,7 +66,8 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Penghargaan Individu Pendidik dan Tenaga Kependidikan</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Penghargaan yang diterima pendidik/tenaga kependidikan, dengan bukti tahun berjalan.</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
+              <Calculator size={14} weight="fill" color="#525252" />
               per capaian x bobot
             </div>
           </article>
@@ -92,7 +93,8 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Prestasi Siswa</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Capaian murid di kompetisi resmi dengan tingkat wilayah (bukti tahun berjalan).</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
+              <Calculator size={14} weight="fill" color="#525252" />
               per tingkat x bobot
             </div>
           </article>
@@ -118,7 +120,10 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Nilai Rata-rata Murid &gt; 85</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Persentase murid dengan nilai TKA/ANBK di atas 85 (bukti tahun berjalan).</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black">persentase x bobot</div>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black">
+              <Calculator size={14} weight="fill" color="#ffffff" />
+              persentase x bobot
+            </div>
           </article>
 
           {/* 7 Murid Lanjutan Unggulan */}
@@ -128,7 +133,10 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Murid lulus yang diterima di universitas atau sekolah unggulan (bukti kelulusan).</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">per capaian x bobot</div>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">
+              <Calculator size={14} weight="fill" color="#525252" />
+              per capaian x bobot
+            </div>
           </article>
 
           {/* 8 Giat Inovatif */}
@@ -138,7 +146,10 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Giat Inovatif dalam Pengembangan Mutu Madrasah</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Kegiatan inovatif pengembangan mutu madrasah dengan laporan kegiatan.</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">per giat x bobot</div>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">
+              <Calculator size={14} weight="fill" color="#525252" />
+              per giat x bobot
+            </div>
           </article>
 
           {/* 9 Rasio Penerimaan */}
@@ -148,19 +159,11 @@ export default function IndikatorSection() {
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Rasio Penerimaan Murid Baru</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Murid diterima dari jumlah pendaftar tahun berjalan (bukti tahun berjalan).</p>
-            <div className="mt-4 inline-flex h-7 px-2.5 rounded-full bg-[#e0e7ff] border-2 border-[#c7d2fe] text-[11px] font-black text-[#4f46e5]">persentase x bobot</div>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#e0e7ff] border-2 border-[#c7d2fe] text-[11px] font-black text-[#4f46e5]">
+              <Calculator size={14} weight="fill" color="#4f46e5" />
+              persentase x bobot
+            </div>
           </article>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-[12px] font-bold text-pencil">
-          <span className="inline-flex items-center gap-1.5">
-            <Info size={16} weight="regular" color="#1cb0f6" />
-            Bobot dikonfigurasi Admin per periode dan terkunci saat finalisasi.
-          </span>
-          <span className="hidden sm:inline w-1 h-1 rounded-full bg-faded" />
-          <a href="#" className="text-spark hover:underline font-black">
-            Lihat detail indikator -&gt;
-          </a>
         </div>
       </div>
     </section>

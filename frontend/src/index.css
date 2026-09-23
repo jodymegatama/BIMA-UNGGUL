@@ -201,9 +201,19 @@ body {
 .dark .bg-zinc-900 { background-color: #101630; }
 .dark .bg-slate-50 { background-color: var(--surface-2); }
 .dark .bg-slate-100 { background-color: var(--surface-3); }
+/* fill aksen "story" (badge pastel, kartu sorotan, wash hero) — di light tetap hijau muda,
+   di dark diredupkan jadi wash tipis agar teks eager-dark/charcoal di atasnya tetap terbaca.
+   Blob dekoratif (.hero-blob) dikecualikan supaya glow tetap hidup. */
+.dark .bg-story:not(.hero-blob),
+.dark [class*="bg-story/"]:not(.hero-blob) {
+  background-color: rgba(215, 255, 184, 0.13);
+}
 
 /* --- Teks --- */
 .dark .text-charcoal { color: var(--text-1); }
+/* varian opasitas (text-charcoal/70) punya nama kelas berbeda sehingga tidak tertangkap
+   selector di atas — tanpa ini teks tetap charcoal gelap di atas permukaan gelap. */
+.dark [class*="text-charcoal/"] { color: var(--text-2); }
 .dark .text-pencil { color: var(--text-2); }
 .dark .text-faded { color: var(--text-3); }
 .dark .text-slate-400 { color: #8b96b5; }
@@ -220,11 +230,35 @@ body {
 .dark [class*="border-zinc-300/"] { border-color: var(--line-2); }
 .dark .border-slate-200 { border-color: var(--line); }
 .dark .border-white { border-color: rgba(255, 255, 255, 0.08); }
+/* border aksen story ikut diredupkan agar tidak menyala neon di dark */
+.dark [class*="border-[#b8eb8a]"] { border-color: rgba(215, 255, 184, 0.3); }
 
 /* --- Bayangan --- */
 .dark .shadow-card { box-shadow: var(--shadow-card); }
 .dark .shadow-float { box-shadow: var(--shadow-float); }
 .dark .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
+
+/* ==========================================================================
+   PALET PASTEL HARDCODE — nilai arbitrary (bg-[#f0f9ff], text-[#0b5cab], dst)
+   tidak dikenali sebagai kelas netral, jadi tidak ter-cover override di atas.
+   Di light biarkan aslinya; di dark diganti tint transparan dari hue yang sama
+   supaya teks yang sudah di-override (var(--text-1/2)) tetap terbaca di atasnya.
+   Selector pakai [class~=] (token utuh) agar tidak ikut menangkap varian seperti
+   hover:bg-[#f0f9ff]; blob dekoratif .hero-blob dikecualikan agar glow tetap.
+   ========================================================================== */
+.dark [class~="bg-[#f0f9ff]"] { background-color: rgba(28, 176, 246, 0.12); }
+.dark [class~="bg-[#e0f2ff]"]:not(.hero-blob) { background-color: rgba(28, 176, 246, 0.18); }
+.dark [class~="bg-[#ffe4e6]"] { background-color: rgba(225, 29, 72, 0.18); }
+.dark [class~="bg-[#fef9c3]"] { background-color: rgba(202, 138, 4, 0.22); }
+.dark [class~="bg-[#e0e7ff]"] { background-color: rgba(79, 70, 229, 0.22); }
+
+.dark [class~="border-[#cde9ff]"] { border-color: rgba(28, 176, 246, 0.4); }
+.dark [class~="border-[#fecdd3]"] { border-color: rgba(225, 29, 72, 0.42); }
+.dark [class~="border-[#fde68a]"] { border-color: rgba(202, 138, 4, 0.42); }
+.dark [class~="border-[#c7d2fe]"] { border-color: rgba(79, 70, 229, 0.45); }
+
+.dark [class~="text-[#0b5cab]"] { color: #7cc7f5; }
+.dark [class~="text-[#4f46e5]"] { color: #a5b4fc; }
 
 /* --- Pemilu & chart card dalam dark: hero/leaderboard cards tetap permukaan --- */
 .dark input::placeholder { color: var(--text-3); }
