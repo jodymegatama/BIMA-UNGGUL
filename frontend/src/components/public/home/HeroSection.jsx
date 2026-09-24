@@ -378,7 +378,7 @@ export default function HeroSection() {
         </div>
 
         {/* trusted strip below hero */}
-        <div className="mt-6 lg:mt-2 rounded-[16px] border-2 border-zinc-200 bg-zinc-50 px-4 lg:px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4 reveal">
+        <div className="mt-10 lg:mt-6 rounded-[16px] border-2 border-zinc-200 bg-zinc-50 px-4 lg:px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4 reveal">
           <div className="flex items-center gap-3 text-[13px] font-bold text-charcoal">
             <span className="hidden sm:inline-flex w-8 h-8 rounded-full bg-white border-2 border-zinc-200 items-center justify-center">
               <Buildings size={16} weight="regular" color="#777777" />
