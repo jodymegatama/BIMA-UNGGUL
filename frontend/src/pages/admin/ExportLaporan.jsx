@@ -3,7 +3,9 @@ import { FilePdf, FileXls, DownloadSimple, Calendar, CheckCircle, Info, SpinnerG
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../lib/api';
-import { KELOMPOKS, INDIKATORS } from '../../constants/indikator';
+import { KELOMPOKS } from '../../constants/indikator';
+
+const JENJANGS = ['MI', 'MTs', 'MA'];
 
 export default function ExportLaporan() {
   const { token } = useAuth();
@@ -32,7 +34,10 @@ export default function ExportLaporan() {
     try {
       const isPdf = type === 'pdf';
       const ext = isPdf ? 'pdf' : 'xlsx';
-      const url = `/api/admin/export/${isPdf ? 'pdf' : 'excel'}?periodeId=${encodeURIComponent(periode)}${kelompok ? `&kelompok=${encodeURIComponent(kelompok)}` : ''}`;
+      const isJenjang = JENJANGS.includes(kelompok);
+      const params = new URLSearchParams({ periodeId: periode });
+      if (kelompok) params.set(isJenjang ? 'jenjang' : 'kelompok', kelompok);
+      const url = `/api/admin/export/${isPdf ? 'pdf' : 'excel'}?${params.toString()}`;
       // Use fetch with blob handling
       const headers = {};
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -45,7 +50,7 @@ export default function ExportLaporan() {
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `leaderboard-${periode}${kelompok?`-${kelompok}`:''}.${ext}`;
+      a.download = `leaderboard-${periode}${kelompok ? `-${kelompok.replace(/\s+/g, '-')}` : ''}.${ext}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -61,12 +66,14 @@ export default function ExportLaporan() {
   };
 
   const periodeInfo = periodes.find((p) => String(p.id) === String(periode));
+  const isJenjang = JENJANGS.includes(kelompok);
+  const scopeLabel = !kelompok ? `Semua kelompok (${KELOMPOKS.length})` : isJenjang ? `Jenjang ${kelompok} (2 kelompok)` : kelompok;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Export Laporan</h1>
-        <p className="text-[12px] font-medium text-pencil mt-1">Filter periode sebelum export — PDF dengan kop instansi & Excel rincian {INDIKATORS.length} indikator (hanya Disetujui).</p>
+        <p className="text-[12px] font-medium text-pencil mt-1">Filter periode sebelum export — PDF berkop instansi & Excel leaderboard per kelompok (hanya Disetujui).</p>
       </div>
 
       <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-5 shadow-card">
@@ -80,9 +87,14 @@ export default function ExportLaporan() {
               <option key={p.id} value={p.id}>{p.nama} — {p.status}</option>
             ))}
           </select>
-          <select value={kelompok} onChange={(e) => setKelompok(e.target.value)} className="h-9 px-4 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-black text-charcoal">
+          <select value={kelompok} onChange={(e) => setKelompok(e.target.value)} className="h-9 px-4 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-black text-charcoal min-w-[160px]">
             <option value="">Semua kelompok</option>
-            {['MI Negeri','MI Swasta','MTs Negeri','MTs Swasta','MA Negeri','MA Swasta'].map((k)=><option key={k} value={k}>{k}</option>)}
+            <optgroup label="Per kelompok">
+              {KELOMPOKS.map((k) => <option key={k} value={k}>{k}</option>)}
+            </optgroup>
+            <optgroup label="Per jenjang (semua)">
+              {JENJANGS.map((j) => <option key={j} value={j}>{j}</option>)}
+            </optgroup>
           </select>
           <span className="inline-flex h-7 px-3 rounded-full bg-zinc-50 border-2 border-zinc-100 text-[11px] font-bold text-pencil">
             {periodeInfo?.status || '-'} • {periode||'-'}
@@ -97,8 +109,8 @@ export default function ExportLaporan() {
               <div className="font-medium text-pencil">Kankemenag Kab. Pasuruan — Seksi Pendma</div>
             </div>
             <div className="rounded-[12px] bg-white border-2 border-zinc-100 p-3">
-              <div className="font-black text-charcoal">Periode {periodeInfo?.nama || periode || '-'}</div>
-              <div className="font-medium text-pencil">{KELOMPOKS.length} kelompok • Top 3 • Semua ranking</div>
+              <div className="font-black text-charcoal">Cakupan</div>
+              <div className="font-medium text-pencil">{scopeLabel} • Semua ranking</div>
             </div>
             <div className="rounded-[12px] bg-white border-2 border-zinc-100 p-3">
               <div className="font-black text-charcoal">Tanggal cetak</div>

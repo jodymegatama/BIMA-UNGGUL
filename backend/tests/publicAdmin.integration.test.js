@@ -6,6 +6,7 @@
  * Data fixture: prefix PUBADM + periode PUBADM/2026 — dibersihkan sebelum & sesudah.
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import ExcelJS from 'exceljs';
 import { prisma } from '../src/db/prisma.js';
 import * as publicController from '../src/controllers/publicController.js';
 import * as periodService from '../src/services/periodService.js';
@@ -233,6 +234,58 @@ describe('Publik & Admin (PUBADM)', () => {
     expect(Buffer.isBuffer(buf)).toBe(true);
     expect(buf.slice(0, 2).toString()).toBe('PK');
     expect(buf.length).toBeGreaterThan(1000);
+  });
+
+  it('Export multi-kelompok — PDF & Excel dengan section per kelompok', async () => {
+    // Tanpa filter kelompok → satu section per kelompok yang punya madrasah aktif
+    // (leaderboard memuat semua madrasah, termasuk skor 0 — konsisten dgn publik).
+    // Jumlah section dihitung dari DB agar test robust terhadap data seed dev.
+    const madrasahGroups = await prisma.madrasah.groupBy({
+      by: ['kelompok'],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    });
+    const expectedSections = madrasahGroups.filter((g) => g._count._all > 0).length;
+    expect(expectedSections).toBeGreaterThanOrEqual(1);
+
+    const bufPdf = await exportService.buildPdfBuffer({ periodeId: String(ctx.periode.id) });
+    expect(Buffer.isBuffer(bufPdf)).toBe(true);
+    expect(bufPdf.slice(0, 4).toString()).toBe('%PDF');
+
+    const bufXlsx = await exportService.buildExcelBuffer({ periodeId: String(ctx.periode.id) });
+    expect(bufXlsx.slice(0, 2).toString()).toBe('PK');
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(bufXlsx);
+    const texts = [];
+    wb.getWorksheet('Leaderboard').eachRow((row) => {
+      texts.push(row.values.map((v) => String(v ?? '')).join(' | '));
+    });
+    const sections = texts.filter((t) => t.includes('LEADERBOARD —'));
+    expect(sections.length).toBe(expectedSections);
+    expect(sections.some((t) => t.includes('MI Negeri'))).toBe(true);
+    expect(texts.some((t) => t.includes('Madrasah PUBADM'))).toBe(true); // baris ranking masuk
+    expect(texts.some((t) => t.includes('Periode: PUBADM/2026'))).toBe(true); // metadata
+  });
+
+  it('Export per jenjang + validasi filter kelompok/jenjang', async () => {
+    const buf = await exportService.buildExcelBuffer({ periodeId: String(ctx.periode.id), jenjang: 'MI' });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    const texts = [];
+    wb.getWorksheet('Leaderboard').eachRow((row) => {
+      texts.push(row.values.map((v) => String(v ?? '')).join(' | '));
+    });
+    const sections = texts.filter((t) => t.includes('LEADERBOARD —'));
+    expect(sections.length).toBeGreaterThanOrEqual(1);
+    expect(sections.every((t) => t.includes('MI '))).toBe(true); // hanya kelompok MI
+    expect(texts.some((t) => t.includes('Madrasah PUBADM'))).toBe(true);
+
+    await expect(
+      exportService.buildPdfBuffer({ periodeId: String(ctx.periode.id), jenjang: 'SMA' }),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      exportService.buildExcelBuffer({ periodeId: String(ctx.periode.id), kelompok: 'MI Negeri', jenjang: 'MI' }),
+    ).rejects.toMatchObject({ status: 400 });
   });
 
   it('AuditLog filter + pagination (via controller)', async () => {
