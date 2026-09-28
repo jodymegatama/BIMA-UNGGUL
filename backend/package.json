@@ -14,6 +14,7 @@
     "smoke:dynamic-form": "node scripts/smoke-dynamic-form.mjs",
     "dummy:create": "node scripts/create-dummy-accounts.mjs",
     "dummy:clean": "node scripts/clean-dummy.mjs",
+    "lint": "eslint src/ scripts/ tests/",
     "test": "vitest run"
   },
   "keywords": [],
