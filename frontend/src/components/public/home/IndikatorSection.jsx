@@ -9,8 +9,8 @@ import {
   Lightbulb,
   UsersThree,
   Calculator,
+  Paperclip,
   Stack,
-  Info,
 } from 'phosphor-react';
 import { INDIKATORS } from '../../../constants/indikator';
 
@@ -18,9 +18,31 @@ import { INDIKATORS } from '../../../constants/indikator';
  * IndikatorSection — persis dari _backup/index.html #indikator
  * 9 kartu, grid 1 / md:2 / lg:3, stagger reveal, copy & badge persis.
  * Revisi 2026-09-14: nama indikator + deskripsi + istilah "Murid" mengikuti spesifikasi baru.
- * Badge tingkat/jenjang TIDAK lagi menampilkan angka pengali — bobot riil dikonfigurasi per periode
- * (lihat halaman Bobot Penilaian admin).
+ * Revisi 2026-09-25 (SEO + info bukti): tiap kartu memuat deskripsi yang menjelaskan bukti
+ * wajib tahun berjalan + chip nama field lampiran persis dari spesifikasi input Operator.
+ * H3 indikator 06 memakai kata "Lebih dari 85" (bukan simbol ">") agar ramah snippet SERP.
+ * Badge tingkat/jenjang TIDAK menampilkan angka pengali — bobot riil dikonfigurasi per periode.
  */
+
+/** Blok lampiran wajib: label + chip nama field yang dilampirkan Operator. */
+function LampiranWajib({ fields }) {
+  return (
+    <div className="mt-4 rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3">
+      <div className="text-[10px] font-black tracking-wide text-faded uppercase flex items-center gap-1">
+        <Paperclip size={12} weight="fill" color="#afafaf" />
+        Lampiran wajib — bukti tahun berjalan
+      </div>
+      <ul className="mt-1.5 flex flex-wrap gap-1">
+        {fields.map((f) => (
+          <li key={f} className="text-[11px] font-bold bg-white border border-zinc-200 rounded-full px-2.5 py-0.5 text-charcoal">
+            {f}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function IndikatorSection() {
   return (
     <section id="indikator" className="py-14 lg:py-20 bg-white border-t-2 border-zinc-100 scroll-mt-[76px]">
@@ -49,7 +71,10 @@ export default function IndikatorSection() {
               <GraduationCap size={20} weight="fill" color="white" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight pr-8">Diklat Pendidik dan Tenaga Kependidikan</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Keikutsertaan diklat oleh institusi penyelenggara, dengan bukti diklat tahun berjalan.</p>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti diklat yang dilaksanakan pada tahun berjalan wajib dilampirkan: nama diklat, nama institusi penyelenggara, nama pelaksana ASN atau non-ASN,
+              dan status kepegawaian.
+            </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               <span className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
                 <Calculator size={14} weight="fill" color="#525252" />
@@ -57,6 +82,14 @@ export default function IndikatorSection() {
               </span>
               <span className="inline-flex items-center justify-center h-7 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black">Bobot dinamis</span>
             </div>
+            <LampiranWajib
+              fields={[
+                'Nama Diklat',
+                'Nama Institusi Penyelenggara Diklat',
+                'Nama Pelaksana ASN/Non-ASN',
+                'Status Pegawai (ASN/Non-ASN)',
+              ]}
+            />
           </article>
 
           {/* 2 Penghargaan Individu */}
@@ -65,11 +98,22 @@ export default function IndikatorSection() {
               <Medal size={20} weight="fill" color="white" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Penghargaan Individu Pendidik dan Tenaga Kependidikan</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Penghargaan yang diterima pendidik/tenaga kependidikan, dengan bukti tahun berjalan.</p>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti penghargaan yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan, nama institusi penyelenggara, nama penerima ASN atau
+              non-ASN, dan status kepegawaian.
+            </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
               per capaian x bobot
             </div>
+            <LampiranWajib
+              fields={[
+                'Nama Penghargaan',
+                'Nama Institusi Penyelenggara Penghargaan',
+                'Nama Penerima ASN/Non-ASN',
+                'Status Pegawai (ASN/Non-ASN)',
+              ]}
+            />
           </article>
 
           {/* 3 Penghargaan Institusi */}
@@ -78,12 +122,22 @@ export default function IndikatorSection() {
               <Buildings size={20} weight="fill" color="#1cb0f6" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Penghargaan Institusi</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Penghargaan madrasah dengan bobot berjenjang wilayah dan bukti fisik tahun berjalan.</p>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti fisik penghargaan pada tahun berjalan wajib dilampirkan: nama penghargaan, institusi penerbit, dan tingkat wilayah prestasi — kabupaten,
+              provinsi, nasional, atau internasional.
+            </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               <span className="h-6 px-2 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black">Kabupaten</span>
               <span className="h-6 px-2 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black">Provinsi</span>
               <span className="h-6 px-2 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black">Nasional</span>
             </div>
+            <LampiranWajib
+              fields={[
+                'Nama Penghargaan',
+                'Institusi Penerbit Penghargaan',
+                'Tingkat Wilayah Prestasi (Kabupaten/Provinsi/Nasional/Internasional)',
+              ]}
+            />
           </article>
 
           {/* 4 Prestasi Siswa */}
@@ -92,11 +146,22 @@ export default function IndikatorSection() {
               <Trophy size={20} weight="fill" color="white" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Prestasi Siswa</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Capaian murid di kompetisi resmi dengan tingkat wilayah (bukti tahun berjalan).</p>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti prestasi yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan atau prestasi, institusi penerbit, nama murid, dan tingkat
+              wilayah prestasi (kabupaten, provinsi, nasional, internasional).
+            </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
               per tingkat x bobot
             </div>
+            <LampiranWajib
+              fields={[
+                'Nama Penghargaan atau Prestasi',
+                'Institusi Penerbit Penghargaan',
+                'Nama Murid',
+                'Tingkat Wilayah Prestasi (Kab/Prov/Nas/Internasional)',
+              ]}
+            />
           </article>
 
           {/* 5 Lulus Jenjang */}
@@ -105,12 +170,21 @@ export default function IndikatorSection() {
               <Student size={20} weight="fill" color="#58cc02" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan</h3>
-            <p className="text-[13px] leading-[1.5] text-charcoal/70 font-medium mt-1.5">Jumlah pendidik &amp; tenaga kependidikan lulus S1/S2/S3 — bukti ijazah tahun berjalan.</p>
+            <p className="text-[13px] leading-[1.5] text-charcoal/70 font-medium mt-1.5">
+              Bukti ijazah jenjang lanjutan pendidik dan tenaga kependidikan pada tahun berjalan wajib dilampirkan: jenjang pendidikan S1, S2, atau S3 beserta
+              jumlah ASN.
+            </p>
             <div className="mt-4 flex gap-1.5">
               <span className="flex-1 h-7 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center text-[11px] font-black">S1</span>
               <span className="flex-1 h-7 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center text-[11px] font-black">S2</span>
               <span className="flex-1 h-7 rounded-full bg-eager text-white border-2 border-eager-dark flex items-center justify-center text-[11px] font-black">S3</span>
             </div>
+            <LampiranWajib
+              fields={[
+                'Jenjang Pendidikan (S1/S2/S3)',
+                'Jumlah ASN',
+              ]}
+            />
           </article>
 
           {/* 6 Nilai rata-rata TKA/ANBK */}
@@ -118,12 +192,16 @@ export default function IndikatorSection() {
             <div className="w-11 h-11 rounded-[12px] bg-ink border-2 border-black flex items-center justify-center group-hover:rotate-3 transition-transform">
               <ChartLineUp size={20} weight="fill" color="white" />
             </div>
-            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Nilai Rata-rata Murid &gt; 85</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Persentase murid dengan nilai TKA/ANBK di atas 85 (bukti tahun berjalan).</p>
+            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Nilai Rata-rata Murid Lebih dari 85</h3>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti hasil TKA atau ANBK tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X
+              dari Y = Z persen).
+            </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black">
               <Calculator size={14} weight="fill" color="#ffffff" />
               persentase x bobot
             </div>
+            <LampiranWajib fields={['Hasil TKA/ANBK Murid > 85 (0 dari 0 = 0%)']} />
           </article>
 
           {/* 7 Murid Lanjutan Unggulan */}
@@ -132,11 +210,19 @@ export default function IndikatorSection() {
               <PaperPlaneTilt size={20} weight="fill" color="#e11d48" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Murid lulus yang diterima di universitas atau sekolah unggulan (bukti kelulusan).</p>
-            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti kelulusan tahun berjalan wajib dilampirkan: nama universitas atau sekolah unggulan tujuan dan nama murid yang diterima.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
               per capaian x bobot
             </div>
+            <LampiranWajib
+              fields={[
+                'Nama Universitas atau Sekolah Unggulan',
+                'Nama Murid',
+              ]}
+            />
           </article>
 
           {/* 8 Giat Inovatif */}
@@ -145,11 +231,14 @@ export default function IndikatorSection() {
               <Lightbulb size={20} weight="fill" color="#ca8a04" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Giat Inovatif dalam Pengembangan Mutu Madrasah</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Kegiatan inovatif pengembangan mutu madrasah dengan laporan kegiatan.</p>
-            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black">
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti laporan kegiatan tahun berjalan wajib dilampirkan, memuat nama giat inovatif pengembangan mutu madrasah.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
               per giat x bobot
             </div>
+            <LampiranWajib fields={['Nama Giat Inovatif']} />
           </article>
 
           {/* 9 Rasio Penerimaan */}
@@ -158,11 +247,14 @@ export default function IndikatorSection() {
               <UsersThree size={20} weight="fill" color="#4f46e5" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Rasio Penerimaan Murid Baru</h3>
-            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">Murid diterima dari jumlah pendaftar tahun berjalan (bukti tahun berjalan).</p>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Bukti penerimaan murid baru tahun berjalan wajib dilampirkan: jumlah murid diterima dari total pendaftar (format X dari Y = Z persen).
+            </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#e0e7ff] border-2 border-[#c7d2fe] text-[11px] font-black text-[#4f46e5]">
               <Calculator size={14} weight="fill" color="#4f46e5" />
               persentase x bobot
             </div>
+            <LampiranWajib fields={['Murid diterima dari jumlah pendaftar tahun berjalan (0 dari 0 = 0%)']} />
           </article>
         </div>
       </div>

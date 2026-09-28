@@ -19,7 +19,27 @@ import { INDIKATORS } from '../../../constants/indikator';
  * Reuse card style dari Home IndikatorSection, ditambah: daftar field input + cara hitung per tipe formula
  * Revisi 2026-09-14: nama/label/deskripsi mengikuti spesifikasi baru (istilah "Murid", bukti tahun berjalan,
  * basis nilai TKA/ANBK untuk indikator 6). Badge tingkat/jenjang tanpa angka pengali — bobot riil per periode.
+ * Revisi 2026-09-25 (SEO + info bukti): deskripsi disinkronkan dengan section beranda — menjelaskan
+ * bukti wajib tahun berjalan + chip nama field lampiran persis dari spesifikasi input Operator.
  */
+
+/** Chip nama field lampiran — satu sumber teks dengan LampiranWajib di Home IndikatorSection. */
+function LampiranWajib({ fields }) {
+  return (
+    <div className="mt-3">
+      <div className="text-[11px] font-black tracking-wide text-faded uppercase flex items-center gap-1">
+        Lampiran wajib — bukti tahun berjalan
+      </div>
+      <ul className="mt-1.5 flex flex-wrap gap-1.5">
+        {fields.map((f) => (
+          <li key={f} className="text-[11px] font-bold bg-white border border-zinc-200 rounded-full px-2.5 py-1 text-charcoal">
+            {f}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 const DETAILS = [
   {
@@ -29,8 +49,15 @@ const DETAILS = [
     iconColor: 'white',
     nama: 'Diklat Pendidik dan Tenaga Kependidikan',
     kode: 'diklat',
-    desc: 'Keikutsertaan diklat oleh institusi penyelenggara, dengan bukti diklat tahun berjalan.',
-    fields: ['Nama Diklat', 'Nama Institusi Penyelenggara Diklat', 'Nama ASN/non-ASN Pelaksana Diklat', 'Status Pegawai (ASN/non-ASN)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti diklat yang dilaksanakan pada tahun berjalan wajib dilampirkan: nama diklat, nama institusi penyelenggara, nama pelaksana ASN atau non-ASN, dan status kepegawaian.',
+    fields: [
+      'Nama Diklat',
+      'Nama Institusi Penyelenggara Diklat',
+      'Nama Pelaksana ASN/Non-ASN',
+      'Status Pegawai (ASN/Non-ASN)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
     tone: 'Bobot dinamis',
@@ -42,8 +69,15 @@ const DETAILS = [
     iconColor: 'white',
     nama: 'Penghargaan Individu Pendidik dan Tenaga Kependidikan',
     kode: 'penghargaan_individu',
-    desc: 'Penghargaan yang diterima pendidik/tenaga kependidikan, dengan bukti tahun berjalan.',
-    fields: ['Nama Penghargaan', 'Nama Institusi Penyelenggara Penghargaan', 'Nama ASN/non-ASN Penerima', 'Status Pegawai', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti penghargaan yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan, nama institusi penyelenggara, nama penerima ASN atau non-ASN, dan status kepegawaian.',
+    fields: [
+      'Nama Penghargaan',
+      'Nama Institusi Penyelenggara Penghargaan',
+      'Nama Penerima ASN/Non-ASN',
+      'Status Pegawai (ASN/Non-ASN)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
   },
@@ -54,8 +88,14 @@ const DETAILS = [
     iconColor: '#1cb0f6',
     nama: 'Penghargaan Institusi',
     kode: 'penghargaan_institusi',
-    desc: 'Penghargaan madrasah dengan bobot berjenjang wilayah dan bukti fisik tahun berjalan.',
-    fields: ['Nama Penghargaan', 'Institusi Penerbit Penghargaan', 'Tingkat Wilayah (Kab/Prov/Nas/Inter)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti fisik penghargaan pada tahun berjalan wajib dilampirkan: nama penghargaan, institusi penerbit, dan tingkat wilayah prestasi — kabupaten, provinsi, nasional, atau internasional.',
+    fields: [
+      'Nama Penghargaan',
+      'Institusi Penerbit Penghargaan',
+      'Tingkat Wilayah Prestasi (Kabupaten/Provinsi/Nasional/Internasional)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Σ(Jumlah per tingkat × Bobot tingkat)',
     badges: ['Kabupaten', 'Provinsi', 'Nasional'],
     cardBg: 'bg-[#f0f9ff]',
@@ -67,8 +107,15 @@ const DETAILS = [
     iconColor: 'white',
     nama: 'Prestasi Siswa',
     kode: 'prestasi_siswa',
-    desc: 'Capaian murid di kompetisi resmi dengan tingkat wilayah (bukti tahun berjalan).',
-    fields: ['Nama Penghargaan/Prestasi', 'Nama Institusi Penerbit', 'Nama Murid', 'Tingkat Wilayah', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti prestasi yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan atau prestasi, institusi penerbit, nama murid, dan tingkat wilayah prestasi (kabupaten, provinsi, nasional, internasional).',
+    fields: [
+      'Nama Penghargaan atau Prestasi',
+      'Institusi Penerbit Penghargaan',
+      'Nama Murid',
+      'Tingkat Wilayah Prestasi (Kab/Prov/Nas/Internasional)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Σ(Jumlah per tingkat × Bobot tingkat)',
     badge: 'per tingkat x bobot',
   },
@@ -79,8 +126,13 @@ const DETAILS = [
     iconColor: '#58cc02',
     nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan',
     kode: 'lulus_jenjang_lanjutan',
-    desc: 'Jumlah pendidik/tenaga kependidikan lulus S1/S2/S3 — bukti ijazah tahun berjalan.',
-    fields: ['Jenjang Pendidikan (S1/S2/S3)', 'Jumlah ASN', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti ijazah jenjang lanjutan pendidik dan tenaga kependidikan pada tahun berjalan wajib dilampirkan: jenjang pendidikan S1, S2, atau S3 beserta jumlah ASN.',
+    fields: [
+      'Jenjang Pendidikan (S1/S2/S3)',
+      'Jumlah ASN',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Σ(Jumlah × Bobot per jenjang)',
     jenjang: ['S1', 'S2', 'S3'],
     cardBg: 'bg-story',
@@ -90,10 +142,14 @@ const DETAILS = [
     icon: ChartLineUp,
     iconBg: 'bg-ink border-black',
     iconColor: 'white',
-    nama: 'Nilai Rata-rata Murid > 85',
+    nama: 'Nilai Rata-rata Murid Lebih dari 85',
     kode: 'rapor_rata_rata',
-    desc: 'Persentase murid dengan nilai TKA/ANBK di atas 85 (bukti tahun berjalan).',
-    fields: ['Hasil TKA/ANBK Murid > 85 (X dari Y = Z%)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti hasil TKA atau ANBK tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X dari Y = Z persen).',
+    fields: [
+      'Hasil TKA/ANBK Murid > 85 (0 dari 0 = 0%)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Persentase × Bobot',
     badge: 'persentase x bobot',
   },
@@ -104,8 +160,13 @@ const DETAILS = [
     iconColor: '#e11d48',
     nama: 'Murid Lanjutan Unggulan',
     kode: 'siswa_lanjutan_unggulan',
-    desc: 'Murid lulus yang diterima di universitas/sekolah unggulan (bukti kelulusan).',
-    fields: ['Nama Universitas/Sekolah Unggulan', 'Nama Murid', 'Link Bukti Fisik (bukti kelulusan)', 'Catatan Tambahan'],
+    desc: 'Bukti kelulusan tahun berjalan wajib dilampirkan: nama universitas atau sekolah unggulan tujuan dan nama murid yang diterima.',
+    fields: [
+      'Nama Universitas atau Sekolah Unggulan',
+      'Nama Murid',
+      'Link Bukti Fisik (bukti kelulusan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per capaian x bobot',
   },
@@ -116,8 +177,12 @@ const DETAILS = [
     iconColor: '#ca8a04',
     nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah',
     kode: 'giat_inovatif',
-    desc: 'Kegiatan inovatif pengembangan mutu madrasah dengan laporan kegiatan.',
-    fields: ['Nama Giat Inovatif', 'Link Bukti Fisik (laporan kegiatan)', 'Catatan Tambahan'],
+    desc: 'Bukti laporan kegiatan tahun berjalan wajib dilampirkan, memuat nama giat inovatif pengembangan mutu madrasah.',
+    fields: [
+      'Nama Giat Inovatif',
+      'Link Bukti Fisik (laporan kegiatan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Jumlah Approved × Bobot',
     badge: 'per giat x bobot',
   },
@@ -128,8 +193,12 @@ const DETAILS = [
     iconColor: '#4f46e5',
     nama: 'Rasio Penerimaan Murid Baru',
     kode: 'rasio_penerimaan',
-    desc: 'Murid diterima dibanding jumlah pendaftar tahun berjalan.',
-    fields: ['Murid Diterima dari Pendaftar (X dari Y = Z%)', 'Link Bukti Fisik (tahun berjalan)', 'Catatan Tambahan'],
+    desc: 'Bukti penerimaan murid baru tahun berjalan wajib dilampirkan: jumlah murid diterima dari total pendaftar (format X dari Y = Z persen).',
+    fields: [
+      'Murid diterima dari jumlah pendaftar tahun berjalan (0 dari 0 = 0%)',
+      'Link Bukti Fisik (tahun berjalan)',
+      'Catatan Tambahan',
+    ],
     hitung: 'Persentase × Bobot',
     badge: 'persentase x bobot',
     badgeTone: 'bg-[#e0e7ff] border-[#c7d2fe] text-[#4f46e5]',
@@ -146,8 +215,8 @@ export default function IndikatorDetailSection() {
           </div>
           <h2 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[36px] leading-none text-charcoal mt-4">Apa yang dinilai & bagaimana skor dihitung</h2>
           <p className="text-[13px] leading-6 text-pencil font-medium mt-3 max-w-[68ch]">
-            Di bawah ini daftar lengkap {INDIKATORS.length} indikator (PRD §11). Tiap baris capaian diinput per indikator dengan field sesuai tabel, dilengkapi link bukti
-            tahun berjalan, dan dihitung <b>tanpa batas jumlah</b>.
+            Daftar lengkap {INDIKATORS.length} indikator mutu madrasah beserta bukti wajib tahun berjalan yang dilampirkan Operator. Tiap baris capaian diinput
+            per indikator dengan field sesuai daftar, dilengkapi link bukti fisik, dan dihitung <b>tanpa batas jumlah</b>.
           </p>
         </div>
 
@@ -166,17 +235,8 @@ export default function IndikatorDetailSection() {
                 <div className="text-[11px] font-bold text-pencil mt-1 font-mono">{it.kode}</div>
                 <p className="text-[12px] leading-5 text-pencil font-medium mt-2">{it.desc}</p>
 
-                {/* field list */}
-                <div className="mt-3">
-                  <div className="text-[11px] font-black tracking-wide text-faded uppercase">Field input</div>
-                  <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                    {it.fields.map((f) => (
-                      <li key={f} className="text-[11px] font-bold bg-white border border-zinc-200 rounded-full px-2.5 py-1">
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* field list + bukti wajib */}
+                <LampiranWajib fields={it.fields} />
 
                 {/* cara hitung */}
                 <div className="mt-4 rounded-[12px] bg-white border-2 border-zinc-100 p-3">
