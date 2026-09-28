@@ -39,10 +39,6 @@ export default function Daftar() {
                   Daftar Operator • Menunggu Persetujuan
                 </div>
                 <h1 className="font-display font-black tracking-[-0.02em] text-[26px] lg:text-[30px] leading-none text-charcoal mt-4">Daftar akun Operator</h1>
-                <p className="text-[13px] leading-5 font-medium text-pencil mt-2">
-                  Akun terikat ke satu madrasah. Kode <span className="font-mono font-black text-charcoal">BMU-XXXXXX</span> dibuat otomatis saat Admin menyetujui.
-                </p>
-
                 <div className="mt-6">
                   <DaftarForm onSuccess={setSuccessData} />
                 </div>

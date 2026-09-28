@@ -168,7 +168,6 @@ export default function DaftarForm({ onSuccess }) {
               />
             </div>
             {fieldErr('email')}
-            <div className="text-[11px] font-medium text-faded mt-1">Dipakai untuk login setelah akun disetujui Admin. BMU-XXXXXX dibuat saat approve.</div>
           </div>
 
           {/* Nama lengkap */}

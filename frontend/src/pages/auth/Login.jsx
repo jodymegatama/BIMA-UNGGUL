@@ -34,7 +34,7 @@ export default function Login() {
             </div>
             <h1 className="font-display font-black tracking-[-0.02em] text-[28px] lg:text-[32px] leading-none text-charcoal mt-4">Masuk ke akun Anda</h1>
             <p className="text-[13px] leading-5 font-medium text-pencil mt-2">
-              Operator Madrasah & Admin Seksi Pendma. Publik tidak perlu login.
+              Operator Madrasah & Admin Seksi Pendma
             </p>
 
             <div className="mt-6 rounded-[16px] border-2 border-zinc-200 bg-white p-5 lg:p-6 shadow-card">
