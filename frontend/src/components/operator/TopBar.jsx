@@ -10,6 +10,7 @@ const titleMap = {
   '/operator/input': 'Input Capaian',
   '/operator/riwayat': 'Riwayat Submission',
   '/operator/profil': 'Profil Madrasah',
+  '/operator/panduan': 'Panduan Pengisian',
 };
 
 // Judul ramah untuk tipe notifikasi (PRD §12)

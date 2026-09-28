@@ -40,6 +40,7 @@ const RiwayatSubmission = lazy(() => import('./pages/operator/RiwayatSubmission'
 const ProfilMadrasah = lazy(() => import('./pages/operator/ProfilMadrasah'));
 const HapusData = lazy(() => import('./pages/operator/HapusData'));
 const OperatorNotifikasi = lazy(() => import('./pages/operator/Notifikasi'));
+const Panduan = lazy(() => import('./pages/operator/Panduan'));
 
 // Zona Admin
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="hapus-data" element={<Zone><HapusData /></Zone>} />
         <Route path="profil" element={<Zone><ProfilMadrasah /></Zone>} />
         <Route path="notifikasi" element={<Zone><OperatorNotifikasi /></Zone>} />
+        <Route path="panduan" element={<Zone><Panduan /></Zone>} />
         <Route path="*" element={<NotFound />} />
       </Route>
 

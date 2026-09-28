@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { SquaresFour, PlusCircle, ClockCounterClockwise, User, SignOut, Trophy, Buildings, Trash } from 'phosphor-react';
+import { SquaresFour, PlusCircle, ClockCounterClockwise, User, SignOut, Trophy, Buildings, Trash, BookOpen } from 'phosphor-react';
 
 const menu = [
   { to: '/operator', label: 'Dashboard', icon: SquaresFour, end: true },
@@ -7,6 +7,7 @@ const menu = [
   { to: '/operator/riwayat', label: 'Riwayat', icon: ClockCounterClockwise },
   { to: '/operator/hapus-data', label: 'Hapus Data', icon: Trash },
   { to: '/operator/profil', label: 'Profil Madrasah', icon: User },
+  { to: '/operator/panduan', label: 'Panduan', icon: BookOpen },
 ];
 
 /**
