@@ -3,7 +3,6 @@
  * Jalankan dari folder backend: node scripts/smoke-notification.mjs
  */
 import { PrismaClient } from '@prisma/client';
-import authService from '../src/services/authService.js';
 import validationService from '../src/services/validationService.js';
 
 const prisma = new PrismaClient();

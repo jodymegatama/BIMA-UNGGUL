@@ -32,7 +32,7 @@ async function main() {
 
   const after = await prisma.submissionItem.count({ where: { madrasahId: user.madrasahId, status: 'draft', deletedAt: null } });
   const edited = await prisma.submissionItem.findUnique({ where: { id: created.id } });
-  console.log('count afterCreate/afterResave:', afterCreate, '→', after, after === afterCreate ? '(OK — update, bukan duplikat)' : '(FAIL — duplikat!)');
+  console.log('count baseline/afterCreate/afterResave:', before, afterCreate, '→', after, after === afterCreate ? '(OK — update, bukan duplikat)' : '(FAIL — duplikat!)');
   console.log('nama ter-update:', edited.namaKegiatan === 'NoDup Test EDITED' ? 'OK' : 'FAIL');
 
   // cleanup

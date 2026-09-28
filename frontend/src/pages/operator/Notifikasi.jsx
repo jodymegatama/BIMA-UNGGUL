@@ -27,7 +27,6 @@ export default function Notifikasi() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await apiFetch('/api/notifications', { auth: true });
       const arr = Array.isArray(data) ? data : (data.data || []);
       setItems(arr.map((n) => ({
@@ -46,11 +45,12 @@ export default function Notifikasi() {
   }, []);
 
   useEffect(() => {
-    loadNotifications();
+    const initial = setTimeout(loadNotifications, 0);
     const iv = setInterval(loadNotifications, 30000);
     const onFocus = () => loadNotifications();
     window.addEventListener('focus', onFocus);
     return () => {
+      clearTimeout(initial);
       clearInterval(iv);
       window.removeEventListener('focus', onFocus);
     };
