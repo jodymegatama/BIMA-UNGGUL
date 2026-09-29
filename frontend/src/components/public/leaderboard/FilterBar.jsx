@@ -1,5 +1,6 @@
 import { Calendar, Funnel } from 'phosphor-react';
 import { KELOMPOKS as KELOMPOK_LIST } from '../../../constants/indikator';
+import { deriveStatusClient, urgency, formatTanggal } from '../../../lib/periode';
 
 // render pill dari registry frontend (constants/indikator.js KELOMPOKS)
 const KELOMPOKS = KELOMPOK_LIST.map((k) => ({ id: k, label: k }));
@@ -10,6 +11,19 @@ const KELOMPOKS = KELOMPOK_LIST.map((k) => ({ id: k, label: k }));
  */
 export default function FilterBar({ periode, kelompok, onPeriode, onKelompok, periodes = [] }) {
   const activePeriod = periodes.find((p) => p.namaPeriode === periode) || (periode ? { namaPeriode: periode } : null);
+  // Status + tanggal cut-off periode terpilih (baris /api/periode publik memuat tanggalCutoff)
+  const st = activePeriod?.statusEfektif || deriveStatusClient(activePeriod);
+  const u = urgency(activePeriod); // null bila tanpa tanggal (mis. baris stub)
+  const cutTgl = activePeriod?.tanggalCutoff ? formatTanggal(activePeriod.tanggalCutoff) : null;
+  const DOT_CLASS = st === 'aktif' ? 'bg-eager animate-pulse' : st === 'belum_dimulai' ? 'bg-spark' : 'bg-zinc-300';
+  const statusText =
+    st === 'aktif'
+      ? `Aktif${cutTgl ? ` • Cut-off ${cutTgl}` : ''}`
+      : st === 'belum_dimulai'
+        ? `Belum dimulai${cutTgl ? ` • Cut-off ${cutTgl}` : ''}`
+        : st
+          ? `Ditutup${cutTgl ? ` ${cutTgl}` : ''}`
+          : 'Nonaktif';
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 lg:p-5 shadow-card">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -37,9 +51,12 @@ export default function FilterBar({ periode, kelompok, onPeriode, onKelompok, pe
                   </button>
                 );
               })}
-              <span className="hidden sm:inline-flex items-center gap-1.5 ml-2 text-[11px] font-bold text-faded">
-                <span className={`w-1.5 h-1.5 rounded-full ${activePeriod?.statusEfektif === 'aktif' ? 'bg-eager animate-pulse' : 'bg-zinc-300'}`} />
-                {activePeriod?.statusEfektif === 'aktif' ? 'Aktif' : 'Nonaktif'}
+              <span
+                className="hidden sm:inline-flex items-center gap-1.5 ml-2 text-[11px] font-bold text-faded"
+                title={u ? { normal: 'Periode berjalan', warning: 'Segera berakhir', danger: 'Segera berakhir', closed: 'Periode sudah ditutup', upcoming: 'Belum dimulai' }[u] : undefined}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${DOT_CLASS}`} />
+                {statusText}
               </span>
             </div>
           </div>

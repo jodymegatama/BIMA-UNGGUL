@@ -7,9 +7,28 @@ import { useAuth } from '../../context/AuthContext';
 import { useOperator } from '../../context/OperatorContext';
 import { formatSkor } from '../../lib/format';
 import { fetchSkorDetail, fetchRank, fetchNotifications } from '../../lib/operatorData';
+import { deriveStatusClient, urgency, countdownText, formatTanggal, STATUS_LABEL } from '../../lib/periode';
 
 const ZERO_STATS = { Draft: 0, Menunggu: 0, Disetujui: 0, Ditolak: 0 };
 const STATUS_KEY = { draft: 'Draft', menunggu: 'Menunggu', disetujui: 'Disetujui', ditolak: 'Ditolak' };
+
+// Style kartu Status mengikuti urgensi cut-off (kelas statis utk Tailwind)
+const STATUS_CARD = {
+  normal: 'bg-story border-[#b8eb8a]',
+  warning: 'bg-story border-[#b8eb8a]',
+  danger: 'bg-amber-50 border-amber-300',
+  closed: 'bg-zinc-100 border-zinc-200',
+  upcoming: 'bg-white border-[#cde9ff]',
+  unknown: 'bg-zinc-50 border-zinc-100',
+};
+const STATUS_TXT = {
+  normal: 'text-eager-dark',
+  warning: 'text-eager-dark',
+  danger: 'text-amber-700',
+  closed: 'text-faded',
+  upcoming: 'text-spark-dark',
+  unknown: 'text-faded',
+};
 
 function makeStatCards(stats) {
   return [
@@ -26,6 +45,8 @@ export default function OperatorDashboard() {
   const [stats, setStats] = useState(ZERO_STATS);
   const [skor, setSkor] = useState(null);
   const [ranking, setRanking] = useState({ rank: null, total: null, kelompok: '-', periode: '-', updatedAt: null });
+  // Periode aktif lengkap ({ namaPeriode, status, tanggalCutoff }) — untuk kartu Status & info cut-off
+  const [periodeStatus, setPeriodeStatus] = useState(null);
   const madrasahNama = ctxMadrasah?.nama || '-';
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +67,12 @@ export default function OperatorDashboard() {
             Ditolak: data.stats.ditolak || 0,
           });
         }
-        if (data?.periode?.namaPeriode) setRanking((prev) => ({ ...prev, periode: data.periode.namaPeriode }));
+        if (data?.periode) {
+          setPeriodeStatus(data.periode);
+          setRanking((prev) => ({ ...prev, periode: data.periode.namaPeriode }));
+        } else if (data) {
+          setPeriodeStatus(null); // backend eksplisit: tidak ada periode aktif
+        }
       } catch { /* fallback di bawah */ }
 
       // fallback lama: hitung manual dari daftar submission-item
@@ -101,6 +127,13 @@ export default function OperatorDashboard() {
   const progress = total ? Math.round((stats.Disetujui / total) * 100) : 0;
   const statCards = makeStatCards(stats);
 
+  // Status periode efektif utk kartu Status & subjudul (bukan hardcode "Aktif")
+  const st = deriveStatusClient(periodeStatus);
+  const u = urgency(periodeStatus) || 'unknown';
+  const stLabel = periodeStatus ? (STATUS_LABEL[st] || st) : 'Tidak ada periode';
+  const cutTgl = periodeStatus?.tanggalCutoff ? formatTanggal(periodeStatus.tanggalCutoff) : null;
+  const cutSisa = periodeStatus?.tanggalCutoff ? countdownText(periodeStatus.tanggalCutoff) : null;
+
   return (
     <div className="space-y-6">
       {/* greeting + periode */}
@@ -109,6 +142,9 @@ export default function OperatorDashboard() {
           <h1 className="font-display font-black tracking-[-0.02em] text-[22px] lg:text-[26px] leading-none text-charcoal">Dashboard Operator</h1>
           <p className="text-[13px] font-medium text-pencil mt-1.5">
             Ringkasan capaian <span className="font-black text-charcoal">{madrasahNama}</span> • Periode {ranking.periode || '—'}
+            {st === 'aktif' && cutTgl && (
+              <> • Cut-off <span className="font-black text-charcoal">{cutTgl}</span>{cutSisa ? ` (${cutSisa})` : ''}</>
+            )}
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
@@ -169,9 +205,15 @@ export default function OperatorDashboard() {
               <div className="text-[11px] font-black text-faded uppercase">Periode</div>
               <div className="text-[13px] font-black text-charcoal">{ranking.periode}</div>
             </div>
-            <div className="rounded-[12px] bg-story border-2 border-[#b8eb8a] p-2">
-              <div className="text-[11px] font-black text-eager-dark uppercase">Status</div>
-              <div className="text-[13px] font-black text-charcoal">Aktif</div>
+            <div className={`rounded-[12px] border-2 p-2 ${STATUS_CARD[u]}`}>
+              <div className={`text-[11px] font-black uppercase ${STATUS_TXT[u]}`}>Status</div>
+              <div
+                className="text-[13px] font-black text-charcoal"
+                title={periodeStatus?.tanggalCutoff ? `Cut-off: ${formatTanggal(periodeStatus.tanggalCutoff, true)}` : undefined}
+              >
+                {stLabel}
+                {st === 'aktif' && cutSisa ? <span className="font-bold text-pencil"> • {cutSisa}</span> : null}
+              </div>
             </div>
           </div>
         </div>

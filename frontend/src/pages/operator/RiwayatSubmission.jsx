@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Funnel, MagnifyingGlass, PencilSimple, PaperPlaneTilt, Eye, WarningCircle, CheckCircle, Clock, Trash, SpinnerGap } from 'phosphor-react';
+import { Funnel, MagnifyingGlass, PencilSimple, PaperPlaneTilt, Eye, WarningCircle, CheckCircle, Clock, Trash, SpinnerGap, Lock } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import { apiFetch } from '../../lib/api';
 import { validateRow, buildPayload } from '../../constants/indikator';
+import { useOperator } from '../../context/OperatorContext';
+import { urgency, countdownText, formatTanggal } from '../../lib/periode';
 
 const FILTERS = ['Semua', 'Draft', 'Menunggu', 'Disetujui', 'Ditolak'];
 
@@ -72,6 +74,13 @@ export default function RiwayatSubmission() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteDraftTarget, setDeleteDraftTarget] = useState(null); // {id, indikatorNama, namaKegiatan, updatedAt}
   const [deletingDraft, setDeletingDraft] = useState(false);
+
+  // Periode aktif dari context (single-flight GET /api/operator/indikator)
+  const { periode: ctxPeriode } = useOperator();
+  const periodeU = urgency(ctxPeriode); // 'closed' berarti tidak bisa tulis (setara guard requireWritablePeriod)
+  const periodeClosed = periodeU === 'closed';
+  const cutTgl = ctxPeriode?.tanggalCutoff ? formatTanggal(ctxPeriode.tanggalCutoff) : null;
+  const cutSisa = ctxPeriode?.tanggalCutoff ? countdownText(ctxPeriode.tanggalCutoff) : null;
 
   /** Hapus permanen DRAFT (hard delete + audit trail di backend). */
   async function handleDeleteDraft() {
@@ -144,6 +153,12 @@ export default function RiwayatSubmission() {
   };
 
   const handleSaveEdit = async () => {
+    // Guard proaktif — selaras requireWritablePeriod() backend (403 PERIOD_CLOSED)
+    if (periodeClosed) {
+      setToast({ type: 'error', msg: 'Periode penilaian sudah berakhir — tidak bisa mengubah data.' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
     const e = validateRow(editing.indikatorKode, editing);
     if (Object.keys(e).length) {
       setEditing((prev) => ({ ...prev, _error: e }));
@@ -167,6 +182,11 @@ export default function RiwayatSubmission() {
   };
 
   const handleResubmit = async (id) => {
+    if (periodeClosed) {
+      setToast({ type: 'error', msg: 'Periode penilaian sudah berakhir — tidak bisa mengirim ulang.' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
     const prev = rows;
     setRows((prevR) => prevR.map((r) => (r.id === id ? { ...r, status: 'Menunggu', updatedAt: new Date().toISOString() } : r)));
     try {
@@ -203,6 +223,21 @@ export default function RiwayatSubmission() {
         <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Riwayat Submission</h1>
         <p className="text-[12px] font-medium text-pencil mt-1">Semua baris capaian Anda — filter status, lihat alasan Ditolak, edit & kirim ulang (ID tetap).</p>
       </div>
+
+      {/* Banner cut-off proaktif — operator tahu batas waktu SEBELUM terkena blokir 403 */}
+      {ctxPeriode && (periodeU === 'warning' || periodeU === 'danger' || periodeClosed) && (
+        <div
+          role="status"
+          className={`rounded-[12px] border-2 px-4 py-3 flex gap-2.5 text-[13px] font-bold ${periodeClosed ? 'bg-zinc-100 border-zinc-200 text-pencil' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
+        >
+          {periodeClosed ? <Lock size={18} weight="fill" color="#777777" className="shrink-0 mt-0.5" /> : <WarningCircle size={18} weight="fill" color="#b45309" className="shrink-0 mt-0.5" />}
+          <span>
+            {periodeClosed
+              ? `Periode penilaian sudah berakhir${cutTgl ? ` (cut-off ${cutTgl})` : ''} — data tidak bisa diubah sampai periode baru dibuka.`
+              : `Periode ${ctxPeriode.namaPeriode || ''} cut-off ${cutTgl || '—'}${cutSisa ? ` (${cutSisa})` : ''} — pastikan semua capaian dikirim sebelum batas waktu.`}
+          </span>
+        </div>
+      )}
 
       {loading && (
         <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-4 flex items-center gap-2 text-[13px] font-bold text-pencil">
@@ -312,10 +347,20 @@ export default function RiwayatSubmission() {
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     {r.status === 'Ditolak' ? (
                       <div className="flex justify-end gap-1.5">
-                        <button onClick={() => handleEdit(r)} className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal">
+                        <button
+                          onClick={() => handleEdit(r)}
+                          disabled={periodeClosed}
+                          title={periodeClosed ? 'Periode sudah ditutup — tidak bisa edit' : undefined}
+                          className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black hover:border-charcoal disabled:opacity-40 disabled:pointer-events-none"
+                        >
                           <PencilSimple size={12} weight="bold" /> Edit
                         </button>
-                        <button onClick={() => handleResubmit(r.id)} className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker">
+                        <button
+                          onClick={() => handleResubmit(r.id)}
+                          disabled={periodeClosed}
+                          title={periodeClosed ? 'Periode sudah ditutup — tidak bisa kirim ulang' : undefined}
+                          className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none"
+                        >
                           <PaperPlaneTilt size={12} weight="fill" color="white" /> Kirim Ulang
                         </button>
                       </div>
@@ -345,7 +390,17 @@ export default function RiwayatSubmission() {
                       </div>
                     ) : r.status === 'Draft' ? (
                       <div className="flex justify-end gap-1.5">
-                        {/* Lanjutkan → lompat ke tab indikator yang tepat; draft auto-load di sana */}
+                        {/* Lanjutkan → lompat ke tab indikator yang tepat; draft auto-load di sana.
+                            Saat periode ditutup: render span disabled (Link tidak punya disabled). */}
+                        {periodeClosed ? (
+                          <span
+                            title="Periode sudah ditutup — draft tidak bisa dilanjutkan"
+                            aria-disabled="true"
+                            className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black opacity-40 cursor-not-allowed"
+                          >
+                            <PencilSimple size={12} weight="bold" /> Lanjutkan
+                          </span>
+                        ) : (
                         <Link
                           to={{ pathname: '/operator/input', search: `?tab=${encodeURIComponent(r.indikatorKode)}` }}
                           className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-eager text-white border-2 border-eager-dark text-[11px] font-black shadow-sticker hover:brightness-[1.03]"
@@ -353,6 +408,7 @@ export default function RiwayatSubmission() {
                         >
                           <PencilSimple size={12} weight="bold" /> Lanjutkan
                         </Link>
+                        )}
                         <button
                           onClick={() => setDeleteDraftTarget(r)}
                           className="inline-flex items-center gap-1 h-8 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-black text-charcoal hover:border-red-300 hover:text-red-700"

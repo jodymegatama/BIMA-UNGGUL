@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchOwnMadrasah } from '../lib/operatorData';
+import { apiFetch } from '../lib/api';
 
 /**
  * OperatorContext — SATU SUMBER DATA madrasah untuk seluruh zona Operator.
@@ -24,11 +25,33 @@ const EMPTY = {
   slug: '',
 };
 
+// Periode aktif default — null artinya belum diketahui / tidak ada periode aktif.
+const EMPTY_PERIODE = null;
+
 export function OperatorProvider({ children }) {
   const { token, user } = useAuth();
   const [madrasah, setMadrasah] = useState(EMPTY);
+  const [periode, setPeriode] = useState(EMPTY_PERIODE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // SATU FETCH (single-flight) untuk seluruh zona Operator — pola sama dgn fetchOwnMadrasah.
+  // Respons GET /api/operator/indikator memuat periode: { id, namaPeriode, status, tanggalCutoff }
+  // (backend/src/controllers/operatorController.js getIndikatorStatus) + agregat stats.
+  const refreshIndikator = useCallback(async () => {
+    if (!token) {
+      setPeriode(EMPTY_PERIODE);
+      return null;
+    }
+    try {
+      const data = await apiFetch('/api/operator/indikator', { auth: true });
+      setPeriode(data?.periode || EMPTY_PERIODE);
+      return data || null;
+    } catch {
+      // gagal — biarkan periode sebelumnya / null; halaman tetap berfungsi
+      return null;
+    }
+  }, [token]);
 
   const refresh = useCallback(async () => {
     if (!token) {
@@ -60,6 +83,7 @@ export function OperatorProvider({ children }) {
       if (!token) {
         if (!ignore) {
           setMadrasah(EMPTY);
+          setPeriode(EMPTY_PERIODE);
           setLoading(false);
         }
         return;
@@ -76,10 +100,20 @@ export function OperatorProvider({ children }) {
       } finally {
         if (!ignore) setLoading(false);
       }
+      // periode aktif: dimuat paralel (bukan pemblokir render) — di-refresh juga saat tab kembali fokus
+      refreshIndikator();
     }
     load();
     return () => { ignore = true; };
-  }, [token, user?.madrasahId]);
+  }, [token, user?.madrasahId, refreshIndikator]);
+
+  // Re-fetch periode saat tab kembali fokus (periode bisa saja cut-off saat operator meninggalkan tab)
+  useEffect(() => {
+    if (!token) return undefined;
+    const onFocus = () => refreshIndikator();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [token, refreshIndikator]);
 
   // Update optimistik setelah PATCH (ProfilMadrasah edit 3 field)
   const updateMadrasah = useCallback((patch) => {
@@ -88,12 +122,14 @@ export function OperatorProvider({ children }) {
 
   const value = useMemo(() => ({
     madrasah,
+    periode,
     loading,
     error,
     refresh,
+    refreshIndikator,
     updateMadrasah,
     setMadrasah,
-  }), [madrasah, loading, error, refresh, updateMadrasah]);
+  }), [madrasah, periode, loading, error, refresh, refreshIndikator, updateMadrasah]);
 
   return <OperatorContext.Provider value={value}>{children}</OperatorContext.Provider>;
 }

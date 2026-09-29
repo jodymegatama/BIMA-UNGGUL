@@ -6,6 +6,7 @@ import { PlusCircle, FloppyDisk, PaperPlaneTilt, Buildings, Info, SpinnerGap, Ch
 import IndikatorTabs from '../../components/operator/IndikatorTabs';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
+import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
 import { INDIKATORS, emptyRowFor, validateRow, buildPayload } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
 import { useOperator } from '../../context/OperatorContext';
@@ -23,7 +24,7 @@ function groupByIndikator(list, indikatorList) {
 }
 
 export default function InputCapaian() {
-  const { madrasah } = useOperator();
+  const { madrasah, periode: ctxPeriode } = useOperator();
   const madrasahNama = madrasah?.nama || '-';
   const [searchParams, setSearchParams] = useSearchParams();
   const [periodeNama, setPeriodeNama] = useState('—');
@@ -308,7 +309,8 @@ export default function InputCapaian() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">Periode {periodeNama}</span>
+          <span className="hidden sm:inline-flex h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">Periode {ctxPeriode?.namaPeriode || periodeNama}</span>
+          <PeriodeCutoffChip periode={ctxPeriode} />
           <span className="inline-flex h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">{INDIKATORS.length} indikator</span>
         </div>
       </div>

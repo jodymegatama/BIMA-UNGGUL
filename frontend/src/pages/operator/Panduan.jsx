@@ -5,7 +5,10 @@ import {
   CaretDown, CaretRight, Info, Question, CheckCircle, Lightbulb, ArrowRight, DownloadSimple,
 } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
+import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
 import { INDIKATORS, INDIKATOR_FIELDS } from '../../constants/indikator';
+import { useOperator } from '../../context/OperatorContext';
+import { deriveStatusClient, formatTanggal, countdownText } from '../../lib/periode';
 
 /**
  * Panduan — halaman statis (tanpa API) berisi alur pengisian data lengkap
@@ -153,14 +156,35 @@ const FAQS = [
     a: 'Bisa. Admin dapat mencabut persetujuan (revoke) jika bukti terbukti tidak valid, dan data Disetujui bisa dihapus melalui permintaan hapus yang disetujui Admin. Skor dan ranking dihitung ulang otomatis.',
   },
   {
-    q: 'Kenapa saya tidak bisa submit atau edit data?',
-    a: 'Kemungkinan periode penilaian telah memasuki cut-off dan difinalisasi oleh Admin. Setelah periode dikunci, data tidak bisa diubah sampai periode baru dibuka.',
+    q: 'Kapan batas waktu (cut-off) input capaian? Kenapa saya tidak bisa submit atau edit data?',
+    // DINAMIS — dihitung dari periode aktif via OperatorContext (faqCutoffAnswer di bawah)
+    a: faqCutoffAnswer,
   },
   {
     q: 'Lapor ke siapa jika mengalami kendala?',
     a: 'Hubungi Seksi Pembinaan Madrasah (Pendma) Kemenag Kab. Pasuruan — kontak tersedia di footer halaman. Sertakan BMU ID madrasah dan tangkapan layar kendala agar lebih cepat ditangani.',
   },
 ];
+
+/**
+ * Jawaban FAQ cut-off — DINAMIS dari periode aktif (OperatorContext, single-flight).
+ * Deklarasi function di-hoist sehingga aman direferensikan array FAQS di atas.
+ */
+function faqCutoffAnswer(periode) {
+  const st = deriveStatusClient(periode);
+  const tgl = periode?.tanggalCutoff ? formatTanggal(periode.tanggalCutoff) : null;
+  const sisa = st === 'aktif' && periode?.tanggalCutoff ? countdownText(periode.tanggalCutoff) : null;
+  if (!periode || !st) {
+    return 'Saat ini belum ada periode penilaian aktif, sehingga input belum bisa dilakukan. Pantau notifikasi atau hubungi Seksi Pendma untuk informasi pembukaan periode baru.';
+  }
+  if (st === 'aktif') {
+    return `Periode ${periode.namaPeriode || '-'} sedang berjalan dan ditutup pada ${tgl || '-'}${sisa ? ` (${sisa})` : ''}. Setelah cut-off, input, edit, dan kirim ulang otomatis terkunci — pastikan semua capaian dikirim sebelum tanggal tersebut.`;
+  }
+  if (st === 'belum_dimulai') {
+    return `Periode ${periode.namaPeriode || '-'} akan dimulai ${periode.tanggalMulai ? formatTanggal(periode.tanggalMulai) : '-'} dan ditutup ${tgl || '-'}. Input capaian bisa dilakukan setelah periode dimulai.`;
+  }
+  return `Periode penilaian sudah ditutup${tgl ? ` (cut-off ${tgl})` : ''}${st === 'finalisasi' ? ' dan difinalisasi' : ''} oleh Admin. Setelah periode dikunci, data tidak bisa diubah sampai periode baru dibuka.`;
+}
 
 /** Hint singkat tipe field untuk ringkasan indikator. */
 function fieldHint(f) {
@@ -199,6 +223,8 @@ function AccordionItem({ open, onToggle, header, children }) {
 export default function Panduan() {
   const [openIndikator, setOpenIndikator] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
+  // Periode aktif dari OperatorContext — single-flight GET /api/operator/indikator
+  const { periode } = useOperator();
   const printDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
   /** Unduh PDF → dialog cetak browser (pilih "Save as PDF"). Judul dokumen diset sementara agar nama file PDF bawaan rapi. */
@@ -234,7 +260,7 @@ export default function Panduan() {
           Alur pengisian data bagi <b>Operator Madrasah</b> — mulai dari pendaftaran akun hingga pemantauan skor dan ranking madrasah Anda.
         </p>
         <p className="hidden print:block text-[11px] font-bold text-faded mt-1.5">
-          Kementerian Agama Kabupaten Pasuruan • Periode 2026/2027 • Dicetak {printDate}
+          Kementerian Agama Kabupaten Pasuruan • Periode {periode?.namaPeriode || '2026/2027'} • Dicetak {printDate}
         </p>
       </div>
 
@@ -353,9 +379,19 @@ export default function Panduan() {
           </span>
           Pertanyaan yang Sering Diajukan
         </h2>
+
+        {/* Info periode aktif & cut-off — LIVE dari OperatorContext (ikut tercetak di PDF) */}
+        {periode && (
+          <div className="mt-4 rounded-[12px] bg-zinc-50 border-2 border-zinc-100 px-4 py-3 flex flex-wrap items-center gap-2 print:break-inside-avoid">
+            <span className="text-[12px] font-bold text-pencil">Batas akhir input capaian:</span>
+            <PeriodeCutoffChip periode={periode} />
+          </div>
+        )}
+
         <div className="mt-4 space-y-2">
           {FAQS.map((f) => {
             const open = openFaq === f.q;
+            const jawaban = typeof f.a === 'function' ? f.a(periode) : f.a;
             return (
               <AccordionItem
                 key={f.q}
@@ -363,7 +399,7 @@ export default function Panduan() {
                 onToggle={() => setOpenFaq(open ? null : f.q)}
                 header={<span className="text-[13px] font-black text-charcoal leading-tight">{f.q}</span>}
               >
-                <p className="mt-3 text-[12px] leading-5 font-medium text-pencil">{f.a}</p>
+                <p className="mt-3 text-[12px] leading-5 font-medium text-pencil">{jawaban}</p>
               </AccordionItem>
             );
           })}

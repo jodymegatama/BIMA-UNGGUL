@@ -3,7 +3,9 @@ import { List, Bell, CaretRight } from 'phosphor-react';
 import { Link, useLocation } from 'react-router-dom';
 import NotificationDropdown from '../shared/NotificationDropdown';
 import ThemeToggle from '../shared/ThemeToggle';
+import PeriodeCutoffChip from './PeriodeCutoffChip';
 import { apiFetch } from '../../lib/api';
+import { useOperator } from '../../context/OperatorContext';
 
 const titleMap = {
   '/operator': 'Dashboard',
@@ -23,8 +25,12 @@ const NOTIF_TITLE = {
   delete_request_rejected: 'Permintaan Hapus Ditolak',
 };
 
-export default function TopBar({ periode = '2026/2027', onMenu }) {
+export default function TopBar({ periode: periodeProp = '—', onMenu }) {
   const { pathname } = useLocation();
+  const { periode: ctxPeriode } = useOperator();
+  // Prioritas periode riil dari context (GET /api/operator/indikator, single-flight);
+  // prop hanya fallback agar TopBar tetap render saat context belum siap.
+  const periodeNama = ctxPeriode?.namaPeriode || periodeProp;
   const title = titleMap[pathname] || 'Operator';
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
@@ -96,8 +102,9 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
       <div className="flex items-center gap-2 shrink-0">
         <span className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
           <span className="w-2 h-2 rounded-full bg-eager animate-pulse" style={{ animation: 'pulse-live 1.6s ease infinite' }} />
-          Periode {periode}
+          Periode {periodeNama}
         </span>
+        <PeriodeCutoffChip periode={ctxPeriode} compact />
         <ThemeToggle />
         <div className="relative">
           <button
