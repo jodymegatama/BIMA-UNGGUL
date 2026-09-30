@@ -13,8 +13,8 @@ export default function DeleteRequestStatusBadge({ status = 'Belum Diajukan', si
   const sizeCls = size === 'sm' ? 'h-6 px-2.5 text-[11px]' : 'h-7 px-3 text-[12px]';
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border-2 font-black ${cfg.cls} ${sizeCls}`}>
-      <Icon size={size === 'sm' ? 12 : 14} weight={status === 'Disetujui' || status === 'Menunggu Persetujuan' ? 'fill' : 'regular'} color={cfg.color} />
-      {cfg.label}
+      <Icon size={size === 'sm' ? 12 : 14} weight={status === 'Disetujui' || status === 'Menunggu Persetujuan' ? 'fill' : 'regular'} color={cfg.color} className="shrink-0" />
+      <span className="whitespace-nowrap">{cfg.label}</span>
     </span>
   );
 }

@@ -115,13 +115,13 @@ export default function HapusData() {
 
       {/* Info status flow */}
       <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 flex flex-wrap items-center gap-2 text-[11px] font-bold">
-        <span className="inline-flex h-6 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-faded">Belum Diajukan</span>
+        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-white border-2 border-zinc-200 text-faded whitespace-nowrap">Belum Diajukan</span>
         <span className="text-faded">→</span>
-        <span className="inline-flex h-6 px-2.5 rounded-full bg-spark text-white border-2 border-spark-dark">Menunggu Persetujuan</span>
+        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-spark text-white border-2 border-spark-dark whitespace-nowrap">Menunggu Persetujuan</span>
         <span className="text-faded">→</span>
-        <span className="inline-flex h-6 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark">Disetujui</span>
+        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-eager text-white border-2 border-eager-dark whitespace-nowrap">Disetujui</span>
         <span className="text-faded">/</span>
-        <span className="inline-flex h-6 px-2.5 rounded-full bg-ink text-white border-2 border-black">Ditolak</span>
+        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-ink text-white border-2 border-black whitespace-nowrap">Ditolak</span>
         <span className="hidden sm:inline-flex items-center gap-1 ml-2 text-faded">
           <ShieldCheck size={12} weight="regular" /> Hanya Approved
         </span>

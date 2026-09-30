@@ -309,9 +309,9 @@ export default function InputCapaian() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">Periode {ctxPeriode?.namaPeriode || periodeNama}</span>
+          <span className="hidden sm:inline-flex items-center h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil whitespace-nowrap"><span className="font-black text-charcoal">Periode</span> {ctxPeriode?.namaPeriode || periodeNama}</span>
           <PeriodeCutoffChip periode={ctxPeriode} />
-          <span className="inline-flex h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">{INDIKATORS.length} indikator</span>
+          <span className="inline-flex items-center h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark whitespace-nowrap">{INDIKATORS.length} indikator</span>
         </div>
       </div>
 
