@@ -8,7 +8,6 @@ import { formatSkor } from '../../../lib/format';
 export default function IndikatorTable({ data = [] }) {
   const total = data.reduce((a, b) => a + (typeof b.skor === 'number' ? b.skor : 0), 0);
   const totalDisplay = formatSkor(total);
-  const max = Math.max(...data.map((d) => (typeof d.skor === 'number' ? d.skor : 0)), 1);
 
   return (
     <div className="rounded-[16px] border-2 border-zinc-200 bg-white overflow-hidden shadow-card">
@@ -40,7 +39,7 @@ export default function IndikatorTable({ data = [] }) {
             {data.map((row) => {
               const skorNum = typeof row.skor === 'number' ? row.skor : 0;
               const skorDisplay = row.skorDisplay ?? formatSkor(skorNum);
-              const pct = Math.round((skorNum / max) * 100);
+              const pct = total > 0 ? Math.round((skorNum / total) * 100) : 0;
               return (
                 <tr key={row.kode} className="hover:bg-zinc-50/70">
                   <td className="px-4 py-3">
@@ -56,7 +55,7 @@ export default function IndikatorTable({ data = [] }) {
                     <div className="h-2 rounded-full bg-zinc-100 border border-zinc-200 overflow-hidden">
                       <div className="h-full bg-eager rounded-full" style={{ width: `${pct}%` }} />
                     </div>
-                    <div className="text-[11px] font-bold text-faded mt-1">{pct}% dari max</div>
+                    <div className="text-[11px] font-bold text-faded mt-1">{pct}%</div>
                   </td>
                 </tr>
               );
