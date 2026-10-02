@@ -6,6 +6,7 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { validateRow, buildPayload } from '../../constants/indikator';
 import { useOperator } from '../../context/OperatorContext';
 import { urgency, countdownText, formatTanggal } from '../../lib/periode';
@@ -109,15 +110,17 @@ export default function RiwayatSubmission() {
   useEffect(() => {
     let ignore = false;
     async function fetchRiwayat() {
+      // sharedFlight: StrictMode menjalankan effect dua kali, dan rantai fallback
+      // bisa melipatgandakannya → satu request saja per sumber.
       try {
-        const data = await apiFetch('/api/operator/submission-item', { auth: true });
+        const data = await sharedFlight.run(getKey('/api/operator/submission-item'), () => apiFetch('/api/operator/submission-item', { auth: true }));
         if (ignore) return;
         const normalized = normalizeApiRows(data);
         setRows(normalized); // set even if empty — no mock fallback
       } catch {
         // alternative path /api/operator/riwayat
         try {
-          const alt = await apiFetch('/api/operator/riwayat', { auth: true });
+          const alt = await sharedFlight.run(getKey('/api/operator/riwayat'), () => apiFetch('/api/operator/riwayat', { auth: true }));
           if (ignore) return;
           const n2 = normalizeApiRows(alt);
           setRows(n2);
