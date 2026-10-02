@@ -24,16 +24,18 @@ export const STATUS_LABEL = {
  * Prioritas: status historis manual (finalisasi/arsip/dll) menang atas derive tanggal —
  * kontrak sama dengan deriveStatus() backend.
  * @param {{status?: string|null, tanggalMulai?: string|null, tanggalCutoff?: string|null}|null} p
+ * @param {Date} [now] — override waktu (test). WAJIB diteruskan oleh fungsi pembungkus
+ *   (mis. urgency) agar hasilnya tidak bergantung jam asli saat test dijalankan.
  * @returns {'belum_dimulai'|'aktif'|'cutoff'|'finalisasi'|'arsip'|'penyelesaian_validasi'|null}
  */
-export function deriveStatusClient(p) {
+export function deriveStatusClient(p, now = new Date()) {
   if (!p) return null;
   if (STATUS_HISTORI_PERIODE.includes(p.status)) return p.status;
-  const now = Date.now();
+  const t = now.getTime();
   const mulai = p.tanggalMulai ? new Date(p.tanggalMulai).getTime() : null;
   const cutoff = p.tanggalCutoff ? new Date(p.tanggalCutoff).getTime() : null;
-  if (mulai != null && now < mulai) return 'belum_dimulai';
-  if (cutoff != null && now > cutoff) return 'cutoff';
+  if (mulai != null && t < mulai) return 'belum_dimulai';
+  if (cutoff != null && t > cutoff) return 'cutoff';
   return 'aktif';
 }
 
@@ -77,7 +79,7 @@ export function formatTanggal(iso, withTime = false) {
  * @returns {'normal'|'warning'|'danger'|'closed'|'upcoming'|null}
  */
 export function urgency(p, now = new Date()) {
-  const st = deriveStatusClient(p);
+  const st = deriveStatusClient(p, now);
   if (st == null) return null;
   if (st === 'belum_dimulai') return 'upcoming';
   if (st !== 'aktif') return 'closed';

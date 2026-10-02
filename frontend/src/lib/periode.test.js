@@ -13,27 +13,29 @@ const NOW = new Date('2026-09-29T03:00:00.000Z');
 const iso = (s) => new Date(s).toISOString();
 
 describe('deriveStatusClient (periode)', () => {
+  // Semua panggilan meneruskan NOW — fungsi memakai jam internal kalau tidak,
+  // jadi tanpa injeksi hasil test ikut berubah tergantung tanggal saat test dijalankan.
   it('belum_dimulai jika tanggalMulai di masa depan', () => {
-    expect(deriveStatusClient({ status: null, tanggalMulai: iso('2026-09-30T00:00:00Z'), tanggalCutoff: iso('2026-12-31T00:00:00Z') })).toBe('belum_dimulai');
+    expect(deriveStatusClient({ status: null, tanggalMulai: iso('2026-09-30T00:00:00Z'), tanggalCutoff: iso('2026-12-31T00:00:00Z') }, NOW)).toBe('belum_dimulai');
   });
 
   it('aktif jika now di antara mulai & cutoff', () => {
-    expect(deriveStatusClient({ status: null, tanggalMulai: iso('2026-09-01T00:00:00Z'), tanggalCutoff: iso('2026-12-31T00:00:00Z') })).toBe('aktif');
+    expect(deriveStatusClient({ status: null, tanggalMulai: iso('2026-09-01T00:00:00Z'), tanggalCutoff: iso('2026-12-31T00:00:00Z') }, NOW)).toBe('aktif');
   });
 
   it('cutoff jika lewat tanggalCutoff', () => {
-    expect(deriveStatusClient({ status: null, tanggalMulai: null, tanggalCutoff: iso('2026-09-01T00:00:00Z') })).toBe('cutoff');
+    expect(deriveStatusClient({ status: null, tanggalMulai: null, tanggalCutoff: iso('2026-09-01T00:00:00Z') }, NOW)).toBe('cutoff');
   });
 
   it('status historis (finalisasi/arsip/penyelesaian_validasi) menang atas derive tanggal — kontrak backend', () => {
     for (const s of STATUS_HISTORI_PERIODE) {
-      expect(deriveStatusClient({ status: s, tanggalMulai: null, tanggalCutoff: iso('2020-01-01T00:00:00Z') })).toBe(s);
+      expect(deriveStatusClient({ status: s, tanggalMulai: null, tanggalCutoff: iso('2020-01-01T00:00:00Z') }, NOW)).toBe(s);
     }
   });
 
   it('null untuk periode kosong', () => {
-    expect(deriveStatusClient(null)).toBeNull();
-    expect(deriveStatusClient({})).toBe('aktif'); // tanpa tanggal apa pun → dianggap aktif (derive backend: mulai ≤ now ≤ cutoff)
+    expect(deriveStatusClient(null, NOW)).toBeNull();
+    expect(deriveStatusClient({}, NOW)).toBe('aktif'); // tanpa tanggal apa pun → dianggap aktif (derive backend: mulai ≤ now ≤ cutoff)
   });
 });
 
