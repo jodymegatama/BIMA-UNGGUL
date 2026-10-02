@@ -260,9 +260,14 @@ export default function RiwayatSubmission() {
             {FILTERS.map((f) => {
               const active = f === filter;
               return (
+                // Seleksi di onPointerDown — pola sama dengan IndikatorTabs: swap
+                // baris (setRows) saat load bisa me-rebuild DOM di antara
+                // pointerdown dan click sehingga klik chip tertelan.
+                // Keyboard (Enter/Space) tetap lewat onClick (e.detail === 0).
                 <button
                   key={f}
-                  onClick={() => setFilter(f)}
+                  onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setFilter(f); }}
+                  onClick={(e) => { if (e.detail === 0) setFilter(f); }}
                   className={`h-8 px-4 rounded-full border-2 text-[12px] font-black transition ${active ? 'bg-eager text-white border-eager-dark shadow-sticker' : 'bg-white text-charcoal border-zinc-200 hover:bg-zinc-50'}`}
                 >
                   {f}

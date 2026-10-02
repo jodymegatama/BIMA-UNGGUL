@@ -75,25 +75,28 @@ describe('RiwayatSubmission', () => {
     expect(riwayatCalls).toHaveLength(1);
   });
 
-  it('chip filter terpilih saat diklik', async () => {
+  it('chip filter terpilih saat pointerdown (kebal swap DOM)', async () => {
     renderPage();
     await waitFor(() => expect(screen.getAllByText('Workshop Kurikulum').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Disetujui' }));
+    const chip = screen.getByRole('button', { name: 'Disetujui' });
+    fireEvent.pointerDown(chip, { pointerType: 'mouse' });
 
     // filter aktif → ringkasan "N baris • Disetujui" diperbarui
     await waitFor(() => expect(screen.getByText(/•\s*Disetujui/)).toBeInTheDocument());
   });
 
-  it('klik mouse memfilter baris sesuai status', async () => {
+  it('klik mouse tidak menggandakan seleksi chip', async () => {
     renderPage();
     await waitFor(() => expect(screen.getAllByText('Workshop Kurikulum').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Menunggu' }));
+    const chip = screen.getByRole('button', { name: 'Menunggu' });
+    fireEvent.pointerDown(chip, { pointerType: 'mouse' });
+    fireEvent.click(chip, { detail: 1 });
 
     await waitFor(() => expect(screen.getByText(/•\s*Menunggu/)).toBeInTheDocument());
     // hanya baris Menunggu yang tampil
     expect(screen.queryByText('Workshop Kurikulum')).not.toBeInTheDocument();
     expect(screen.getByText('Pelatihan Guru')).toBeInTheDocument();
   });
-});
+});

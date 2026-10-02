@@ -53,10 +53,14 @@ export default function ValidasiFilterBar({ filters, onChange }) {
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* Chip kelompok: seleksi di onPointerDown — memicu refetch antrian yang
+            mengganti isi tabel, jadi klik bisa tertelan saat DOM di-rebuild.
+            Keyboard tetap lewat onClick (e.detail === 0). */}
         {['Semua', 'MI Negeri', 'MI Swasta', 'MTs Negeri', 'MTs Swasta', 'MA Negeri', 'MA Swasta'].map((k) => (
           <button
             key={k}
-            onClick={() => set('kelompok', k)}
+            onPointerDown={(e) => { if (e.pointerType !== 'keyboard') set('kelompok', k); }}
+            onClick={(e) => { if (e.detail === 0) set('kelompok', k); }}
             className={`h-7 px-3 rounded-full border-2 text-[11px] font-black transition ${filters.kelompok === k ? 'bg-ink text-white border-black shadow-[0_2px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {k}

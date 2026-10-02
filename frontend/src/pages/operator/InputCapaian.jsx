@@ -401,10 +401,12 @@ export default function InputCapaian() {
         draftCounts={draftCounts}
       />
 
-      {/* Lanjutkan semua draft — buka seluruh draft lintas indikator sekaligus. */}
+      {/* Lanjutkan semua draft — buka seluruh draft lintas indikator sekaligus.
+          Seleksi di onPointerDown: kebal badai re-render yang bisa menelan click. */}
       {allDraftCount > 0 && !allMode && (
         <button
-          onClick={() => { setAllMode(true); setPanelOpen(false); }}
+          onPointerDown={(e) => { if (e.pointerType !== 'keyboard') { setAllMode(true); setPanelOpen(false); } }}
+          onClick={(e) => { if (e.detail === 0) { setAllMode(true); setPanelOpen(false); } }}
           className="inline-flex items-center gap-2 h-10 px-4 rounded-full border-2 border-[#cde9ff] bg-[#f0f9ff] text-[#0b5cab] font-black text-[13px] shadow-card hover:brightness-[0.98] transition"
         >
           <Rows size={16} weight="bold" />
