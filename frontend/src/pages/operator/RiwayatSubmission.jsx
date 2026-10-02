@@ -164,7 +164,7 @@ export default function RiwayatSubmission() {
       setEditing((prev) => ({ ...prev, _error: e }));
       return;
     }
-    const prevRows = rows;
+    const prevRow = rows.find((r) => r.id === editing.id);
     // optimistic: keep ID tetap (PRD US4)
     setRows((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, status: 'Menunggu', updatedAt: new Date().toISOString(), alasan: null, _error: {} } : r)));
     const editingSnapshot = editing;
@@ -173,8 +173,11 @@ export default function RiwayatSubmission() {
       await apiFetch(`/api/operator/submission-item/${editingSnapshot.id}`, { method: 'PATCH', body: buildPayload(editingSnapshot.indikatorKode, editingSnapshot), auth: true });
       setToast({ type: 'success', msg: 'Perubahan dikirim ulang — status Menunggu.' });
     } catch (e2) {
-      // rollback on error
-      setRows(prevRows);
+      // rollback HANYA baris ini — memulihkan seluruh array akan menghidupkan
+      // kembali baris yang sudah dihapus/diubah pengguna setelah snapshot diambil.
+      if (prevRow) {
+        setRows((prev) => prev.map((r) => (r.id === editingSnapshot.id ? { ...prevRow } : r)));
+      }
       const msg = e2.status === 403 && /cutoff|periode/i.test(e2.message) ? 'Periode sudah cutoff — tidak bisa edit.' : (e2.message || 'Gagal kirim ulang.');
       setToast({ type: 'error', msg });
     }
@@ -187,13 +190,16 @@ export default function RiwayatSubmission() {
       setTimeout(() => setToast(null), 3000);
       return;
     }
-    const prev = rows;
+    const prevRow = rows.find((r) => r.id === id);
     setRows((prevR) => prevR.map((r) => (r.id === id ? { ...r, status: 'Menunggu', updatedAt: new Date().toISOString() } : r)));
     try {
       await apiFetch(`/api/operator/submission-item/${id}`, { method: 'PATCH', body: { status: 'menunggu' }, auth: true });
       setToast({ type: 'success', msg: 'Dikirim ulang untuk validasi.' });
     } catch (e) {
-      setRows(prev);
+      // rollback per-baris (bukan seluruh array) — lihat catatan di handleSaveEdit
+      if (prevRow) {
+        setRows((prevR) => prevR.map((r) => (r.id === id ? { ...prevRow } : r)));
+      }
       setToast({ type: 'error', msg: e.message || 'Gagal kirim ulang.' });
     }
     setTimeout(() => setToast(null), 2500);
