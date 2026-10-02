@@ -5,6 +5,7 @@ import NotificationDropdown from '../shared/NotificationDropdown';
 import ThemeToggle from '../shared/ThemeToggle';
 import PeriodeCutoffChip from './PeriodeCutoffChip';
 import { apiFetch } from '../../lib/api';
+import { fetchNotificationsRaw } from '../../lib/notifications';
 import { useOperator } from '../../context/OperatorContext';
 
 const titleMap = {
@@ -38,7 +39,9 @@ export default function TopBar({ periode: periodeProp = '—', onMenu }) {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await apiFetch('/api/notifications', { auth: true });
+      // fetchNotificationsRaw: request di-dedup dengan Dashboard/halaman Notifikasi
+      // yang memuatnya bersamaan (StrictMode + polling + event fokus).
+      const data = await fetchNotificationsRaw();
       const arr = Array.isArray(data) ? data : (data.data || []);
       setItems(arr.map((n) => ({
         id: n.id,

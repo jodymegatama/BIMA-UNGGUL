@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardText, Buildings, Calendar, CheckCircle, Clock, ArrowRight } from 'phosphor-react';
 import { apiGet, apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { KELOMPOKS } from '../../constants/indikator';
 
 const KELOMPOK_LIST = KELOMPOKS;
@@ -13,13 +14,17 @@ export default function AdminDashboard() {
   const [periode, setPeriode] = useState(null);
   const [kelompokRows, setKelompokRows] = useState(() => KELOMPOK_LIST.map((k) => ({ kelompok: k, aktif: 0, total: 0, menunggu: null })));
 
+  // Semua request di bawah di-dedup lewat sharedFlight: StrictMode menjalankan
+  // effect dua kali, dan tiap pantulan setState-nya bisa menelan klik. Yang
+  // di-dedup hanya request-nya — hasilnya tetap diterapkan di bawah guard
+  // `ignore` masing-masing pemanggil.
   useEffect(() => {
     let ignore = false;
 
     async function load() {
       // periode aktif
       try {
-        const res = await apiFetch('/api/admin/periode', { auth: true });
+        const res = await sharedFlight.run(getKey('/api/admin/periode'), () => apiFetch('/api/admin/periode', { auth: true }));
         const list = Array.isArray(res?.data) ? res.data : [];
         const aktif = list.find((p) => p.status === 'aktif') || null;
         if (!ignore) setPeriode(aktif);
@@ -27,21 +32,24 @@ export default function AdminDashboard() {
 
       // counts validasi (total menunggu / disetujui / all)
       try {
-        const r1 = await apiFetch('/api/admin/validasi?status=menunggu&page=1&limit=1', { auth: true });
+        const p1 = '/api/admin/validasi?status=menunggu&page=1&limit=1';
+        const r1 = await sharedFlight.run(getKey(p1), () => apiFetch(p1, { auth: true }));
         if (!ignore) setMenungguTotal(r1?.total ?? 0);
       } catch { if (!ignore) setMenungguTotal(0); }
       try {
-        const r2 = await apiFetch('/api/admin/validasi?status=disetujui&page=1&limit=1', { auth: true });
+        const p2 = '/api/admin/validasi?status=disetujui&page=1&limit=1';
+        const r2 = await sharedFlight.run(getKey(p2), () => apiFetch(p2, { auth: true }));
         if (!ignore) setDisetujuiTotal(r2?.total ?? 0);
       } catch { if (!ignore) setDisetujuiTotal(0); }
       try {
-        const r3 = await apiFetch('/api/admin/validasi?page=1&limit=1', { auth: true });
+        const p3 = '/api/admin/validasi?page=1&limit=1';
+        const r3 = await sharedFlight.run(getKey(p3), () => apiFetch(p3, { auth: true }));
         if (!ignore) setTotalSubmission(r3?.total ?? 0);
       } catch { if (!ignore) setTotalSubmission(0); }
 
       // per kelompok: total & aktif dari leaderboard publik; menunggu dari queue rows
       try {
-        const lb = await apiGet('/api/leaderboard');
+        const lb = await sharedFlight.run(getKey('/api/leaderboard'), () => apiGet('/api/leaderboard'));
         const rk = lb?.rankings || {};
         const rows = KELOMPOK_LIST.map((k) => {
           const list = Array.isArray(rk[k]) ? rk[k] : [];
@@ -50,7 +58,8 @@ export default function AdminDashboard() {
         if (!ignore) setKelompokRows(rows);
       } catch { /* leaderboard butuh periode aktif — biarkan 0 */ }
       try {
-        const q = await apiFetch('/api/admin/validasi?status=menunggu&page=1&limit=500', { auth: true });
+        const pq = '/api/admin/validasi?status=menunggu&page=1&limit=500';
+        const q = await sharedFlight.run(getKey(pq), () => apiFetch(pq, { auth: true }));
         const arr = Array.isArray(q?.data) ? q.data : [];
         if (!ignore && arr.length) {
           const byK = {};

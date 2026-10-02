@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useAuth } from './AuthContext';
 import { fetchOwnMadrasah } from '../lib/operatorData';
 import { apiFetch } from '../lib/api';
+import { sharedFlight, getKey } from '../lib/singleFlight';
 
 /**
  * OperatorContext — SATU SUMBER DATA madrasah untuk seluruh zona Operator.
@@ -38,13 +39,18 @@ export function OperatorProvider({ children }) {
   // SATU FETCH (single-flight) untuk seluruh zona Operator — pola sama dgn fetchOwnMadrasah.
   // Respons GET /api/operator/indikator memuat periode: { id, namaPeriode, status, tanggalCutoff }
   // (backend/src/controllers/operatorController.js getIndikatorStatus) + agregat stats.
+  // sharedFlight: endpoint ini juga dimuat Dashboard & InputCapaian secara paralel
+  // + StrictMode menjalankan effect dua kali → satu request untuk semuanya.
+  // (Endpoint ini read-only dan tidak pernah dimutasi, jadi berbagi aman; berbeda
+  // dengan fetchOwnMadrasah yang sengaja TIDAK di-dedup agar refresh() setelah
+  // PATCH profil selalu membaca data pasca-simpan.)
   const refreshIndikator = useCallback(async () => {
     if (!token) {
       setPeriode(EMPTY_PERIODE);
       return null;
     }
     try {
-      const data = await apiFetch('/api/operator/indikator', { auth: true });
+      const data = await sharedFlight.run(getKey('/api/operator/indikator'), () => apiFetch('/api/operator/indikator', { auth: true }));
       setPeriode(data?.periode || EMPTY_PERIODE);
       return data || null;
     } catch {
@@ -89,8 +95,15 @@ export function OperatorProvider({ children }) {
         return;
       }
       if (!ignore) setLoading(true);
+      // Periode aktif dimuat PARALEL dengan profil madrasah (dulu baru dipanggil
+      // setelah profil settle). Karena kini benar-benar konkuren dengan request
+      // Dashboard, sharedFlight menggabungkannya menjadi satu request.
+      refreshIndikator();
       try {
-        const m = await fetchOwnMadrasah();
+        // Dedup khusus request awal: StrictMode menjalankan effect dua kali.
+        // refresh() di bawah sengaja TIDAK lewat sini — setelah PATCH profil ia
+        // harus membaca data pasca-simpan, bukan hasil request yang tertunda.
+        const m = await sharedFlight.run(getKey('/api/operator/madrasah'), () => fetchOwnMadrasah());
         if (!ignore) {
           setMadrasah(m);
           setError(null);
@@ -100,8 +113,6 @@ export function OperatorProvider({ children }) {
       } finally {
         if (!ignore) setLoading(false);
       }
-      // periode aktif: dimuat paralel (bukan pemblokir render) — di-refresh juga saat tab kembali fokus
-      refreshIndikator();
     }
     load();
     return () => { ignore = true; };

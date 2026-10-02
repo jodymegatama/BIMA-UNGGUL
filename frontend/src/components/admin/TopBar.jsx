@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import NotificationDropdown from '../shared/NotificationDropdown';
 import ThemeToggle from '../shared/ThemeToggle';
 import { apiFetch } from '../../lib/api';
+import { fetchNotificationsRaw } from '../../lib/notifications';
 
 const titleMap = {
   '/admin': 'Dashboard',
@@ -34,7 +35,9 @@ export default function TopBar({ periode = '2026/2027', onMenu }) {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await apiFetch('/api/notifications', { auth: true });
+      // fetchNotificationsRaw: request di-dedup dengan Dashboard/halaman Notifikasi
+      // yang memuatnya bersamaan (StrictMode + polling + event fokus).
+      const data = await fetchNotificationsRaw();
       const arr = Array.isArray(data) ? data : (data.data || []);
       setItems(arr.map((n) => ({
         id: n.id,

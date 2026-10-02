@@ -3,6 +3,7 @@ import { PlusCircle, Lock, LockOpen, Clock, WarningCircle, CheckCircle, Calendar
 import PeriodeStatusBadge from '../../components/admin/PeriodeStatusBadge';
 import PeriodeForm from '../../components/admin/PeriodeForm';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ManajemenPeriode() {
@@ -26,11 +27,17 @@ export default function ManajemenPeriode() {
   const [err, setErr] = useState('');
   const [toast, setToast] = useState(null);
 
-  const fetchRows = useCallback(async () => {
+  // `dedupe` hanya untuk pemuatan awal: StrictMode menjalankan effect dua kali dan
+  // endpoint ini juga dimuat AdminLayout/Dashboard (sharedFlight memakai URL sama).
+  // Muat ulang setelah create/edit/finalisasi/reopen sengaja lewat jalur segar.
+  const fetchRows = useCallback(async ({ dedupe = false } = {}) => {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     try {
-      const res = await apiFetch('/api/admin/periode', { auth: true });
+      const p = '/api/admin/periode';
+      const res = dedupe
+        ? await sharedFlight.run(getKey(p), () => apiFetch(p, { auth: true }))
+        : await apiFetch(p, { auth: true });
       const data = Array.isArray(res) ? res : (res.data || res.periode || []);
       // map backend field names to UI: nama, tahunCapaian, tanggalMulai, tanggalCutoff, status
       const mapped = data.map((r) => ({
@@ -49,7 +56,7 @@ export default function ManajemenPeriode() {
     } finally { setLoading(false); }
   }, [token]);
 
-  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
+  useEffect(() => { fetchRows({ dedupe: true }); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 

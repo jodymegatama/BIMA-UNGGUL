@@ -6,7 +6,9 @@ import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useOperator } from '../../context/OperatorContext';
 import { formatSkor } from '../../lib/format';
-import { fetchSkorDetail, fetchRank, fetchNotifications } from '../../lib/operatorData';
+import { fetchSkorDetail, fetchRank } from '../../lib/operatorData';
+import { fetchNotifications } from '../../lib/notifications';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { deriveStatusClient, urgency, countdownText, formatTanggal, STATUS_LABEL } from '../../lib/periode';
 
 const ZERO_STATS = { Draft: 0, Menunggu: 0, Disetujui: 0, Ditolak: 0 };
@@ -48,6 +50,12 @@ export default function OperatorDashboard() {
   // Periode aktif lengkap ({ namaPeriode, status, tanggalCutoff }) — untuk kartu Status & info cut-off
   const [periodeStatus, setPeriodeStatus] = useState(null);
   const madrasahNama = ctxMadrasah?.nama || '-';
+  // Kunci stabil untuk effect skor/rank: identitas objek context berubah setiap
+  // kali OperatorContext menulis madrasah baru, dan kita tidak mau refetch
+  // skor+ranking hanya karena itu.
+  const madrasahId = ctxMadrasah?.id ?? null;
+  const madrasahSlug = ctxMadrasah?.slug || '';
+  const madrasahKelompok = ctxMadrasah?.kelompok || '';
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,8 +64,10 @@ export default function OperatorDashboard() {
     async function load() {
       if (!token) { setLoading(false); return; }
       // 1) stats per status — utama: GET /api/operator/indikator (agregat server-side)
+      // sharedFlight: StrictMode double-effect + OperatorContext/InputCapaian yang
+      // memuat endpoint sama secara paralel → satu request saja, tanpa render storm.
       try {
-        const data = await apiFetch('/api/operator/indikator', { auth: true });
+        const data = await sharedFlight.run(getKey('/api/operator/indikator'), () => apiFetch('/api/operator/indikator', { auth: true }));
         if (ignore) return;
         if (data?.stats) {
           setStats({
@@ -77,7 +87,7 @@ export default function OperatorDashboard() {
 
       // fallback lama: hitung manual dari daftar submission-item
       try {
-        const d = await apiFetch('/api/operator/submission-item', { auth: true });
+        const d = await sharedFlight.run(getKey('/api/operator/submission-item'), () => apiFetch('/api/operator/submission-item', { auth: true }));
         const arr = Array.isArray(d) ? d : (d.data || []);
         if (!ignore && arr.length) {
           const s = { ...ZERO_STATS };
@@ -90,6 +100,9 @@ export default function OperatorDashboard() {
       } catch { /* keep zeros */ }
 
       // 3) notifikasi real
+      // fetchNotifications SUDAH memakai sharedFlight di dalamnya (lib/notifications.js).
+      // Jangan dibungkus sharedFlight lagi: run() akan mengembalikan promise
+      // pembungkusnya sendiri → menunggu dirinya sendiri tanpa akhir.
       try {
         const n = await fetchNotifications();
         if (!ignore) setNotifs(n.slice(0, 5));
@@ -105,23 +118,22 @@ export default function OperatorDashboard() {
   useEffect(() => {
     let ignore = false;
     async function loadSkorRank() {
-      const m = ctxMadrasah;
-      if (!m || !m.id) return;
-      if (m.slug) {
+      if (!madrasahId) return;
+      if (madrasahSlug) {
         try {
-          const detail = await fetchSkorDetail(m.slug);
+          const detail = await sharedFlight.run(getKey(`/api/madrasah/${madrasahSlug}`), () => fetchSkorDetail(madrasahSlug));
           if (ignore) return;
           if (detail?.skor) setSkor(detail.skor.totalScore ?? 0);
         } catch { /* skor belum ada */ }
       }
       try {
-        const r = await fetchRank(m.kelompok, m.id);
-        if (!ignore && r) setRanking((prev) => ({ ...prev, ...r, kelompok: r.kelompok || m.kelompok }));
+        const r = await sharedFlight.run(getKey(`/api/leaderboard?kelompok=${madrasahKelompok}`), () => fetchRank(madrasahKelompok, madrasahId));
+        if (!ignore && r) setRanking((prev) => ({ ...prev, ...r, kelompok: r.kelompok || madrasahKelompok }));
       } catch { /* ranking belum ada */ }
     }
     loadSkorRank();
     return () => { ignore = true; };
-  }, [ctxMadrasah]);
+  }, [madrasahId, madrasahSlug, madrasahKelompok]);
 
   const total = stats.Draft + stats.Menunggu + stats.Disetujui + stats.Ditolak;
   const progress = total ? Math.round((stats.Disetujui / total) * 100) : 0;

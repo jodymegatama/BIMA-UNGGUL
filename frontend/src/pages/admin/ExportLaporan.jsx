@@ -3,6 +3,7 @@ import { FilePdf, FileXls, DownloadSimple, Calendar, CheckCircle, Info, SpinnerG
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { KELOMPOKS } from '../../constants/indikator';
 
 const JENJANGS = ['MI', 'MTs', 'MA'];
@@ -16,9 +17,11 @@ export default function ExportLaporan() {
   const [toast, setToast] = useState(null);
   const [err, setErr] = useState('');
 
+  // Halaman ini read-only: URL yang sama selalu menghasilkan daftar periode yang
+  // sama, jadi dedup aman dan memakai request yang sama dengan AdminLayout/Dashboard.
   useEffect(() => {
     if (!token) return;
-    apiFetch('/api/admin/periode', { auth: true }).then((res) => {
+    sharedFlight.run(getKey('/api/admin/periode'), () => apiFetch('/api/admin/periode', { auth: true })).then((res) => {
       const list = Array.isArray(res) ? res : (res.data || []);
       const mapped = list.map((p) => ({ id: p.id, nama: p.namaPeriode || p.nama, status: p.status }));
       setPeriodes(mapped);

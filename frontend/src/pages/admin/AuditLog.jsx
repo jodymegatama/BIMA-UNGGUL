@@ -3,6 +3,7 @@ import AuditLogFilterBar from '../../components/admin/AuditLogFilterBar';
 import AuditLogTable from '../../components/admin/AuditLogTable';
 import AuditLogDetailModal from '../../components/admin/AuditLogDetailModal';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AuditLog() {
@@ -30,7 +31,10 @@ export default function AuditLog() {
       q.set('page', String(page));
       q.set('limit', String(perPage));
       q.set('order', sortAsc ? 'asc' : 'desc');
-      const res = await apiFetch(`/api/admin/audit-log?${q.toString()}`, { auth: true });
+      // Halaman read-only: kunci dedup memuat seluruh query, jadi request yang sama
+      // selalu aman dibagikan (tidak ada mutasi yang butuh baca ulang pasca-aksi).
+      const url = `/api/admin/audit-log?${q.toString()}`;
+      const res = await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }));
       const data = Array.isArray(res) ? res : (res.data || []);
       setRows(data.map((r) => ({
         id: r.id,

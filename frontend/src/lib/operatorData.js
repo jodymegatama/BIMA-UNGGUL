@@ -46,15 +46,5 @@ export async function fetchRank(kelompok, madrasahId) {
   };
 }
 
-// GET /api/notifications → daftar notifikasi user login
-export async function fetchNotifications() {
-  const data = await apiFetch('/api/notifications', { auth: true });
-  const arr = Array.isArray(data) ? data : (data.data || []);
-  return arr.map((n) => ({
-    id: n.id,
-    judul: n.tipe || 'Notifikasi',
-    desc: n.pesan || '',
-    time: n.createdAt ? new Date(n.createdAt).toLocaleString('id-ID') : '',
-    read: n.statusBaca === 'sudah_dibaca',
-  }));
-}
+// Notifikasi pindah ke lib/notifications.js — dipakai bersama zona operator &
+// admin (single-flight lintas komponen).
