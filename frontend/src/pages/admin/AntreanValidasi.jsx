@@ -7,6 +7,7 @@ import ValidasiDetailModal from '../../components/admin/ValidasiDetailModal';
 import DeleteRequestPanel from '../../components/admin/DeleteRequestPanel';
 import DeleteRequestActionModal from '../../components/admin/DeleteRequestActionModal';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { useAuth } from '../../context/AuthContext';
 
 function mapApiRow(r) {
@@ -77,7 +78,12 @@ export default function AntreanValidasi() {
   const [toast, setToast] = useState(null);
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
 
-  const fetchValidasi = useCallback(async () => {
+  // `dedupe` untuk pemuatan yang dipicu effect (mount + perubahan filter/halaman):
+  // kunci dedup memuat seluruh query, jadi URL sama = hasil sama, dan StrictMode
+  // yang menjalankan effect dua kali hanya menghasilkan satu request.
+  // Muat ulang setelah aksi admin (approve/reject/revoke) sengaja TIDAK di-dedup —
+  // ia harus membaca kondisi pasca-mutasi, bukan request yang dimulai sebelum aksi.
+  const fetchValidasi = useCallback(async ({ dedupe = false } = {}) => {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     setErrorMsg(null);
@@ -91,7 +97,10 @@ export default function AntreanValidasi() {
       if (filters.periode !== 'Semua' && /^\d+$/.test(filters.periode)) q.set('periodeId', filters.periode);
       q.set('page', String(page));
       q.set('limit', '20');
-      const res = await apiFetch(`/api/admin/validasi?${q.toString()}`, { auth: true });
+      const url = `/api/admin/validasi?${q.toString()}`;
+      const res = dedupe
+        ? await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }))
+        : await apiFetch(url, { auth: true });
       const data = Array.isArray(res) ? res : (res.data || res.items || []);
       setRows(data.map(mapApiRow));
       setTotal(res.total ?? data.length);
@@ -103,7 +112,7 @@ export default function AntreanValidasi() {
     } finally { setLoading(false); }
   }, [token, filters, page]);
 
-  const fetchDelete = useCallback(async () => {
+  const fetchDelete = useCallback(async ({ dedupe = false } = {}) => {
     if (!token) { setDeleteLoading(false); return; }
     setDeleteLoading(true);
     try {
@@ -115,7 +124,10 @@ export default function AntreanValidasi() {
       if (deleteFilter.q) q.set('q', deleteFilter.q);
       q.set('page', String(deletePage));
       q.set('limit', '20');
-      const res = await apiFetch(`/api/admin/delete-requests?${q.toString()}`, { auth: true });
+      const url = `/api/admin/delete-requests?${q.toString()}`;
+      const res = dedupe
+        ? await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }))
+        : await apiFetch(url, { auth: true });
       const data = Array.isArray(res) ? res : (res.data || res.items || []);
       setDeleteRows(data.map(mapDeleteRow));
       setDeleteTotal(res.total ?? data.length);
@@ -124,8 +136,8 @@ export default function AntreanValidasi() {
     } finally { setDeleteLoading(false); }
   }, [token, deleteFilter, deletePage]);
 
-  useEffect(() => { fetchValidasi(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchValidasi]);
-  useEffect(() => { if (activeTab === 'hapus') fetchDelete(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchDelete, activeTab]);
+  useEffect(() => { fetchValidasi({ dedupe: true }); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchValidasi]);
+  useEffect(() => { if (activeTab === 'hapus') fetchDelete({ dedupe: true }); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchDelete, activeTab]);
 
   // Reset page saat filter berubah — di event handler (bukan effect) sesuai docs react "You Might Not Need an Effect"
   const handleFilterChange = (next) => { setFilters(next); setPage(1); };
@@ -185,16 +197,20 @@ export default function AntreanValidasi() {
         <p className="text-[12px] font-medium text-pencil mt-1">Filter status, madrasah, indikator, periode, dan kata kunci — klik baris untuk detail + bukti. Tab Permintaan Hapus untuk approval soft-delete.</p>
       </div>
 
-      {/* Tab switcher */}
+      {/* Tab switcher — seleksi di onPointerDown (pola IndikatorTabs): tabel diganti
+          state "Memuat..." saat tab berganti, dan swap DOM itu bisa menelan klik
+          yang belum selesai. Keyboard tetap lewat onClick (e.detail === 0). */}
       <div className="flex gap-2">
         <button
-          onClick={() => setActiveTab('validasi')}
+          onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setActiveTab('validasi'); }}
+          onClick={(e) => { if (e.detail === 0) setActiveTab('validasi'); }}
           className={`h-9 px-4 rounded-full border-2 text-[13px] font-black transition ${activeTab === 'validasi' ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
         >
           Validasi Submission
         </button>
         <button
-          onClick={() => setActiveTab('hapus')}
+          onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setActiveTab('hapus'); }}
+          onClick={(e) => { if (e.detail === 0) setActiveTab('hapus'); }}
           className={`h-9 px-4 rounded-full border-2 text-[13px] font-black flex items-center gap-2 transition ${activeTab === 'hapus' ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
         >
           Permintaan Hapus

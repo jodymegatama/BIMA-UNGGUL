@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 
 export default function AdminLayout() {
   const [drawer, setDrawer] = useState(false);
@@ -15,9 +16,15 @@ export default function AdminLayout() {
   const admin = { nama: user?.name || user?.namaLengkap || '-', nip: user?.nip || '-' };
 
   // Badge antrean "menunggu" — real-time dari backend (payload minimal: limit=1, pakai total)
-  const fetchPending = useCallback(async () => {
+  // `dedupe` hanya untuk pemuatan awal/route-change: StrictMode + halaman admin yang
+  // memuat URL sama (Dashboard) → satu request. `refreshPending` yang dipanggil
+  // setelah approve/reject sengaja TIDAK di-dedup (harus pasca-mutasi).
+  const fetchPending = useCallback(async ({ dedupe = false } = {}) => {
+    const p = '/api/admin/validasi?status=menunggu&page=1&limit=1';
     try {
-      const res = await apiFetch('/api/admin/validasi?status=menunggu&page=1&limit=1', { auth: true });
+      const res = dedupe
+        ? await sharedFlight.run(getKey(p), () => apiFetch(p, { auth: true }))
+        : await apiFetch(p, { auth: true });
       setPendingValidasi(res?.total ?? 0);
     } catch {
       // gagal load → 0 (badge tersembunyi), layout tidak rusak
@@ -25,10 +32,11 @@ export default function AdminLayout() {
     }
   }, []);
 
-  // Periode aktif untuk label Sidebar/TopBar
+  // Periode aktif untuk label Sidebar/TopBar — sharedFlight memakai URL yang sama
+  // dengan Dashboard admin, jadi keduanya berbagi satu request saat konkuren.
   useEffect(() => {
     let ignore = false;
-    apiFetch('/api/admin/periode', { auth: true })
+    sharedFlight.run(getKey('/api/admin/periode'), () => apiFetch('/api/admin/periode', { auth: true }))
       .then((res) => {
         if (ignore) return;
         const list = Array.isArray(res?.data) ? res.data : [];
@@ -41,7 +49,7 @@ export default function AdminLayout() {
 
   // Re-fetch badge: mount, ganti route, window focus, polling ringan
   useEffect(() => {
-    fetchPending(); // eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react)
+    fetchPending({ dedupe: true }); // eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react)
     const onFocus = () => fetchPending();
     window.addEventListener('focus', onFocus);
     const iv = setInterval(fetchPending, 60000);

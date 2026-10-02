@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCircle, Clock, XCircle, FileText, ArrowLeft } from 'phosphor-react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
+import { fetchNotificationsRaw } from '../../lib/notifications';
 
 const iconMap = {
   disetujui: { Icon: CheckCircle, color: '#58cc02' },
@@ -27,7 +28,9 @@ export default function Notifikasi() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await apiFetch('/api/notifications', { auth: true });
+      // fetchNotificationsRaw: request di-dedup dengan TopBar (polling 30s + fokus)
+      // dan Dashboard yang memuat endpoint yang sama.
+      const data = await fetchNotificationsRaw();
       const arr = Array.isArray(data) ? data : (data.data || []);
       setItems(arr.map((n) => ({
         id: n.id,
@@ -107,7 +110,8 @@ export default function Notifikasi() {
       {/* Filter tabs */}
       <div className="flex gap-2 px-4 py-3 border-b-2 border-zinc-100">
         <button
-          onClick={() => setFilter('all')}
+          onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setFilter('all'); }}
+          onClick={(e) => { if (e.detail === 0) setFilter('all'); }}
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'all'
               ? 'bg-charcoal text-white'
@@ -117,7 +121,8 @@ export default function Notifikasi() {
           Semua ({items.length})
         </button>
         <button
-          onClick={() => setFilter('unread')}
+          onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setFilter('unread'); }}
+          onClick={(e) => { if (e.detail === 0) setFilter('unread'); }}
           className={`px-3 py-2 rounded-[12px] text-[12px] font-black transition ${
             filter === 'unread'
               ? 'bg-charcoal text-white'

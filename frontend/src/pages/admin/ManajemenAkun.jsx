@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, XCircle, Clock, MagnifyingGlass, Buildings, ShieldCheck, Hash, SpinnerGap, PencilSimple, Trash, PlusCircle, WarningCircle } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 import { useAuth } from '../../context/AuthContext';
 import AkunForm from '../../components/admin/AkunForm';
 import MadrasahTable from '../../components/admin/MadrasahTable';
@@ -36,7 +37,11 @@ export default function ManajemenAkun() {
   const [deleteErr, setDeleteErr] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const fetchRows = useCallback(async () => {
+  // `dedupe` untuk pemuatan awal & perubahan filter/halaman: kunci dedup memuat
+  // seluruh query, jadi URL yang sama selalu berarti hasil yang sama (kebal
+  // StrictMode double-effect). Muat ulang setelah approve/nonaktif/aktif/create/
+  // edit akun sengaja lewat jalur segar agar membaca kondisi pasca-mutasi.
+  const fetchRows = useCallback(async ({ dedupe = false } = {}) => {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     try {
@@ -45,7 +50,10 @@ export default function ManajemenAkun() {
       if (q.trim()) p.set('q', q.trim());
       p.set('page', String(page));
       p.set('limit', '20');
-      const res = await apiFetch(`/api/admin/akun?${p.toString()}`, { auth: true });
+      const url = `/api/admin/akun?${p.toString()}`;
+      const res = dedupe
+        ? await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }))
+        : await apiFetch(url, { auth: true });
       const data = Array.isArray(res) ? res : (res.data || []);
       const mapped = data.map((r) => ({
         id: r.id,
@@ -67,13 +75,14 @@ export default function ManajemenAkun() {
     } finally { setLoading(false); }
   }, [token, activeTab, q, page]);
 
-  useEffect(() => { fetchRows(); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
+  useEffect(() => { fetchRows({ dedupe: true }); /* eslint-disable-line react-hooks/set-state-in-effect -- async fn; setState di promise callback (docs: eslint-react) */ }, [fetchRows]);
 
   // fetch list madrasah untuk dropdown AkunForm
   // limit=500: tabel madrasah bisa lebih dari 1 halaman (default 20) — dropdown harus lengkap
+  // Read-only + sekali seumur mount → dedup aman (StrictMode double-effect).
   useEffect(() => {
     if (!token) return;
-    apiFetch('/api/admin/madrasah?limit=500', { auth: true })
+    sharedFlight.run(getKey('/api/admin/madrasah?limit=500'), () => apiFetch('/api/admin/madrasah?limit=500', { auth: true }))
       .then((res) => {
         const list = Array.isArray(res) ? res : (res.data || []);
         setMadrasahList(list);
@@ -158,15 +167,20 @@ export default function ManajemenAkun() {
           <h1 className="font-display font-black tracking-[-0.02em] text-[20px] lg:text-[24px] leading-none text-charcoal">Manajemen Akun & Madrasah</h1>
           <p className="text-[12px] font-medium text-pencil mt-1">Kelola akun operator/admin dan data madrasah dalam satu halaman.</p>
         </div>
+        {/* Segmented Data Akun/Data Madrasah — seleksi di onPointerDown (pola
+            IndikatorTabs): berganti section menukar seluruh tabel, dan swap DOM itu
+            bisa menelan klik yang belum selesai. Keyboard tetap onClick. */}
         <div className="flex gap-2 bg-zinc-100 border-2 border-zinc-200 rounded-full p-1">
           <button
-            onClick={() => setSection('akun')}
+            onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setSection('akun'); }}
+            onClick={(e) => { if (e.detail === 0) setSection('akun'); }}
             className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${section === 'akun' ? 'bg-ink text-white border-black shadow-[0_3px_0_0_#000437]' : 'border-transparent text-pencil hover:text-charcoal active:translate-y-[1px]'}`}
           >
             Data Akun
           </button>
           <button
-            onClick={() => setSection('madrasah')}
+            onPointerDown={(e) => { if (e.pointerType !== 'keyboard') setSection('madrasah'); }}
+            onClick={(e) => { if (e.detail === 0) setSection('madrasah'); }}
             className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${section === 'madrasah' ? 'bg-ink text-white border-black shadow-[0_3px_0_0_#000437]' : 'border-transparent text-pencil hover:text-charcoal active:translate-y-[1px]'}`}
           >
             Data Madrasah
@@ -183,10 +197,12 @@ export default function ManajemenAkun() {
         >
           <PlusCircle size={14} weight="bold" color="white" /> Tambah Akun
         </button>
+        {/* Tab status: pointerdown — tab ini memicu refetch + loading swap tabel. */}
         {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => { setActiveTab(t); setPage(1); }}
+            onPointerDown={(e) => { if (e.pointerType !== 'keyboard') { setActiveTab(t); setPage(1); } }}
+            onClick={(e) => { if (e.detail === 0) { setActiveTab(t); setPage(1); } }}
             className={`h-8 px-4 rounded-full border-2 text-[12px] font-black transition ${activeTab === t ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {t}

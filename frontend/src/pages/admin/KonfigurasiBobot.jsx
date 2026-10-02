@@ -3,6 +3,7 @@ import { FloppyDisk, Lock, Clock, CheckCircle, WarningCircle, SpinnerGap } from 
 import BobotIndikatorForm from '../../components/admin/BobotIndikatorForm';
 import { TINGKAT_WILAYAH_OPTIONS, JENJANG_PENDIDIKAN_OPTIONS } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
+import { sharedFlight, getKey } from '../../lib/singleFlight';
 
 // kunci field per tipe — derived dari registry constants/indikator.js (satu sumber)
 const TINGKAT_WILAYAH_KEYS = TINGKAT_WILAYAH_OPTIONS.map((o) => o.value);
@@ -20,9 +21,12 @@ export default function KonfigurasiBobot() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Read-only: URL sama = hasil sama, dan AdminLayout/Dashboard memuat endpoint ini
+  // juga → dedup menghapus request ganda (termasuk StrictMode double-effect).
   const fetchPeriodes = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/admin/periode', { auth: true });
+      const url = '/api/admin/periode';
+      const res = await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }));
       const list = Array.isArray(res) ? res : (res.data || []);
       if (list.length) {
         const mapped = list.map((p) => ({ id: p.id, nama: p.namaPeriode || p.nama, namaPeriode: p.namaPeriode || p.nama, status: p.status === 'aktif' ? 'Aktif' : p.status === 'finalisasi' ? 'Finalisasi' : p.status }));
@@ -38,7 +42,8 @@ export default function KonfigurasiBobot() {
     if (!pid || pid === 'fallback') { setData(null); setLoading(false); return; }
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/admin/bobot?periodeId=${pid}`, { auth: true });
+      const url = `/api/admin/bobot?periodeId=${pid}`;
+      const res = await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }));
       const arr = Array.isArray(res) ? res : (res.data || []);
       // Backend merge left-join: selalu 9 entri {indikatorId, slug, nama, tipeFormula, ...bobot|null}
       const map = {};
@@ -134,9 +139,13 @@ export default function KonfigurasiBobot() {
   };
 
   const handlePeriodeChange = (id) => {
-    setPeriodeId(id);
     const p = periodes.find((x) => String(x.id) === String(id));
     if (p) setPeriodeStatus(p.status);
+    // Klik chip periode yang SUDAH aktif: jangan kosongkan grid. periodeId yang
+    // tidak berubah tidak memicu effect fetch, jadi setData(null) akan meninggalkan
+    // grid kosong tanpa isi pengganti.
+    if (String(periodeId) === String(id)) return;
+    setPeriodeId(id);
     setData(null);
   };
 
@@ -148,10 +157,14 @@ export default function KonfigurasiBobot() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* Chip periode: seleksi di onPointerDown — memilih periode memicu fetchBobot
+            dan swap seluruh grid bobot, jadi klik bisa tertelan saat DOM di-rebuild.
+            Keyboard tetap lewat onClick (e.detail === 0). */}
         {periodes.map((p) => (
           <button
             key={p.id}
-            onClick={() => handlePeriodeChange(p.id)}
+            onPointerDown={(e) => { if (e.pointerType !== 'keyboard') handlePeriodeChange(p.id); }}
+            onClick={(e) => { if (e.detail === 0) handlePeriodeChange(p.id); }}
             className={`h-9 px-4 rounded-full border-2 text-[12px] font-black transition ${String(periodeId) === String(p.id) ? 'bg-ink text-white border-black shadow-[0_4px_0_0_#000437]' : 'bg-white border-zinc-200 text-charcoal hover:border-zinc-300 hover:bg-zinc-50 active:translate-y-[1px]'}`}
           >
             {p.namaPeriode || p.nama} <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full border ${p.status === 'Finalisasi' || p.status === 'Arsip' ? 'bg-zinc-100 border-zinc-200 text-faded' : 'bg-story border-[#b8eb8a] text-eager-dark'}`}>{p.status}</span>
