@@ -1,6 +1,8 @@
 services:
   db:
-    image: mysql:8.0
+    # 8.4 = versi yang sama dengan CI & yang seluruh migrasi sudah diuji
+    # (8.0 → 8.4 adalah upgrade in-place yang didukung resmi MySQL).
+    image: mysql:8.4
     restart: unless-stopped
     ports:
       - "127.0.0.1:3307:3306"   # hanya localhost, akses phpMyAdmin/host

@@ -12,6 +12,13 @@ import publicRoutes from './routes/public.routes.js';
 
 const app = express();
 
+// 0. Trust proxy — WAJIB di produksi. Backend tidak pernah expose port ke luar
+//    (compose cuma `expose`, akses publik lewat nginx), jadi hop pertama selalu
+//    nginx milik sendiri dan aman dipercaya. Tanpa ini express-rate-limit
+//    menolak X-Forwarded-For dengan ERR_ERL_UNEXPECTED_X_FORWARDED_FOR, dan
+//    rate limit login dihitung dari IP proxy, bukan IP asli user sebenarnya.
+app.set('trust proxy', 1);
+
 // 1. Security Headers (Helmet)
 app.use(helmet());
 
