@@ -82,8 +82,22 @@ async function setup() {
   const draftNyangkut = await buatDraft(`${NS} draft nyangkut`, periodeLama.id, 2025);
 
   // Draft pembanding yang SUDAH benar-benar di periode aktif: harus dibiarkan utuh.
-  const aktif = await resolveAktifPeriode();
-  if (!aktif) throw new Error('Butuh minimal satu periode aktif di DB untuk fixture.');
+  let aktif = await resolveAktifPeriode();
+  if (!aktif) {
+    // DB segar (CI) belum punya periode aktif — seed tidak membuat periode,
+    // jadi fixture ini yang membuat satu. Prefix NS supaya ikut terhapus
+    // oleh cleanup(); DB dev memakai periode aktifnya sendiri dan tidak
+    // menyentuh cabang ini.
+    aktif = await prisma.periodePenilaian.create({
+      data: {
+        namaPeriode: `${NS}/aktif`,
+        tahunCapaian: new Date().getFullYear(),
+        tanggalMulai: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        tanggalCutoff: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        status: 'aktif',
+      },
+    });
+  }
   const draftSehat = await buatDraft(`${NS} draft sehat`, aktif.id, aktif.tahunCapaian);
 
   return { periodeLama, operator, madrasah, diklat, draftNyangkut, draftSehat, aktif };
