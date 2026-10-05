@@ -13,6 +13,7 @@
     "backend:dev": "npm run dev -w backend",
     "frontend:build": "npm run build -w frontend",
     "backend:start": "npm start -w backend",
+    "db:check": "npm run prisma:check-drift -w backend",
     "db:migrate": "npm run prisma:migrate -w backend",
     "db:studio": "npm run prisma:studio -w backend",
     "db:seed": "npm run prisma:seed -w backend",

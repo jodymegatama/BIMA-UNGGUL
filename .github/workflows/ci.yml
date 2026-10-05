@@ -1,0 +1,117 @@
+name: CI
+
+# Menjalankan test frontend + backend di tiap push dan tiap PR.
+# Tujuan: commit yang test-nya gagal atau tidak self-contained (bergantung pada
+# data yang kebetulan ada di DB lokal) ketahuan SEBELUM merge.
+#
+# Backend memakai MySQL sungguhan sebagai service container supaya suite
+# integrasi benar-benar jalan — bukan ter-skip karena DATABASE_URL kosong.
+# Detail setup & kredensial: backend/tests/TESTING_GUIDE.md
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['master']
+
+# Cancel run lama kalau branch sama sudah dapat push baru — hemat menit runner.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend — test + lint + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint -w frontend
+
+      - name: Test
+        run: npm run test -w frontend
+
+      - name: Build
+        run: npm run build -w frontend
+        env:
+          VITE_API_URL: ''
+
+  backend:
+    name: Backend — test integrasi + lint
+    runs-on: ubuntu-latest
+
+    # Database sekali pakai per run: nol data sisa antar-run, dan test yang
+    # salah cleans up tidak bisa merusak DB lokal developer.
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          # Kredensial CI — hanya hidup di dalam container runner, bukan rahasia.
+          MYSQL_ROOT_PASSWORD: ci-root-pw
+          MYSQL_DATABASE: bima_unggul_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: mysql://root:ci-root-pw@127.0.0.1:3306/bima_unggul_ci
+      JWT_SECRET: ci-jwt-secret-not-used-in-tests
+      JWT_REFRESH_SECRET: ci-jwt-refresh-secret-not-used-in-tests
+      NODE_ENV: test
+      # Akun admin fixture dari scripts/create-dummy-accounts.mjs (dipanggil
+      # di step "Seed akun admin" di bawah). Mengisi gate `hasCreds` supaya
+      # 5 test CRUD admin/akun/madrasah ikut jalan, bukan ter-skip.
+      BACKEND_TEST_NIP: '199012312345678901'
+      BACKEND_TEST_PASS: 'Admin12345'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate -w backend
+
+      - name: Apply migrations
+        run: npm run prisma:deploy -w backend
+
+      # Gate drift: database di atas dibangun MURNI dari folder migrations, jadi
+      # kalau schema.prisma berbeda dari hasilnya berarti ada perubahan schema
+      # tanpa migration (atau migration yang tidak sesuai schema). Ditempatkan
+      # sebelum seed supaya yang dibandingkan benar-benar DB bersih.
+      - name: Check schema ↔ migrations drift
+        run: npm run prisma:check-drift -w backend
+
+      - name: Seed indikator
+        run: npm run prisma:seed -w backend
+
+      - name: Seed akun admin (untuk gate kredensial test)
+        run: node scripts/create-dummy-accounts.mjs
+        working-directory: backend
+
+      - name: Lint
+        run: npm run lint -w backend
+
+      - name: Test
+        run: npm run test -w backend

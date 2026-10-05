@@ -16,6 +16,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../src/db/prisma.js';
 import { calculateSkorMadrasah, calculateRanking } from '../src/services/scoringService.js';
+import { dbGate } from './helpers/dbGate.js';
 
 const NAMA_PERIODE = 'TEST/2026';
 const ADMIN_NIP = '19700101199203001'; // fixture admin (reuse dari legacy)
@@ -161,7 +162,10 @@ function rankingFixtureOnly(ranking) {
 // Suite
 // ============================================================================
 
-describe('Scoring — formula', () => {
+// Suite ini butuh MySQL nyata. Tanpa DATABASE_URL di backend/.env, Prisma
+// gagal di beforeAll dan file-nya dilaporkan merah meski kodenya benar —
+// karena itu di-skip dengan alasan eksplisit (lihat helpers/dbGate.js).
+describe.skipIf(!dbGate())('Scoring — formula', () => {
   let ctx;
 
   beforeAll(async () => {
