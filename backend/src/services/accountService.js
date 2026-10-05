@@ -6,6 +6,8 @@
 import { prisma } from '../db/prisma.js';
 import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
+import { parseEnumParam } from '../utils/enumParam.js';
+import { StatusUser } from '@prisma/client';
 import { recordAuditLog } from './auditService.js';
 import bcrypt from 'bcryptjs';
 
@@ -13,7 +15,10 @@ export async function listAkun({ status, q, page='1', limit='20' }) {
   let p = parseInt(page,10); let l = parseInt(limit,10);
   if (!Number.isFinite(p)||p<1) p=1; if(!Number.isFinite(l)||l<1) l=20; if(l>100) l=100;
   const where = {};
-  if (status) where.status = status;
+  // status harus salah satu nilai enum User — string bebas membuat Prisma melempar
+  // PrismaClientValidationError yang berakhir sebagai 500.
+  const statusFilter = parseEnumParam(status, StatusUser, 'status');
+  if (statusFilter) where.status = statusFilter;
   if (q && String(q).trim()) {
     const kw = String(q).trim();
     where.OR = [{ nip:{contains:kw}},{ name:{contains:kw}},{ email:{contains:kw}}];
@@ -30,6 +35,14 @@ export async function createAkun({ nip,name,email,password,role='operator', madr
   const isOperator = role === 'operator';
   if (!name||!email||!password) throw new HttpError(400,'MISSING_FIELDS','name,email,password wajib');
   if (!isOperator && !nip) throw new HttpError(400,'MISSING_FIELDS','nip wajib untuk role admin');
+  // Validasi TIPE: angka & objek itu truthy jadi lolos cek `!name`, lalu diteruskan
+  // mentah ke prisma.user.create() yang menolak kolom VARCHAR dengan angka ->
+  // PrismaClientValidationError -> 500. Cek panjang password memakai String()
+  // sehingga tidak menangkap kasus ini.
+  if (typeof name!=='string'||typeof email!=='string'||typeof password!=='string'||typeof role!=='string'
+      ||(nip!==undefined&&typeof nip!=='string')) {
+    throw new HttpError(400,'INVALID_FIELD_TYPE','name, email, password, dan role harus berupa teks');
+  }
   if (String(password).length < 8) throw new HttpError(400,'WEAK_PASSWORD','Password minimal 8 karakter');
   const emailNorm = String(email).trim().toLowerCase();
   const dupWhere = isOperator ? { email: emailNorm } : { OR:[{nip},{email: emailNorm}] };

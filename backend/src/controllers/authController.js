@@ -60,6 +60,25 @@ export async function register(req, res) {
   }
 
   // 4. Validate madrasah data
+  // 4a. Validasi TIPE dulu. Validasi panjang di bawah memakai `nama.length` /
+  // `alamat.length`, yang `undefined` untuk number/object sehingga lolos diam-diam,
+  // lalu mentransmisikan nilai mentah ke prisma.user.create() -> PrismaClientValidationError
+  // -> 500. Object/array juga harus ditolak eksplisit: madrasahData disimpan sebagai
+  // JSON, jadi isinya bisa apa saja dan baru meledak saat admin menyetujui akun.
+  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({
+      error: 'name, email, dan password harus berupa teks',
+      code: 'INVALID_FIELD_TYPE',
+    });
+  }
+
+  if (typeof madrasahData !== 'object' || madrasahData === null || Array.isArray(madrasahData)) {
+    return res.status(400).json({
+      error: 'madrasahData harus berupa objek',
+      code: 'INVALID_MADRASAH_DATA',
+    });
+  }
+
   const { nama, jenjang, statusKepemilikan, alamat, jumlahSiswa } = madrasahData;
   if (!nama || !jenjang || !statusKepemilikan || !alamat || !jumlahSiswa) {
     return res.status(400).json({
@@ -87,6 +106,14 @@ export async function register(req, res) {
     return res.status(400).json({
       error: 'Jumlah siswa harus angka positif',
       code: 'INVALID_JUMLAH_SISWA',
+    });
+  }
+
+  // nama & alamat dipakai `.length` di bawah dan jadi kolom VARCHAR saat approve.
+  if (typeof nama !== 'string' || typeof alamat !== 'string') {
+    return res.status(400).json({
+      error: 'Nama dan alamat madrasah harus berupa teks',
+      code: 'INVALID_MADRASAH_DATA',
     });
   }
 
@@ -172,6 +199,23 @@ export async function login(req, res) {
     });
   }
 
+  // 1b. Validasi TIPE identitas & password.
+  // comparePassword() memanggil bcrypt.compare(password, hash); bcrypt melempar
+  // "Illegal arguments: number, string" kalau password bukan string (mis. body
+  // JSON berisi { "password": 12345678 }). Error itu dibungkus jadi Error biasa
+  // oleh authService lalu naik ke handler Express sebagai 500 — padahal ini salah
+  // input klien, harus 400.
+  if (
+    (email !== undefined && typeof email !== 'string') ||
+    (nip !== undefined && typeof nip !== 'string') ||
+    typeof password !== 'string'
+  ) {
+    return res.status(400).json({
+      error: 'Email/NIP dan password harus berupa teks',
+      code: 'INVALID_CREDENTIALS_TYPE',
+    });
+  }
+
   // 2. Find active user by email ATAU nip
   const user = await authService.findActiveUser({ email, nip });
   if (!user) {
@@ -247,8 +291,33 @@ export async function refresh(req, res) {
     });
   }
 
-  // 1. Verify refresh token
-  const decoded = authService.verifyRefreshToken(refreshToken);
+  // 1. Verify refresh token.
+  // verifyRefreshToken() melempar Error biasa (bukan HttpError) saat token
+  // kadaluarsa / tanda tangannya salah / string sampah. Tanpa catch di sini,
+  // error itu jatuh ke handler Express yang mengembalikan 500 — dan frontend
+  // (src/lib/api.js) hanya mengakhiri sesi pada 401/403, jadi user dengan
+  // refresh token kadaluarsa akan terjebak dengan "Gagal memuat" alih-alih
+  // diarahkan ke halaman login. Semua kegagalan verifikasi = 401.
+  let decoded;
+  try {
+    decoded = authService.verifyRefreshToken(refreshToken);
+  } catch (err) {
+    return res.status(401).json({
+      error: err.message || 'Refresh token tidak valid',
+      code: 'INVALID_REFRESH_TOKEN',
+    });
+  }
+
+  // 1b. decoded.userId harus integer positif sebelum jadi filter Prisma.
+  // Token yang ditandatangani dengan payload aneh (mis. userId string / null)
+  // akan membuat prisma.user.findUnique({ where: { id: 'x' } }) melempar
+  // PrismaClientValidationError -> 500. Tetap 401: tokennya tidak bisa dipakai.
+  if (!decoded || !Number.isInteger(decoded.userId) || decoded.userId <= 0) {
+    return res.status(401).json({
+      error: 'Refresh token tidak valid',
+      code: 'INVALID_REFRESH_TOKEN',
+    });
+  }
 
   // 2. Find user to get latest role/madrasahId
   const user = await prisma.user.findUnique({
@@ -285,17 +354,25 @@ export async function logout(req, res) {
   // 1. Clear refresh token cookie
   res.clearCookie('refreshToken');
 
-  // 2. Create audit log
+  // 2. Create audit log — TIDAK boleh menggagalkan logout.
+  // Audit adalah jejak tambahan; sesi tetap harus berakhir walau penulisannya
+  // gagal (mis. akun dihapus admin sementara access token masih hidup =>
+  // foreign key violation). Kalau dibiarkan melempar, user melihat 500 padahal
+  // logout-nya sukses dan cookie sudah dihapus.
   if (req.user) {
-    await prisma.auditLog.create({
-      data: {
-        userId: req.user.userId,
-        action: 'logout',
-        entity: 'User',
-        entityId: String(req.user.userId),
-        ipAddress: req.ip,
-      },
-    });
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.userId,
+          action: 'logout',
+          entity: 'User',
+          entityId: String(req.user.userId),
+          ipAddress: req.ip,
+        },
+      });
+    } catch (err) {
+      console.error('[audit] gagal menulis log logout:', err);
+    }
   }
 
   res.status(200).json({
@@ -316,6 +393,16 @@ export async function logout(req, res) {
  */
 export async function approveUser(req, res) {
   const userId = parseInt(req.params.id, 10);
+
+  // :id harus integer positif. Tanpa guard ini parseInt("abc") = NaN masuk ke
+  // prisma.user.findUnique({ where: { id: NaN } }) dan Prisma melempar
+  // PrismaClientValidationError -> 500 untuk permintaan yang jelas salah.
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      error: 'ID user harus angka bulat positif',
+      code: 'INVALID_USER_ID',
+    });
+  }
 
   // 1. Find user (status harus "menunggu") dengan madrasahData
   const user = await prisma.user.findUnique({

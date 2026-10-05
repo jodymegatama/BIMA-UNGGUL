@@ -11,6 +11,8 @@ import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { createNotification } from './notificationService.js';
+import { parseEnumParam } from '../utils/enumParam.js';
+import { StatusSubmission, StatusDeleteRequest } from '@prisma/client';
 
 // ---------- Helpers ----------
 function parsePagination(query) {
@@ -35,7 +37,9 @@ export async function getValidasiQueue(query = {}) {
   const { page, limit, skip } = parsePagination(query);
 
   const where = { deletedAt: null };
-  if (status) where.status = status;
+  // Kolom status SubmissionItem bertipe enum — filter tak dikenal = 400, bukan 500.
+  const statusFilter = parseEnumParam(status, StatusSubmission, 'status');
+  if (statusFilter) where.status = statusFilter;
   if (madrasahId) where.madrasahId = parseInt(madrasahId, 10);
   if (indikatorId) where.indikatorId = parseInt(indikatorId, 10);
   if (periodeId) where.periodeId = parseInt(periodeId, 10);
@@ -226,7 +230,8 @@ export async function getDeleteRequestsQueue(query = {}) {
   const { page, limit, skip } = parsePagination({ page: qPage, limit: qLimit });
 
   const where = {};
-  if (status) where.status = status;
+  const statusFilter = parseEnumParam(status, StatusDeleteRequest, 'status');
+  if (statusFilter) where.status = statusFilter;
   if (q && String(q).trim().length > 0) {
     const keyword = String(q).trim();
     where.OR = [{ alasan: { contains: keyword } }, { alasanAdmin: { contains: keyword } }];

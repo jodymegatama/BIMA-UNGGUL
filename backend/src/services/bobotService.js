@@ -43,6 +43,26 @@ export async function listBobot({ periodeId }) {
   return { periode, data };
 }
 
+/**
+ * Total bobot yang benar-benar dipakai scoring untuk satu indikator.
+ *
+ * Bobot tidak hanya hidup di `nilaiBobot`: `per_tingkat_wilayah` membacanya
+ * dari `bobotTingkatWilayah`, `per_jenjang` dari `bobotJenjang`. Kalau hanya
+ * `nilaiBobot` yang diperiksa, indikator tanpa bobot selalu dianggap
+ * berbobot dan guard total-nol tidak pernah kepicu.
+ */
+function bobotEfektif(b) {
+  if (!b) return 0;
+  let total = typeof b.nilaiBobot === 'number' ? b.nilaiBobot : 0;
+  for (const v of Object.values(b.bobotTingkatWilayah ?? {})) {
+    if (typeof v === 'number') total += v;
+  }
+  for (const v of Object.values(b.bobotJenjang ?? {})) {
+    if (typeof v === 'number') total += v;
+  }
+  return total;
+}
+
 export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
   const pid = parseInt(periodeId, 10);
   if (!Number.isFinite(pid)) throw new HttpError(400, 'INVALID_ID', 'periodeId tidak valid');
@@ -55,6 +75,14 @@ export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
     // also check if any bobot terkunci
     const lockedCount = await tx.bobotIndikator.count({ where: { periodeId: pid, terkunci: true } });
     if (lockedCount > 0) throw new HttpError(423, 'BOBOT_LOCKED', 'Bobot terkunci karena periode difinalisasi');
+
+    // Validasi indikatorId SEBELUM upsert. Tanpa ini, indikatorId yang tidak ada
+    // jatuh ke Prisma sebagai foreign-key error mentah -> 500 "Foreign key
+    // constraint failed on the field: `indikatorId`" yang bocor ke UI.
+    const indikatorIds = [...new Set(bobots.map((b) => parseInt(b.indikatorId, 10)).filter(Number.isFinite))];
+    const validIds = new Set((await tx.indikator.findMany({ where: { id: { in: indikatorIds } }, select: { id: true } })).map((i) => i.id));
+    const unknown = indikatorIds.filter((id) => !validIds.has(id));
+    if (unknown.length > 0) throw new HttpError(404, 'INDIKATOR_NOT_FOUND', `Indikator tidak ditemukan: ${unknown.join(', ')}`);
 
     const updated = [];
     for (const b of bobots) {
@@ -88,6 +116,16 @@ export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
       });
       updated.push(up);
       await recordAuditLog({ userId, action: 'update_bobot', entity: 'BobotIndikator', entityId: up.id, dataSebelum: before, dataSesudah: up, ipAddress: ip }, tx);
+    }
+
+    // Guard total-nol: setelah update, minimal satu indikator harus punya bobot
+    // efektif > 0. Tanpa ini admin bisa meng-nolkan seluruh 9 indikator, dan
+    // karena skor dihitung live saat dibaca, semua madrasah langsung jadi skor 0
+    // tanpa error — leaderboard publik tetap tampil seolah normal.
+    const after = await tx.bobotIndikator.findMany({ where: { periodeId: pid } });
+    const totalBobot = after.reduce((sum, b) => sum + bobotEfektif(b), 0);
+    if (totalBobot <= 0) {
+      throw new HttpError(400, 'ALL_BOBOT_ZERO', 'Minimal satu indikator harus punya bobot lebih dari 0 — semua bobot tidak boleh nol');
     }
 
     // Live-compute (scoring refactor): skor dihitung saat dibaca —

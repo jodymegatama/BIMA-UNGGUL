@@ -8,6 +8,8 @@ import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { STATUS_HISTORI_PERIODE } from '../constants/periode.constants.js';
+import { parseEnumParam } from '../utils/enumParam.js';
+import { StatusPeriode } from '@prisma/client';
 
 function parseTahun(namaPeriode) {
   const m = String(namaPeriode).match(/^(\d{4})\//);
@@ -79,7 +81,9 @@ export async function resolveAktifPeriode() {
 
 export async function listPeriode({ status, q } = {}) {
   const where = {};
-  if (status) where.status = status;
+  // Nilai di luar enum StatusPeriode ditolak Prisma dengan error yang berakhir jadi 500.
+  const statusFilter = parseEnumParam(status, StatusPeriode, 'status');
+  if (statusFilter) where.status = statusFilter;
   if (q) where.namaPeriode = { contains: q };
   const rows = await prisma.periodePenilaian.findMany({
     where,

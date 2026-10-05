@@ -15,6 +15,7 @@ import * as accountService from '../src/services/accountService.js';
 import * as exportService from '../src/services/exportService.js';
 import { calculateSkorMadrasah } from '../src/services/scoringService.js';
 import * as auditLogController from '../src/controllers/admin/auditLogController.js';
+import { dbGate } from './helpers/dbGate.js';
 
 const NS = 'PUBADM';
 const ip = '127.0.0.1-e2e-final';
@@ -91,7 +92,10 @@ async function setup() {
   return { admin, operator, madrasah, periode, diklat, item };
 }
 
-describe('Publik & Admin (PUBADM)', () => {
+// Suite ini butuh MySQL nyata. Tanpa DATABASE_URL di backend/.env, Prisma
+// gagal di beforeAll dan file-nya dilaporkan merah meski kodenya benar —
+// karena itu di-skip dengan alasan eksplisit (lihat helpers/dbGate.js).
+describe.skipIf(!dbGate())('Publik & Admin (PUBADM)', () => {
   let ctx;
 
   beforeAll(async () => {
@@ -197,6 +201,114 @@ describe('Publik & Admin (PUBADM)', () => {
       bobotService.updateBobot({ periodeId: String(ctx.periode.id), bobots: [{ indikatorId: ctx.diklat.id, nilaiBobot: 30 }] }, { userId: ctx.admin.id, ip }),
     ).rejects.toMatchObject({ status: 423 });
     await periodService.reopenPeriode(ctx.periode.id, { alasan: 'unlock for cleanup', userId: ctx.admin.id, ip });
+  });
+
+  it('Bobot — indikatorId tidak ada → 404 (bukan 500 FK mentah)', async () => {
+    // Regresi: indikatorId yang tidak ada dulu jatuh ke Prisma sebagai foreign-key
+    // error → 500 "Foreign key constraint failed on the field: `indikatorId`".
+    const unknown = 999_999;
+    await expect(
+      bobotService.updateBobot({ periodeId: String(ctx.periode.id), bobots: [{ indikatorId: unknown, nilaiBobot: 5 }] }, { userId: ctx.admin.id, ip }),
+    ).rejects.toMatchObject({ status: 404, code: 'INDIKATOR_NOT_FOUND' });
+
+    // Tidak boleh ada baris yang bocor ke DB.
+    const orphan = await prisma.bobotIndikator.findMany({ where: { periodeId: ctx.periode.id, indikatorId: unknown } });
+    expect(orphan).toHaveLength(0);
+
+    // indikatorId bukan angka tetap 400 (validasi format, bukan keberadaan).
+    await expect(
+      bobotService.updateBobot({ periodeId: String(ctx.periode.id), bobots: [{ indikatorId: 'abc', nilaiBobot: 5 }] }, { userId: ctx.admin.id, ip }),
+    ).rejects.toMatchObject({ status: 400, code: 'INVALID_INDIKATOR' });
+  });
+
+  it('Bobot — tolak semua bobot nol (400 ALL_BOBOT_ZERO)', async () => {
+    const semuaIndikator = await prisma.indikator.findMany({ orderBy: { kode: 'asc' } });
+    expect(semuaIndikator.length).toBeGreaterThan(1);
+
+    // Nolkan seluruh indikator pada periode fixture → harus ditolak.
+    const nolSemua = semuaIndikator.map((i) => ({
+      indikatorId: i.id,
+      nilaiBobot: 0,
+      bobotTingkatWilayah: { kabupaten: 0, provinsi: 0, nasional: 0, internasional: 0 },
+      bobotJenjang: { s1: 0, s2: 0, s3: 0 },
+    }));
+    await expect(
+      bobotService.updateBobot({ periodeId: String(ctx.periode.id), bobots: nolSemua }, { userId: ctx.admin.id, ip }),
+    ).rejects.toMatchObject({ status: 400, code: 'ALL_BOBOT_ZERO' });
+
+    // Rollback: tidak boleh ada bobot 0 yang bocor ke DB.
+    const bocor = await prisma.bobotIndikator.findMany({ where: { periodeId: ctx.periode.id } });
+    expect(bocor.every((b) => b.nilaiBobot === null || b.nilaiBobot > 0)).toBe(true);
+
+    // Nolkan hanya satu indikator sementara ada yang lain berbobot → harus BERHASIL
+    // (indikator nonaktif itu hal yang sah; yang dilarang total seluruhnya nol).
+    const target = semuaIndikator[0].id;
+    const lain = semuaIndikator.slice(1).map((i) => ({ indikatorId: i.id, nilaiBobot: 10 }));
+    const ok = await bobotService.updateBobot(
+      { periodeId: String(ctx.periode.id), bobots: [{ indikatorId: target, nilaiBobot: 0 }, ...lain] },
+      { userId: ctx.admin.id, ip },
+    );
+    expect(ok.find((b) => b.indikatorId === target)?.nilaiBobot).toBe(0);
+
+    // Kembalikan seperti semula supaya test lain tidak terpengaruh.
+    await bobotService.updateBobot(
+      { periodeId: String(ctx.periode.id), bobots: [{ indikatorId: target, nilaiBobot: 10 }] },
+      { userId: ctx.admin.id, ip },
+    );
+  });
+
+  it('Bobot — nolkan semua sumber bobot (nilaiBobot + tingkat + jenjang) → tetap ditolak', async () => {
+    // Regresi: guard total-nol hanya berlaku kalau SEMUA sumber bobot nol.
+    // Kalau hanya `nilaiBobot` yang dicek, indikator per_tingkat_wilayah yang
+    // bobotnya 0 lolos dan leaderboard diam-diam kehilangan bobot.
+    const semuaIndikator = await prisma.indikator.findMany({ orderBy: { kode: 'asc' } });
+    const existing = await prisma.bobotIndikator.findMany({ where: { periodeId: ctx.periode.id } });
+    const existingIds = new Set(existing.map((b) => b.indikatorId));
+
+    // Hapus dulu semua bobot supaya kondisi awal benar-benar kosong, lalu isi
+    // ulang dengan semua sumber bobot = 0.
+    await prisma.bobotIndikator.deleteMany({ where: { periodeId: ctx.periode.id } });
+    await bobotService.updateBobot(
+      {
+        periodeId: String(ctx.periode.id),
+        bobots: semuaIndikator.map((i) => ({
+          indikatorId: i.id,
+          nilaiBobot: 0,
+          bobotTingkatWilayah: { kabupaten: 0, provinsi: 0, nasional: 0, internasional: 0 },
+          bobotJenjang: { s1: 0, s2: 0, s3: 0 },
+        })),
+      },
+      { userId: ctx.admin.id, ip },
+    ).then(
+      () => { throw new Error('Harus ditolak: semua bobot nol'); },
+      (err) => { expect(err.code).toBe('ALL_BOBOT_ZERO'); },
+    );
+
+    // Babak balik: satu bobotTingkatWilayah non-nol → harus diterima, walau
+    // nilaiBobot seluruhnya 0. Ini yang membuktikan guard membaca semua sumber.
+    const targetIdx = semuaIndikator[0].id;
+    const hasil = await bobotService.updateBobot(
+      {
+        periodeId: String(ctx.periode.id),
+        bobots: [{ indikatorId: semuaIndikator[0].id, bobotTingkatWilayah: { kabupaten: 5, provinsi: 0, nasional: 0, internasional: 0 } }],
+      },
+      { userId: ctx.admin.id, ip },
+    );
+    expect(hasil.find((b) => b.indikatorId === semuaIndikator[0].id)?.bobotTingkatWilayah.kabupaten).toBe(5);
+    expect(targetIdx).toBe(semuaIndikator[0].id);
+
+    // Pulihkan bobot fixture agar test Export (yang menyusul) tetap punya bobot.
+    await prisma.bobotIndikator.deleteMany({ where: { periodeId: ctx.periode.id } });
+    await prisma.bobotIndikator.createMany({
+      data: existing.filter((b) => existingIds.has(b.indikatorId)).map((b) => ({
+        indikatorId: b.indikatorId,
+        periodeId: ctx.periode.id,
+        nilaiBobot: b.nilaiBobot,
+        bobotTingkatWilayah: b.bobotTingkatWilayah,
+        bobotJenjang: b.bobotJenjang,
+        terkunci: false,
+      })),
+    });
   });
 
   it('Akun GET/POST/PATCH + duplicate email 409 + admin wajib nip', async () => {

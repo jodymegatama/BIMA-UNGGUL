@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/app.js';
+import { prisma } from '../src/db/prisma.js';
+import { AUTH_CONFIG } from '../src/constants/auth.constants.js';
+import { dbGate } from './helpers/dbGate.js';
 
 // Kredensial demo dibaca dari env — JANGAN hardcode di file test.
 // Set BACKEND_TEST_NIP / BACKEND_TEST_PASS (akun ADMIN — login tetap via NIP) di backend/.env atau environment.
@@ -48,6 +52,71 @@ describe('Auth API', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
     expect(Array.isArray(res.body.data ?? res.body)).toBe(true);
+  });
+});
+
+// Regresi: verifyRefreshToken() melempar Error biasa (bukan HttpError) saat
+// token kadaluarsa / tanda tangannya salah / bukan JWT. Tanpa catch, error itu
+// jatuh ke handler Express dan membalas 500 — sedangkan frontend src/lib/api.js
+// hanya mengakhiri sesi pada 401/403. Akibatnya user dengan refresh token
+// kadaluarsa terjebak di "Gagal memuat" alih-alih diarahkan ke /login.
+describe('Auth refresh — kegagalan verifikasi = 401 (bukan 500)', () => {
+
+  const signRefresh = (payload, opts) =>
+    jwt.sign(payload, AUTH_CONFIG.REFRESH_SECRET, { algorithm: 'HS256', expiresIn: '7d', ...opts });
+
+  it('tanpa cookie refreshToken -> 401 MISSING_REFRESH_TOKEN', async () => {
+    const res = await request(app).post('/api/auth/refresh').expect(401);
+    expect(res.body.code).toBe('MISSING_REFRESH_TOKEN');
+  });
+
+  it('refresh token kadaluarsa -> 401 INVALID_REFRESH_TOKEN', async () => {
+    const expired = signRefresh({ userId: 1 }, { expiresIn: '-1s' });
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', `refreshToken=${expired}`)
+      .expect(401);
+    expect(res.body.code).toBe('INVALID_REFRESH_TOKEN');
+    expect(res.body.error).toMatch(/kadaluarsa|tidak valid/i);
+  });
+
+  it('refresh token tanda tangan salah -> 401 INVALID_REFRESH_TOKEN', async () => {
+    const forged = signRefresh({ userId: 1 }, {}).split('.');
+    forged[1] = Buffer.from(JSON.stringify({ userId: 1, role: 'admin' })).toString('base64url');
+    const tampered = `${forged[0]}.${forged[1]}.${forged[2]}`;
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', `refreshToken=${tampered}`)
+      .expect(401);
+    expect(res.body.code).toBe('INVALID_REFRESH_TOKEN');
+  });
+
+  it('refresh token bukan JWT -> 401 INVALID_REFRESH_TOKEN', async () => {
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', 'refreshToken=ini.bukan.jwt')
+      .expect(401);
+    expect(res.body.code).toBe('INVALID_REFRESH_TOKEN');
+  });
+
+  it('refresh token userId tidak ada -> 401 INVALID_USER', async () => {
+    const orphan = signRefresh({ userId: 999_999 });
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', `refreshToken=${orphan}`)
+      .expect(401);
+    expect(res.body.code).toBe('INVALID_USER');
+  });
+
+  (dbGate() ? it : it.skip)('refresh token valid milik user aktif -> 200 + accessToken', async () => {
+    const admin = await prisma.user.findFirst({ where: { role: 'admin', status: 'aktif' }, orderBy: { id: 'asc' } });
+    expect(admin, 'butuh minimal satu admin aktif di DB').toBeTruthy();
+    const valid = signRefresh({ userId: admin.id });
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', `refreshToken=${valid}`)
+      .expect(200);
+    expect(res.body.accessToken).toBeTruthy();
   });
 });
 
@@ -147,7 +216,38 @@ describe('Periode CRUD admin (create → update → delete)', () => {
   });
 });
 
-describe('Endpoint publik (tanpa auth)', () => {
+// Endpoint publik ini menyentuh DB (stats, periode, leaderboard, madrasah),
+// jadi tanpa DATABASE_URL Prisma error dan route balas 500 — test-bondanya
+// jadi false negative. Gate per DB, bukan per kredensial: health di atas tetap
+// jalan tanpa DB.
+describe.skipIf(!dbGate())('Endpoint publik (tanpa auth)', () => {
+  // Periode fixture sendiri. Tanpa ini endpoint leaderboard bergantung pada
+  // periode yang kebetulan ada di DB — di database kosong (CI) dia balas 404
+  // "Tidak ada periode aktif" padahal kodenya benar. Jendela tanggal mencakup
+  // now supaya resolveAktifPeriode() memilihnya.
+  const NS = 'API-PUB';
+  let periodePublikId = null;
+
+  beforeAll(async () => {
+    await prisma.periodePenilaian.deleteMany({ where: { namaPeriode: `${NS}/2026` } }).catch(() => {});
+    const created = await prisma.periodePenilaian.create({
+      data: {
+        namaPeriode: `${NS}/2026`,
+        tahunCapaian: 2026,
+        tanggalMulai: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        tanggalCutoff: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+        status: 'aktif',
+      },
+    });
+    periodePublikId = created.id;
+  });
+
+  afterAll(async () => {
+    if (periodePublikId) {
+      await prisma.periodePenilaian.deleteMany({ where: { id: periodePublikId } }).catch(() => {});
+    }
+  });
+
   it('GET /api/stats -> 200 { madrasahCount, kelompokCount }', async () => {
     const res = await request(app).get('/api/stats');
     expect(res.status).toBe(200);
@@ -166,7 +266,10 @@ describe('Endpoint publik (tanpa auth)', () => {
   });
 
   it('GET /api/leaderboard -> 200 + madrasahCount number', async () => {
-    const res = await request(app).get('/api/leaderboard?kelompok=MI%20Negeri');
+    // periodeId eksplisit → test tidak bergantung pada periode aktif mana pun
+    // yang sedang ada di DB (pola yang sama dipakai publicAdmin untuk endpoint
+    // yang sama).
+    const res = await request(app).get(`/api/leaderboard?kelompok=MI%20Negeri&periodeId=${periodePublikId}`);
     expect(res.status).toBe(200);
     expect(typeof res.body.madrasahCount).toBe('number');
     expect(Array.isArray(res.body.rankings)).toBe(true);
