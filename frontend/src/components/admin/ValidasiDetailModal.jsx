@@ -74,9 +74,20 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             {item.alasan && <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 text-[12px]"><span className="font-black text-red-900">Alasan penolakan sebelumnya:</span> <span className="font-medium text-red-800">{item.alasan}</span></div>}
           </div>
 
-          <a href={item.linkBukti} target="_blank" rel="noreferrer" className="flex items-center gap-2 h-10 px-4 rounded-[12px] bg-white border-2 border-zinc-200 hover:border-ink text-[13px] font-black text-charcoal">
-            <LinkIcon size={16} weight="regular" /> Buka Bukti Fisik (tab baru)
-          </a>
+          {/* linkBukti nullable di DB (draft boleh tanpa bukti — migration
+              20261002163000). Submit tetap mewajibkannya, jadi baris di antrean
+              validasi selalu punya bukti; guard ini supaya modal tidak
+              pernah merender tautan rusak href="null" kalau ada baris lama
+              yang sudah menunggu sebelum aturan itu berlaku. */}
+          {item.linkBukti ? (
+            <a href={item.linkBukti} target="_blank" rel="noreferrer" className="flex items-center gap-2 h-10 px-4 rounded-[12px] bg-white border-2 border-zinc-200 hover:border-ink text-[13px] font-black text-charcoal">
+              <LinkIcon size={16} weight="regular" /> Buka Bukti Fisik (tab baru)
+            </a>
+          ) : (
+            <div className="flex items-center gap-2 h-10 px-4 rounded-[12px] bg-red-50 border-2 border-red-200 text-[13px] font-black text-red-800">
+              <WarningCircle size={16} weight="fill" /> Bukti fisik belum dilampirkan
+            </div>
+          )}
 
           {!mode && (
             <div className="flex flex-wrap gap-2">

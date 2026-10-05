@@ -252,11 +252,12 @@ export default function InputCapaian() {
     }));
   };
 
-  const validateRows = () => {
+  // mode 'draft' hanya memeriksa kolom yang diisi (format), kolom kosong tidak diblokir
+  const validateRows = (mode = 'submit') => {
     let hasErr = false;
     const updated = rows.map((r) => {
       // validasi config-driven per indikator (PRD §11) — required, URL, number, ratio
-      const e = validateRow(active, r);
+      const e = validateRow(active, r, { mode });
       if (Object.keys(e).length) hasErr = true;
       return { ...r, _error: e };
     });
@@ -273,8 +274,8 @@ export default function InputCapaian() {
 
   const handleDraft = async () => {
     if (allMode) return; // tombol disembunyikan di mode semua — guard tambahan
-    if (!validateRows()) {
-      toast.error('Perbaiki field wajib terlebih dahulu.');
+    if (!validateRows('draft')) {
+      toast.error('Format kolom yang diisi belum sesuai.');
       return;
     }
     setBusy('draft');

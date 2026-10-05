@@ -164,13 +164,29 @@ export function emptyRowFor(kode) {
   return row;
 }
 
-/** Validasi satu baris berdasarkan config → object error per key (kosong jika valid). */
-export function validateRow(kode, row) {
+/**
+ * Validasi baris capaian (client-side, rule config-driven) → object error per key (kosong jika valid).
+ *
+ * @param {string} kode  slug indikator
+ * @param {object} row   baris yang sedang diedit
+ * @param {object} [opts]
+ * @param {'submit'|'draft'} [opts.mode='submit'] — 'draft' hanya memeriksa
+ *   field yang sudah diisi (bentuk/tipe), tidak mewajibkan kolom kosong.
+ *   Backend punya aturan yang sama: validateItem(kode, payload, mode) —
+ *   'draft' meloloskan field kosong, 'submit' mewajibkannya. Tanpa mode ini,
+ *   UI memblokir Simpan Draft lebih dulu dan fitur draft tidak pernah
+ *   sampai ke server.
+ */
+export function validateRow(kode, row, { mode = 'submit' } = {}) {
+  const isSubmit = mode === 'submit';
   const errors = {};
   for (const f of INDIKATOR_FIELDS[kode] || []) {
     if (f.type === 'ratio') {
       const p = Number(row.pembilang);
       const s = Number(row.penyebut);
+      if (!isSubmit && (row.pembilang === '' || row.penyebut === '')) {
+        continue; // draft: ratio kosong tidak dihitung
+      }
       if (row.pembilang === '' || row.penyebut === '' || !Number.isFinite(p) || !Number.isFinite(s)) {
         errors.ratio = 'Pembilang dan penyebut wajib diisi angka.';
       } else if (!Number.isInteger(p) || !Number.isInteger(s)) {
@@ -185,9 +201,9 @@ export function validateRow(kode, row) {
       continue;
     }
     const v = String(row[f.key] ?? '').trim();
-    if (f.required && !v) {
-      errors[f.key] = `${f.label} wajib diisi.`;
-      continue;
+    if (!v) {
+      if (f.required && isSubmit) errors[f.key] = `${f.label} wajib diisi.`;
+      continue; // draft: kolom kosong dilewati, tidak jadi error
     }
     if (f.key === 'linkBukti' && v && !/^https?:\/\//i.test(v)) {
       errors[f.key] = 'Link bukti harus URL http(s).';
