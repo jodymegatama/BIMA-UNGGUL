@@ -114,6 +114,16 @@ function sanitizePayload(kode, raw) {
     const rule = FIELD_RULES[kode][k];
     if (!rule) continue;
     if (v === undefined || v === null) { out[k] = null; continue; }
+    // String kosong/spasi berarti "belum diisi" -> NULL, bukan ''.
+    //
+    // Dua alasan, keduanya nyata:
+    //  1. Kolom enum (statusPegawai, tingkatWilayah, jenjangPendidikan) TIDAK
+    //     menerima '' sebagai nilai — Prisma melempar error dan draft parsial
+    //     gagal disimpan dengan 500. Jadi ini yang membuat fitur draft Parsial
+    //     benar-benar bisa dipakai: form mengirim '' untuk select yang belum diisi.
+    //  2. Number('') === 0, jadi field angka kosong akan tersimpan sebagai NOL
+    //     alih-alih NULL — angka palsu yang bisa bocor ke perhitungan skor.
+    if (typeof v === 'string' && v.trim() === '') { out[k] = null; continue; }
     if (rule.type === 'int') {
       const n = Number(v);
       out[k] = Number.isFinite(n) ? n : v;

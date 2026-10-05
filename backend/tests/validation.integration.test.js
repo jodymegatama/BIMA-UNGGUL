@@ -10,6 +10,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../src/db/prisma.js';
 import * as validationService from '../src/services/validationService.js';
 import { calculateSkorMadrasah } from '../src/services/scoringService.js';
+import * as submissionService from '../src/services/submissionService.js';
+import { dbGate } from './helpers/dbGate.js';
 
 const NS = 'E2E-VAL';
 const ip = '127.0.0.1-e2e';
@@ -76,7 +78,10 @@ async function setup() {
   return { periode, admin, operator, madrasah, diklat, giat };
 }
 
-describe('Validasi admin (E2E-VAL)', () => {
+// Butuh MySQL nyata — tanpa DATABASE_URL di backend/.env, Prisma gagal di
+// beforeAll. Di-skip dengan alasan eksplisit agar kegagalan environment tidak
+// tersamar sebagai regresi kode.
+describe.skipIf(!dbGate())('Validasi admin (E2E-VAL)', () => {
   let ctx;
 
   beforeAll(async () => {
@@ -244,5 +249,142 @@ describe('Validasi admin (E2E-VAL)', () => {
     expect(paged.total).toBeGreaterThanOrEqual(3);
     const filteredByMadrasah = await validationService.getValidasiQueue({ madrasahId: String(ctx.madrasah.id), periodeId: String(ctx.periode.id) });
     expect(filteredByMadrasah.total).toBeGreaterThanOrEqual(paged.total);
+  });
+
+  // Regresi: kolom SubmissionItem.linkBukti dulu NOT NULL, padahal kontrak
+  // FIELD_RULES hanya mewajibkannya pada mode 'submit' (skenario QB-3 di
+  // TESTING_GUIDE: "Draft boleh; submit ditolak"). Akibatnya saveItems() dengan
+  // mode draft gagal di Prisma create() -> 500 "Argument `linkBukti` is
+  // missing." dan fitur Simpan Draft tidak bisa dipakai sama sekali.
+  it('Draft parsial tanpa linkBukti tersimpan (regresi kolom NOT NULL)', async () => {
+    const saved = await submissionService.saveItems({
+      indikatorId: ctx.diklat.id,
+      kodeSlug: 'diklat',
+      items: [{ namaKegiatan: `Draft parsial ${NS} ${Date.now()}` }],
+      targetStatus: 'draft',
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    expect(saved.total).toBe(1);
+    expect(saved.data[0].status).toBe('draft');
+    expect(saved.data[0].linkBukti).toBeNull();
+
+    // Draft tidak boleh masuk antrean validasi.
+    const inQueue = await validationService.getValidasiQueue({ status: 'menunggu', periodeId: String(ctx.periode.id) });
+    expect(inQueue.data.some((d) => d.id === saved.data[0].id)).toBe(false);
+  });
+
+  // Regresi: kolom enum (statusPegawai, tingkatWilayah, jenjangPendidikan)
+  // menerima NULL tapi TIDAK menerima '' sebagai nilai enum. Form frontend
+  // (emptyRowFor) menginisialisasi SETIAP kolom dengan '' — termasuk select enum
+  // yang belum dipilih — jadi begitu draft boleh disimpan dengan kolom kosong,
+  // payload routinely berisi statusPegawai: '' dan Prisma create() melempar
+  // error -> 500. Draft parsial jadi tidak bisa dipakai sama sekali.
+  // Selain itu Number('') === 0, jadi field angka kosong akan tersimpan sebagai
+  // NOL kalau tidak dinormalkan lebih dulu.
+  it('Draft dengan kolom enum & angka kosong -> tersimpan sebagai NULL (regresi enum kosong)', async () => {
+    const tag = `Enum kosong ${NS} ${Date.now()}`;
+    const saved = await submissionService.saveItems({
+      indikatorId: ctx.diklat.id,
+      kodeSlug: 'diklat',
+      items: [{ namaKegiatan: tag, statusPegawai: '', linkBukti: '' }],
+      targetStatus: 'draft',
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    expect(saved.total).toBe(1);
+    expect(saved.data[0].statusPegawai, "'' harus jadi NULL, bukan string kosong").toBeNull();
+    expect(saved.data[0].linkBukti).toBeNull();
+
+    // Field angka kosong harus NULL, bukan 0 — 0 bisa bocor ke perhitungan skor.
+    const angka = await submissionService.saveItems({
+      indikatorId: ctx.giat.id,
+      kodeSlug: 'giat_inovatif',
+      items: [{ namaKegiatan: `${tag} angka`, jumlah: '' }],
+      targetStatus: 'draft',
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    expect(angka.data[0].jumlah).toBeNull();
+  });
+
+  it('Submit tanpa linkBukti tetap ditolak 400 VALIDATION_ERROR', async () => {
+    // Pasangan dari test di atas: kolom jadi nullable di DB, tapi
+    // submit wajibnya TIDAK ikut dilonggarkan.
+    await expect(
+      submissionService.saveItems({
+        indikatorId: ctx.diklat.id,
+        kodeSlug: 'diklat',
+        items: [{ namaKegiatan: `Submit tanpa bukti ${NS}`, institusi: 'Inst', namaPeserta: 'Pes', statusPegawai: 'asn' }],
+        targetStatus: 'menunggu',
+        userId: ctx.operator.id,
+        madrasahId: ctx.madrasah.id,
+        ip,
+      }),
+    ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_ERROR' });
+
+    // Tidak boleh ada baris yang bocor ke DB.
+    const bocor = await prisma.submissionItem.findMany({ where: { namaKegiatan: { startsWith: `Submit tanpa bukti ${NS}` } } });
+    expect(bocor).toHaveLength(0);
+  });
+
+  it('Draft parsial → edit & resubmit jadi menunggu setelah linkBukti diisi', async () => {
+    const saved = await submissionService.saveItems({
+      indikatorId: ctx.diklat.id,
+      kodeSlug: 'diklat',
+      items: [{ namaKegiatan: `Draft lalu kirim ${NS} ${Date.now()}` }],
+      targetStatus: 'draft',
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    const draftId = saved.data[0].id;
+
+    // Edit draft masih boleh parsial (tidak menambah linkBukti).
+    const stillDraft = await submissionService.updateOwnItem({
+      id: draftId,
+      body: { status: 'draft', catatan: 'Tambah catatan' },
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    expect(stillDraft.status).toBe('draft');
+
+    // Kirim ulang tanpa linkBukti → harus ditolak (field lain sudah lengkap,
+    // jadi satu-satunya alasan penolakan adalah linkBukti).
+    await expect(
+      submissionService.updateOwnItem({
+        id: draftId,
+        body: {
+          status: 'menunggu',
+          institusi: 'Instansi E2E',
+          namaPeserta: 'Peserta E2E',
+          statusPegawai: 'asn',
+        },
+        userId: ctx.operator.id,
+        madrasahId: ctx.madrasah.id,
+        ip,
+      }),
+    ).rejects.toMatchObject({ status: 400, code: 'VALIDATION_ERROR' });
+
+    // Kirim ulang setelah semua field wajib (termasuk linkBukti) diisi → berhasil.
+    const submitted = await submissionService.updateOwnItem({
+      id: draftId,
+      body: {
+        status: 'menunggu',
+        institusi: 'Instansi E2E',
+        namaPeserta: 'Peserta E2E',
+        statusPegawai: 'asn',
+        linkBukti: 'https://example.com/bukti-lengkap',
+      },
+      userId: ctx.operator.id,
+      madrasahId: ctx.madrasah.id,
+      ip,
+    });
+    expect(submitted.status).toBe('menunggu');
+    expect(submitted.linkBukti).toBe('https://example.com/bukti-lengkap');
   });
 });

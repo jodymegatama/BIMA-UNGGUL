@@ -223,7 +223,11 @@ model SubmissionItem {
   penyebut          Int?               // Y dalam "X dari Y = Z%" (Rapor >85, Rasio Penerimaan)
   tahun             Int?               // Tahun capaian/perolehan
   
-  linkBukti         String             // URL bukti fisik — WAJIB
+  // NULL-able di DB, tapi WAJIB saat submit — lihat FIELD_RULES di
+  // src/services/submissionService.js (linkBukti: { required: true, type: 'url' }).
+  // Kolom dibuat nullable supaya draft parsial bisa disimpan tanpa bukti dulu
+  // (skenario QB-3), sementara submit tetap divalidasi di service layer.
+  linkBukti         String?
   catatan           String?            @db.Text // Catatan tambahan (opsional)
   
   // Status & Scoring
@@ -255,7 +259,11 @@ model Validation {
   submissionItemId Int
   submissionItem   SubmissionItem @relation(fields: [submissionItemId], references: [id], onDelete: Cascade)
   validatorId      Int
-  validator        User           @relation(fields: [validatorId], references: [id])
+  // onDelete: Cascade — mengikuti migration 20260821125344 (DB nyata CASCADE).
+  // Restrict (default Prisma) akan membuat hapus akun/hapus dummy gagal saat
+  // validator masih punya baris validasi; alur deleteAkun & clean-dummy memang
+  // menghapus validasi lebih dulu, jadi Cascade yang benar.
+  validator        User           @relation(fields: [validatorId], references: [id], onDelete: Cascade)
   aksi             AksiValidasi
   alasan           String?        @db.Text // wajib untuk reject & revoke
   createdAt        DateTime       @default(now())
