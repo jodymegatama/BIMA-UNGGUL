@@ -15,5 +15,5 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-# entrypoint jalankan migrate deploy lalu start
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+# Terapkan migration dan seed referensi/admin awal sebelum server menerima request.
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run prisma:seed && node src/server.js"]

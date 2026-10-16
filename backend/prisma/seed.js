@@ -1,6 +1,55 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+const initialAdminEnv = {
+  nip: process.env.INITIAL_ADMIN_NIP?.trim(),
+  name: process.env.INITIAL_ADMIN_NAME?.trim(),
+  email: process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase(),
+  password: process.env.INITIAL_ADMIN_PASSWORD,
+};
+
+async function seedInitialAdmin() {
+  const configured = Object.values(initialAdminEnv).filter((value) => value !== undefined && value !== '').length;
+  if (configured === 0) {
+    console.log('Initial admin bootstrap skipped (no INITIAL_ADMIN_* variables configured).');
+    return;
+  }
+  if (configured !== Object.keys(initialAdminEnv).length) {
+    throw new Error('Set all INITIAL_ADMIN_NIP, INITIAL_ADMIN_NAME, INITIAL_ADMIN_EMAIL, and INITIAL_ADMIN_PASSWORD variables.');
+  }
+
+  if (!/^\d{8,18}$/.test(initialAdminEnv.nip)) throw new Error('INITIAL_ADMIN_NIP must contain 8–18 digits.');
+  if (initialAdminEnv.name.length < 2 || initialAdminEnv.name.length > 191) throw new Error('INITIAL_ADMIN_NAME must contain 2–191 characters.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(initialAdminEnv.email)) throw new Error('INITIAL_ADMIN_EMAIL must be a valid email address.');
+  if (initialAdminEnv.password.length < 12) throw new Error('INITIAL_ADMIN_PASSWORD must contain at least 12 characters.');
+
+  const existingAdmin = await prisma.user.findFirst({ where: { role: 'admin' }, select: { id: true } });
+  if (existingAdmin) {
+    console.log('Initial admin bootstrap skipped (an admin account already exists).');
+    return;
+  }
+
+  const conflictingUser = await prisma.user.findFirst({
+    where: { OR: [{ nip: initialAdminEnv.nip }, { email: initialAdminEnv.email }] },
+    select: { id: true },
+  });
+  if (conflictingUser) throw new Error('Initial admin NIP or email is already assigned to another account.');
+
+  const passwordHash = await bcrypt.hash(initialAdminEnv.password, 12);
+  await prisma.user.create({
+    data: {
+      nip: initialAdminEnv.nip,
+      name: initialAdminEnv.name,
+      email: initialAdminEnv.email,
+      password: passwordHash,
+      role: 'admin',
+      status: 'aktif',
+    },
+  });
+  console.log('Initial admin account created.');
+}
 
 async function main() {
   console.log('🌱 Starting seed for 9 Indikator Mutu...');
@@ -77,6 +126,7 @@ async function main() {
   }
 
   console.log('✅ Seed completed successfully!');
+  await seedInitialAdmin();
 }
 
 main()

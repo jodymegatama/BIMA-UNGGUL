@@ -105,12 +105,17 @@ VITE_API_URL=https://domain-anda/api
 ```bash
 npx prisma generate --schema=backend/prisma/schema.prisma
 npm run db:migrate        # atau: npx prisma migrate dev --schema=backend/prisma/schema.prisma
-npm run db:seed           # seed 9 indikator master (wajib)
+npm run db:seed           # seed 9 indikator master (wajib); admin awal opsional via INITIAL_ADMIN_*
 # opsional dev:
 node backend/prisma/seed-demo.js   # 39 madrasah demo Pasuruan → periode 2026/2027 (jangan di produksi)
 ```
 
-Buat admin pertama (via seed atau register lalu approve di DB).
+Untuk database produksi baru, isi `INITIAL_ADMIN_NIP`, `INITIAL_ADMIN_NAME`,
+`INITIAL_ADMIN_EMAIL`, dan `INITIAL_ADMIN_PASSWORD` di `backend/.env` sebelum
+container backend pertama kali dijalankan. Seed membuat admin aktif hanya jika
+belum ada admin; akun yang sudah ada tidak diubah. Password minimal 12 karakter.
+Hapus keempat variabel tersebut setelah bootstrap berhasil. Jangan gunakan
+`backend/scripts/create-dummy-accounts.mjs` di produksi.
 
 ### 4. Jalankan Dev
 
@@ -137,6 +142,10 @@ npm run frontend:dev
 | `node backend/prisma/seed-demo.js` | seed demo 39 madrasah (dev only) |
 
 ## Deploy Produksi
+
+Pada startup backend, Docker menjalankan `prisma migrate deploy`, seed 9 indikator,
+dan bootstrap admin opsional sebelum server mulai. Kredensial admin awal dibaca
+dari environment server dan tidak disimpan di repository.
 
 ### Opsi A — aaPanel + Nginx + PM2 (direkomendasikan)
 
