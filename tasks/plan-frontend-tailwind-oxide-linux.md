@@ -11,6 +11,7 @@ Prevent recurrence of the frontend CI build failure caused by a missing Linux-na
 - Commit `b483e05` added the optional Oxide platform package entries, including `@tailwindcss/oxide-linux-x64-gnu` at version 4.3.3, with registry integrity and platform metadata.
 - The package-lock audit confirmed all 12 optional platform package entries and version pins match the official Oxide 4.3.3 manifest. The pre-existing Windows x64 entry lacked `resolved` and `integrity`; those values have now been added from npm registry metadata.
 - CI run #5 for commit `cf6d4fd` passed the frontend build and backend job.
+- CI run #6 for commit `193c398` passed frontend install/lint/tests/build and the backend job.
 - The repository already has completed work recorded in `tasks/plan.md` and `tasks/todo.md`; this issue uses separate files so that history remains intact.
 
 ## Goal
@@ -70,11 +71,11 @@ Make omissions or inconsistent metadata for Tailwind Oxide's platform-specific o
 **Description:** Confirm the updated branch runs the existing Ubuntu workflow with clean `npm ci`, frontend lint, tests, and production build. Preserve the current platform and Node.js version so the check exercises the actual failure environment.
 
 **Acceptance criteria:**
-- [ ] The run is associated with the commit containing the regression check.
-- [ ] Frontend install, lint, tests, and build all pass on `ubuntu-latest` / Node.js 22.
-- [ ] The backend job remains green, confirming the lockfile-only or test addition did not affect the workspace install.
+- [x] The run is associated with the commit containing the regression check.
+- [x] Frontend install, lint, tests, and build all pass on `ubuntu-latest` / Node.js 22.
+- [x] The backend job remains green, confirming the lockfile/test addition did not affect the workspace install.
 
-**Verification:** Inspect the run and both job conclusions in GitHub Actions.
+**Verification:** GitHub Actions run #6 (`193c398`) completed successfully; both `Frontend — test + lint + build` and `Backend — test integrasi + lint` concluded `success`.
 
 **Dependencies:** Task 2.
 
@@ -90,7 +91,7 @@ Make omissions or inconsistent metadata for Tailwind Oxide's platform-specific o
 
 ### Completion
 - [x] Regression check passes locally.
-- [ ] CI for the resulting commit passes frontend build and backend jobs.
+- [x] CI for the resulting commit passes frontend build and backend jobs.
 
 ## Risks and Mitigations
 
