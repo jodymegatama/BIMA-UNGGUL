@@ -36,196 +36,199 @@
 -- exists") pada DB yang sudah sebagian benar, dan kegagalan migration
 -- memblokir seluruh migration berikutnya.
 
+-- @t is assigned from a scalar subquery. With one match it preserves the real
+-- table name; with multiple case-folded matches MySQL raises error 1242 instead
+-- of LIMIT 1 silently choosing an arbitrary table.
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator') AND INDEX_NAME = 'idx_Indikator_slug');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('DROP INDEX `idx_Indikator_slug` ON `', @t, '`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian') AND INDEX_NAME = 'idx_PeriodePenilaian_tanggalCutoff');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('DROP INDEX `idx_PeriodePenilaian_tanggalCutoff` ON `', @t, '`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') AND INDEX_NAME = 'idx_Validation_aksi');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('DROP INDEX `idx_Validation_aksi` ON `', @t, '`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` MODIFY `alasan` TEXT NULL'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest'));
 SET @s := IF(@t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` MODIFY `alasan` TEXT NOT NULL, MODIFY `alasanAdmin` TEXT NULL'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.COLUMNS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator') AND COLUMN_NAME = 'createdAt');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('indikator'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` DROP COLUMN `createdAt`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` MODIFY `catatan` TEXT NULL, MODIFY `alasanPenolakan` TEXT NULL'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('user') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('user'));
 SET @s := IF(@t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` MODIFY `telepon` VARCHAR(191) NULL'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation'));
 SET @s := IF(@t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` MODIFY `alasan` TEXT NULL'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') AND INDEX_NAME = 'idx_AuditLog_action');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_AuditLog_action` TO `AuditLog_action_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') AND INDEX_NAME = 'idx_AuditLog_createdAt');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_AuditLog_createdAt` TO `AuditLog_createdAt_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') AND INDEX_NAME = 'idx_AuditLog_entity_entityId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_AuditLog_entity_entityId` TO `AuditLog_entity_entityId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') AND INDEX_NAME = 'idx_AuditLog_userId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_AuditLog_userId` TO `AuditLog_userId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') AND INDEX_NAME = 'idx_AuditLog_userId_createdAt');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('auditlog'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_AuditLog_userId_createdAt` TO `AuditLog_userId_createdAt_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator') AND INDEX_NAME = 'idx_BobotIndikator_periodeId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_BobotIndikator_periodeId` TO `BobotIndikator_periodeId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator') AND INDEX_NAME = 'idx_BobotIndikator_terkunci');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('bobotindikator'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_BobotIndikator_terkunci` TO `BobotIndikator_terkunci_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') AND INDEX_NAME = 'idx_DeleteRequest_reviewedAt');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_DeleteRequest_reviewedAt` TO `DeleteRequest_reviewedAt_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') AND INDEX_NAME = 'idx_DeleteRequest_status');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_DeleteRequest_status` TO `DeleteRequest_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') AND INDEX_NAME = 'idx_DeleteRequest_submissionItemId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('deleterequest'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_DeleteRequest_submissionItemId` TO `DeleteRequest_submissionItemId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian') AND INDEX_NAME = 'idx_PeriodePenilaian_status');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('periodepenilaian'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_PeriodePenilaian_status` TO `PeriodePenilaian_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_createdById');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_createdById` TO `SubmissionItem_createdById_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_deletedAt');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_deletedAt` TO `SubmissionItem_deletedAt_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_indikatorId_periodeId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_indikatorId_periodeId` TO `SubmissionItem_indikatorId_periodeId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_madrasahId_periodeId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_madrasahId_periodeId` TO `SubmissionItem_madrasahId_periodeId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_madrasahId_status');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_madrasahId_status` TO `SubmissionItem_madrasahId_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_periodeId_status');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_periodeId_status` TO `SubmissionItem_periodeId_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') AND INDEX_NAME = 'idx_SubmissionItem_status');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('submissionitem'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_SubmissionItem_status` TO `SubmissionItem_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') AND INDEX_NAME = 'idx_Validation_submissionItemId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_Validation_submissionItemId` TO `Validation_submissionItemId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
 SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') AND INDEX_NAME = 'idx_Validation_validatorId');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('validation'));
 SET @s := IF(@n > 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_Validation_validatorId` TO `Validation_validatorId_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
@@ -238,6 +241,6 @@ SET @n := (SELECT COUNT(*) FROM information_schema.STATISTICS
 SET @dup := (SELECT COUNT(*) FROM information_schema.STATISTICS
   WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('user') AND INDEX_NAME = 'User_status_idx');
 SET @t := (SELECT TABLE_NAME FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('user') LIMIT 1);
+  WHERE TABLE_SCHEMA = DATABASE() AND LOWER(TABLE_NAME) = LOWER('user'));
 SET @s := IF(@n > 0 AND @dup = 0 AND @t IS NOT NULL, CONCAT('ALTER TABLE `', @t, '` RENAME INDEX `idx_User_status` TO `User_status_idx`'), 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
