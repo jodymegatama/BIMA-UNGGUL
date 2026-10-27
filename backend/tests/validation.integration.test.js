@@ -70,7 +70,7 @@ async function setup() {
       jumlahSiswa: 100,
       alamat: 'Jl Test E2E',
       slug: `madrasah-${NS.toLowerCase()}-utama-${Date.now()}`,
-      kelompok: 'MI Negeri',
+      kelompok: 'MI',
     },
   });
   await prisma.user.update({ where: { id: operator.id }, data: { madrasahId: madrasah.id } });

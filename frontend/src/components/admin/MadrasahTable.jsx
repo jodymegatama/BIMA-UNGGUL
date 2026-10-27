@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { MagnifyingGlass, PlusCircle, PencilSimple, Trash, SpinnerGap, WarningCircle, Power, Hash } from 'phosphor-react';
 import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { KELOMPOKS } from '../../constants/indikator';
+import { KELOMPOKS, kelompokLabel } from '../../constants/indikator';
 import MadrasahForm from './MadrasahForm';
 
 export default function MadrasahTable() {
@@ -138,7 +138,7 @@ export default function MadrasahTable() {
           className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal focus:outline-none focus:border-ink"
         >
           <option value="">Semua kelompok</option>
-          {KELOMPOKS.map((k) => <option key={k} value={k}>{k}</option>)}
+          {KELOMPOKS.map((k) => <option key={k} value={k}>{kelompokLabel(k)}</option>)}
         </select>
         <div className="relative flex-1 min-w-[180px] max-w-[300px]">
           <MagnifyingGlass size={16} weight="regular" color="#afafaf" className="absolute left-3 top-1/2 -translate-y-1/2" />

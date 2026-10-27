@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Buildings } from 'phosphor-react';
+import { JENJANG_OPTIONS, kelompokLabel } from '../../constants/indikator';
 
 // kelas input shared (error-state ternary — satu sumber styling)
 const inputCls = (hasErr) => `mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 bg-white text-[13px] font-bold text-charcoal placeholder:text-faded focus:outline-none focus:ring-2 ${hasErr ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-zinc-200 focus:border-ink focus:ring-zinc-200'}`;
@@ -48,7 +49,7 @@ export default function MadrasahForm({ onClose, onSubmit, initial = null }) {
             <div className="flex items-center gap-2 rounded-[12px] bg-zinc-50 border-2 border-zinc-100 px-3 py-2.5">
               <Buildings size={14} weight="regular" color="#777777" className="shrink-0" />
               <span className="text-[12px] font-mono font-black text-charcoal">{initial.nomorMadrasah}</span>
-              <span className="text-[11px] font-bold text-faded">• Kelompok {initial.kelompok}</span>
+              <span className="text-[11px] font-bold text-faded">• Kelompok {kelompokLabel(initial.kelompok)}</span>
             </div>
           )}
 
@@ -72,9 +73,7 @@ export default function MadrasahForm({ onClose, onSubmit, initial = null }) {
                 onChange={(e) => setJenjang(e.target.value)}
                 className="mt-1.5 w-full h-10 px-3 rounded-[12px] border-2 border-zinc-200 bg-white text-[13px] font-bold text-charcoal focus:outline-none focus:ring-2 focus:border-ink focus:ring-zinc-200 disabled:bg-zinc-50 disabled:text-faded"
               >
-                <option value="MI">MI — Madrasah Ibtidaiyah</option>
-                <option value="MTs">MTs — Madrasah Tsanawiyah</option>
-                <option value="MA">MA — Madrasah Aliyah</option>
+                {JENJANG_OPTIONS.map((j) => <option key={j.value} value={j.value}>{j.label}</option>)}
               </select>
             </div>
             <div>
@@ -120,7 +119,7 @@ export default function MadrasahForm({ onClose, onSubmit, initial = null }) {
             <p className="text-[11px] leading-5 font-medium text-pencil">
               {isEdit
                 ? 'Nomor BMU, jenjang, dan kepemilikan tidak dapat diubah. Nama & jumlah siswa bebas diubah.'
-                : 'Nomor <b>BMU-XXXXXX</b> dan slug dibuat otomatis. Kelompok dihitung dari jenjang + kepemilikan.'}
+                : 'Nomor <b>BMU-XXXXXX</b> dan slug dibuat otomatis. Kelompok mengikuti jenjang; negeri dan swasta digabung.'}
             </p>
           </div>
 

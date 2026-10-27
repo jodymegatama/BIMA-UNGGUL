@@ -1,3 +1,4 @@
+import { kelompokLabel } from '../../constants/indikator';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { SquaresFour, PlusCircle, ClockCounterClockwise, User, SignOut, Trophy, Buildings, Trash, BookOpen } from 'phosphor-react';
 
@@ -53,7 +54,7 @@ export default function Sidebar({ madrasah, operator, onNavigate, onLogout }) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="inline-flex h-6 px-2 rounded-full bg-white border-2 border-zinc-200 text-[10px] font-black text-pencil">
-                {madrasah.kelompok}
+                {kelompokLabel(madrasah.kelompok)}
               </span>
               <span className="text-[10px] font-mono font-bold text-faded truncate">{madrasah.bmuId}</span>
             </div>

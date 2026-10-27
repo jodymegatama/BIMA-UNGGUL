@@ -167,7 +167,7 @@ export default function HeroSection() {
               <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-3">
                 <div className="text-[11px] font-black tracking-wide text-faded uppercase">Kelompok</div>
                 <div className="font-display font-black text-[22px] leading-none text-charcoal mt-1">{stats?.kelompokCount ?? KELOMPOKS.length}</div>
-                <div className="text-[12px] font-bold text-pencil leading-tight mt-0.5">MI / MTs / MA x Negeri Swasta</div>
+                <div className="text-[12px] font-bold text-pencil leading-tight mt-0.5">RA / MI / MTS / MA</div>
               </div>
               <div className="rounded-[12px] border-2 border-zinc-200 bg-white p-3">
                 <div className="text-[11px] font-black tracking-wide text-faded uppercase">Indikator</div>
@@ -384,7 +384,7 @@ export default function HeroSection() {
               <Buildings size={16} weight="regular" color="#777777" />
             </span>
             <span>
-              Diikuti <b className="text-charcoal">{stats?.madrasahCount ?? '—'} madrasah</b> <span className="text-pencil font-medium">MI, MTs, MA Negeri dan Swasta se Kab. Pasuruan</span>
+              Diikuti <b className="text-charcoal">{stats?.madrasahCount ?? '—'} madrasah</b> <span className="text-pencil font-medium">RA, MI, MTS, MA negeri dan swasta se Kab. Pasuruan</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-[12px] font-black">

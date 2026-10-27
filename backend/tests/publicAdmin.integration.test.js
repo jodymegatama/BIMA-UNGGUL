@@ -61,7 +61,7 @@ async function setup() {
       jumlahSiswa: 120,
       alamat: 'Jl Final',
       slug: `slug-${NS.toLowerCase()}-${Date.now()}`,
-      kelompok: 'MI Negeri',
+      kelompok: 'MI',
     },
   });
   const operator = await prisma.user.create({
@@ -374,7 +374,7 @@ describe.skipIf(!dbGate())('Publik & Admin (PUBADM)', () => {
     });
     const sections = texts.filter((t) => t.includes('LEADERBOARD —'));
     expect(sections.length).toBe(expectedSections);
-    expect(sections.some((t) => t.includes('MI Negeri'))).toBe(true);
+    expect(sections.some((t) => t.includes('LEADERBOARD — MI'))).toBe(true);
     expect(texts.some((t) => t.includes('Madrasah PUBADM'))).toBe(true); // baris ranking masuk
     expect(texts.some((t) => t.includes('Periode: PUBADM/2026'))).toBe(true); // metadata
   });
@@ -389,7 +389,7 @@ describe.skipIf(!dbGate())('Publik & Admin (PUBADM)', () => {
     });
     const sections = texts.filter((t) => t.includes('LEADERBOARD —'));
     expect(sections.length).toBeGreaterThanOrEqual(1);
-    expect(sections.every((t) => t.includes('MI '))).toBe(true); // hanya kelompok MI
+    expect(sections.every((t) => t.includes('LEADERBOARD — MI'))).toBe(true); // hanya kelompok MI
     expect(texts.some((t) => t.includes('Madrasah PUBADM'))).toBe(true);
 
     await expect(

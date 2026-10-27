@@ -87,7 +87,7 @@ export default function MadrasahDetail() {
           bmuId: m.nomorMadrasah || m.bmuId || '-',
           jenjang: m.jenjang || '',
           status: m.statusKepemilikan || m.status || '',
-          kelompok: m.kelompok || `${m.jenjang || ''} ${m.statusKepemilikan || ''}`.trim(),
+          kelompok: m.kelompok || m.jenjang || '',
           jumlahSiswa: m.jumlahSiswa ?? 0,
           alamat: m.alamat || '-',
           slug: m.slug,

@@ -7,6 +7,7 @@
 import * as authService from '../services/authService.js';
 import { prisma } from '../db/prisma.js';
 import { AUTH_CONFIG } from '../constants/auth.constants.js';
+import { KELOMPOKS_LIST } from '../constants/periode.constants.js';
 
 /**
  * POST /api/auth/register
@@ -88,9 +89,9 @@ export async function register(req, res) {
     });
   }
 
-  if (!['MI', 'MTs', 'MA'].includes(jenjang)) {
+  if (!KELOMPOKS_LIST.includes(jenjang)) {
     return res.status(400).json({
-      error: 'Jenjang harus MI, MTs, atau MA',
+      error: 'Jenjang harus RA, MI, MTs, atau MA',
       code: 'INVALID_JENJANG',
     });
   }

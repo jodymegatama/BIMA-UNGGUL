@@ -66,6 +66,7 @@ enum StatusPegawai {
 }
 
 enum Jenjang {
+  RA
   MI
   MTs
   MA
@@ -119,12 +120,12 @@ model Madrasah {
   id                Int               @id @default(autoincrement())
   nomorMadrasah     String            @unique // BMU-000001 permanen & unik — immutable
   namaMadrasah      String            // editable by operator (langsung)
-  jenjang           Jenjang           // MI/MTs/MA — immutable
+  jenjang           Jenjang           // RA/MI/MTs/MA — immutable
   statusKepemilikan StatusKepemilikan // Negeri/Swasta — immutable
   jumlahSiswa       Int               // editable by operator (langsung, >0)
   alamat            String            @db.Text // editable by operator (langsung)
   slug              String            @unique // tidak regenerate saat nama berubah
-  kelompok          String            // MI Negeri etc — derived, immutable
+  kelompok          String            // RA/MI/MTs/MA — derived dari jenjang, immutable
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   deletedAt         DateTime?         // Null = aktif, NotNull = nonaktif/soft-deleted (submission tetap)

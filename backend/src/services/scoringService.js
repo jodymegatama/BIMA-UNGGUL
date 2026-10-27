@@ -20,7 +20,8 @@
  * dibaca; risiko stale; PRD §13 realtime).
  */
 import { prisma } from '../db/prisma.js';
-import { KELOMPOKS_LIST } from '../constants/periode.constants.js';
+import { KELOMPOKS_LIST, normalizeKelompok } from '../constants/periode.constants.js';
+import { HttpError } from '../utils/httpError.js';
 
 /**
  * Hitung skor dari data yang sudah dimuat — murni JS (tanpa query).
@@ -123,13 +124,15 @@ export async function calculateSkorMadrasah(madrasahId, periodeId, client = pris
  * 4. BMU ID (ascending) — untuk memastikan ranking unik
  *
  * Batch query: bobots 1x/kelompok, items 1x/kelompok, validations 1x/kelompok
- * @param {string} kelompok - "MI Negeri" | "MTs Negeri" | etc.
+ * @param {string} kelompok - RA | MI | MTs | MA (termasuk alias tautan lama)
  * @param {number} periodeId - ID PeriodePenilaian
  * @returns {Promise<Array>} - Array of { madrasah, totalScore, submissionCount, lastApprovedAt, ranking }
  */
 export async function calculateRanking(kelompok, periodeId) {
+  const canonical = normalizeKelompok(kelompok);
+  if (!canonical) throw new HttpError(400, 'INVALID_KELOMPOK', 'Kelompok tidak valid');
   const madrasahList = await prisma.madrasah.findMany({
-    where: { kelompok, deletedAt: null }, // soft-deleted (nonaktif) tidak tampil di leaderboard
+    where: { kelompok: canonical, deletedAt: null }, // nonaktif tidak tampil di leaderboard
   });
   if (!madrasahList.length) return [];
 
@@ -197,7 +200,7 @@ export async function calculateRanking(kelompok, periodeId) {
 /**
  * Hitung ranking semua kelompok (utk export PDF/Excel).
  * @param {number} periodeId - ID PeriodePenilaian
- * @returns {Promise<Object>} - { "MI Negeri": [...], ... }
+ * @returns {Promise<Object>} - { RA: [...], MI: [...], MTs: [...], MA: [...] }
  */
 export async function calculateRankingAllGroups(periodeId) {
   const entries = await Promise.all(

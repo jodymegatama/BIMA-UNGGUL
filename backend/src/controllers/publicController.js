@@ -5,7 +5,7 @@ import { prisma } from '../db/prisma.js';
 import { HttpError } from '../utils/httpError.js';
 import { calculateRanking, calculateSkorMadrasah } from '../services/scoringService.js';
 import { resolveAktifPeriode, deriveStatus } from '../services/periodService.js';
-import { KELOMPOKS_LIST, STATUS_HISTORI_PERIODE } from '../constants/periode.constants.js';
+import { KELOMPOKS_LIST, STATUS_HISTORI_PERIODE, normalizeKelompok } from '../constants/periode.constants.js';
 
 export async function leaderboard(req,res){
   const { periodeId, kelompok } = req.query;
@@ -21,14 +21,15 @@ export async function leaderboard(req,res){
   // statusEfektif — derived dari jendela tanggal, bukan status mentah DB yang bisa stale
   const periodeWithStatus = { ...periode, statusEfektif: deriveStatus(periode) };
   if (kelompok) {
-    if (!KELOMPOKS_LIST.includes(kelompok)) throw new HttpError(400,'INVALID_KELOMPOK','kelompok tidak valid');
+    const canonical = normalizeKelompok(kelompok);
+    if (!canonical) throw new HttpError(400,'INVALID_KELOMPOK','kelompok tidak valid');
     const [rankings, madrasahCount] = await Promise.all([
-      calculateRanking(kelompok, pid),
+      calculateRanking(canonical, pid),
       prisma.madrasah.count({ where: { deletedAt: null } }),
     ]);
-    return res.json({ periode: periodeWithStatus, kelompok, rankings, madrasahCount });
+    return res.json({ periode: periodeWithStatus, kelompok: canonical, rankings, madrasahCount });
   }
-  // all groups — paralel (sebelumnya serial 6×, endpoint publik paling sering di-hits)
+  // Semua empat kelompok dihitung paralel.
   const [all, madrasahCount] = await Promise.all([
     Promise.all(KELOMPOKS_LIST.map((k) => calculateRanking(k, pid).then((r) => [k, r]))).then((pairs) => Object.fromEntries(pairs)),
     prisma.madrasah.count({ where: { deletedAt: null } }),

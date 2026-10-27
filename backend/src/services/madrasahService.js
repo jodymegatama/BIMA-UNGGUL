@@ -8,8 +8,8 @@ import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { generateBMUNumber, generateSlug, deriveKelompok } from './authService.js';
+import { KELOMPOKS_LIST, normalizeKelompok } from '../constants/periode.constants.js';
 
-const JENJANG = ['MI', 'MTs', 'MA'];
 const KEPEMILIKAN = ['Negeri', 'Swasta'];
 
 // Helper: slug unik — append -2, -3 jika bentrok
@@ -40,7 +40,11 @@ export async function listMadrasah({ q, kelompok, status, page = '1', limit = '2
     // default: hanya aktif (kompatibel dgn dropdown AkunForm)
     where.deletedAt = null;
   }
-  if (kelompok) where.kelompok = kelompok;
+  if (kelompok) {
+    const canonical = normalizeKelompok(kelompok);
+    if (!canonical) throw new HttpError(400, 'INVALID_KELOMPOK', 'Kelompok tidak valid');
+    where.kelompok = canonical;
+  }
   if (q && String(q).trim()) {
     const kw = String(q).trim();
     where.OR = [
@@ -71,14 +75,14 @@ export async function listMadrasah({ q, kelompok, status, page = '1', limit = '2
 
 export async function createMadrasah({ namaMadrasah, jenjang, statusKepemilikan, jumlahSiswa, alamat }, { userId, ip }) {
   if (!namaMadrasah || !String(namaMadrasah).trim()) throw new HttpError(400, 'MISSING_NAME', 'Nama madrasah wajib');
-  if (!JENJANG.includes(jenjang)) throw new HttpError(400, 'INVALID_JENJANG', 'Jenjang harus MI/MTs/MA');
+  if (!KELOMPOKS_LIST.includes(jenjang)) throw new HttpError(400, 'INVALID_JENJANG', 'Jenjang harus RA/MI/MTs/MA');
   if (!KEPEMILIKAN.includes(statusKepemilikan)) throw new HttpError(400, 'INVALID_KEPEMILIKAN', 'Status kepemilikan harus Negeri/Swasta');
   const siswa = parseInt(jumlahSiswa, 10);
   if (!Number.isFinite(siswa) || siswa <= 0) throw new HttpError(400, 'INVALID_SISWA', 'Jumlah siswa harus angka > 0');
 
   const nomor = await generateBMUNumber();
   const slug = await uniqueSlug(generateSlug(namaMadrasah));
-  const kelompok = deriveKelompok(jenjang, statusKepemilikan);
+  const kelompok = deriveKelompok(jenjang);
 
   try {
     const created = await prisma.madrasah.create({

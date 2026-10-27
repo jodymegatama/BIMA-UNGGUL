@@ -76,7 +76,7 @@ if (!madrasah) {
       jumlahSiswa: 200,
       alamat: 'Jl. Dummy No.1 Pasuruan',
       slug: 'mi-negeri-dummy',
-      kelompok: 'MI Negeri',
+      kelompok: 'MI',
     },
   });
   console.log('Created madrasah dummy: ' + madrasah.slug);

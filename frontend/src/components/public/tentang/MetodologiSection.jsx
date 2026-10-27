@@ -1,8 +1,8 @@
 import { ShieldCheck, GitBranch, Scales, Clock, Flag, WarningCircle, ArrowsLeftRight } from 'phosphor-react';
-import { KELOMPOKS } from '../../../constants/indikator';
+import { KELOMPOKS, kelompokLabel } from '../../../constants/indikator';
 
 /**
- * MetodologiSection — Bagian 3: Metodologi & Cara Kerja (PRD §6 Interaction, §11 formula, §9 lifecycle, 6 kelompok, tie-breaker)
+ * MetodologiSection — Bagian 3: Metodologi & Cara Kerja (PRD §6 Interaction, §11 formula, §9 lifecycle, 4 kelompok, tie-breaker)
  */
 export default function MetodologiSection() {
   return (
@@ -52,11 +52,11 @@ export default function MetodologiSection() {
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {KELOMPOKS.map((k) => (
                   <span key={k} className="h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center text-[12px] font-black text-charcoal">
-                    {k}
+                    {kelompokLabel(k)}
                   </span>
                 ))}
               </div>
-              <p className="text-[11px] leading-5 font-medium text-pencil mt-3">Tiap madrasah hanya bersaing dalam kelompoknya. Tidak ada perbandingan lintas jenjang/status.</p>
+              <p className="text-[11px] leading-5 font-medium text-pencil mt-3">Tiap madrasah hanya bersaing dalam kelompoknya. Negeri dan swasta digabung per jenjang; tidak ada perbandingan lintas jenjang.</p>
             </div>
 
             {/* tie-breaker */}

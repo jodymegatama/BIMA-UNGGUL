@@ -64,7 +64,7 @@ async function setup() {
     data: {
       nomorMadrasah: `BMU-${NS}-001`, namaMadrasah: `Madrasah ${NS}`, jenjang: 'MI',
       statusKepemilikan: 'Negeri', jumlahSiswa: 100, alamat: 'Jl E2E REC',
-      slug: `madrasah-${NS.toLowerCase()}-${Date.now()}`, kelompok: 'MI Negeri',
+      slug: `madrasah-${NS.toLowerCase()}-${Date.now()}`, kelompok: 'MI',
     },
   });
   await prisma.user.update({ where: { id: operator.id }, data: { madrasahId: madrasah.id } });

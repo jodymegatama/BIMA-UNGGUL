@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ClipboardText, Buildings, Calendar, CheckCircle, Clock, ArrowRight } from 'phosphor-react';
 import { apiGet, apiFetch } from '../../lib/api';
 import { sharedFlight, getKey } from '../../lib/singleFlight';
-import { KELOMPOKS } from '../../constants/indikator';
+import { KELOMPOKS, kelompokLabel } from '../../constants/indikator';
 
 const KELOMPOK_LIST = KELOMPOKS;
 
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
             {kelompokRows.map((k) => (
               <div key={k.kelompok} className="flex items-center justify-between px-5 py-3">
                 <div>
-                  <div className="text-[13px] font-black text-charcoal">{k.kelompok}</div>
+                  <div className="text-[13px] font-black text-charcoal">{kelompokLabel(k.kelompok)}</div>
                   <div className="text-[11px] font-bold text-pencil">{k.aktif} aktif / {k.total} total</div>
                 </div>
                 <div className="flex items-center gap-2">

@@ -8,6 +8,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma.js';
 import { AUTH_CONFIG } from '../constants/auth.constants.js';
+import { KELOMPOKS_LIST } from '../constants/periode.constants.js';
+import { HttpError } from '../utils/httpError.js';
 
 /**
  * Hash password menggunakan bcryptjs (async)
@@ -163,15 +165,15 @@ export function generateSlug(nama) {
 }
 
 /**
- * Derive kelompok dari jenjang + statusKepemilikan
+ * Kelompok mengikuti jenjang; Negeri dan Swasta berada pada ranking yang sama.
  * Reference: PRD Section 8 (Madrasah model) & Section 5 (AC: kelompok derived)
  * 
- * @param {string} jenjang — "MI" | "MTs" | "MA"
- * @param {string} statusKepemilikan — "Negeri" | "Swasta"
+ * @param {string} jenjang — "RA" | "MI" | "MTs" | "MA"
  * @returns {string} — kelompok
  */
-export function deriveKelompok(jenjang, statusKepemilikan) {
-  return `${jenjang} ${statusKepemilikan}`;
+export function deriveKelompok(jenjang) {
+  if (!KELOMPOKS_LIST.includes(jenjang)) throw new HttpError(400, 'INVALID_JENJANG', 'Jenjang harus RA/MI/MTs/MA');
+  return jenjang;
 }
 
 /**
@@ -292,7 +294,7 @@ export async function approveUserAndCreateMadrasah(userId, madrasahData) {
   try {
     const bmuNumber = await generateBMUNumber();
     const slug = generateSlug(madrasahData.nama);
-    const kelompok = deriveKelompok(madrasahData.jenjang, madrasahData.statusKepemilikan);
+    const kelompok = deriveKelompok(madrasahData.jenjang);
 
     // Prisma transaction: update user + create madrasah atomic
     const result = await prisma.$transaction(async (tx) => {

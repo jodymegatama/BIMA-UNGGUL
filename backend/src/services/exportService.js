@@ -2,19 +2,16 @@
  * Export Service — BIMA UNGGUL Phase 3 Final
  * Generate PDF (pdfkit) & Excel (exceljs) dari leaderboard — hanya data disetujui.
  *
- * Revisi 2026-09-24: export dikelompokkan per jenjang kelompok madrasah.
- * - Tanpa kelompok/jenjang → satu section per kelompok (MI Negeri … MA Swasta),
- *   rank di-reset per section, kelompok tanpa data dilewati.
- * - `jenjang=MI|MTs|MA` → hanya 2 kelompok jenjang tsb.
- * - `kelompok="MI Negeri"` → satu tabel seperti sebelumnya (back-compatible).
+ * Satu section per jenjang RA/MI/MTs/MA, negeri dan swasta digabung.
+ * Alias kelompok lama dan parameter jenjang tetap diterima.
  */
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import { calculateRanking, calculateRankingAllGroups } from './scoringService.js';
-import { KELOMPOKS_LIST } from '../constants/periode.constants.js';
+import { KELOMPOKS_LIST, normalizeKelompok } from '../constants/periode.constants.js';
 import { prisma } from '../db/prisma.js';
 
-const JENJANGS = ['MI', 'MTs', 'MA'];
+const kelompokLabel = (value) => value === 'MTs' ? 'MTS' : value;
 
 function httpError(status, message) {
   return Object.assign(new Error(message), { status });
@@ -27,12 +24,14 @@ function httpError(status, message) {
 export function resolveKelompoks({ kelompok, jenjang } = {}) {
   if (kelompok && jenjang) throw httpError(400, 'Pilih kelompok ATAU jenjang, bukan keduanya');
   if (kelompok) {
-    if (!KELOMPOKS_LIST.includes(kelompok)) throw httpError(400, `Kelompok tidak dikenal: ${kelompok}`);
-    return { kelompok, jenjang: null, kelompoks: [kelompok] };
+    const canonical = normalizeKelompok(kelompok);
+    if (!canonical) throw httpError(400, 'Kelompok tidak dikenal');
+    return { kelompok: canonical, jenjang: null, kelompoks: [canonical] };
   }
   if (jenjang) {
-    if (!JENJANGS.includes(jenjang)) throw httpError(400, `Jenjang tidak dikenal: ${jenjang}`);
-    return { kelompok: null, jenjang, kelompoks: KELOMPOKS_LIST.filter((k) => k.startsWith(`${jenjang} `)) };
+    const canonical = typeof jenjang === 'string' && KELOMPOKS_LIST.find((k) => k.toUpperCase() === jenjang.trim().toUpperCase());
+    if (!canonical) throw httpError(400, 'Jenjang tidak dikenal');
+    return { kelompok: null, jenjang: canonical, kelompoks: [canonical] };
   }
   return { kelompok: null, jenjang: null, kelompoks: [...KELOMPOKS_LIST] };
 }
@@ -89,7 +88,7 @@ function drawPdfSectionTitle(doc, kelompok) {
   doc.rect(40, titleY, 3.5, 13).fill(PDF_NAVY);
   doc.restore();
   doc.font('Helvetica-Bold').fontSize(11).fillColor('#111827')
-    .text(`KELOMPOK: ${kelompok}`, 52, titleY + 0.5, { width: 503, align: 'left', lineBreak: false });
+    .text(`KELOMPOK: ${kelompokLabel(kelompok)}`, 52, titleY + 0.5, { width: 503, align: 'left', lineBreak: false });
   doc.y = titleY + 17;
   doc.x = 40;
 }
@@ -97,7 +96,7 @@ function drawPdfSectionTitle(doc, kelompok) {
 export async function buildPdfBuffer({ periodeId, kelompok, jenjang }) {
   const data = await getLeaderboardData({ periodeId, kelompok, jenjang });
   const { periode, groups } = data;
-  const filterLabel = data.kelompok || (data.jenjang ? `Jenjang ${data.jenjang}` : 'Semua kelompok');
+  const filterLabel = kelompokLabel(data.kelompok) || (data.jenjang ? `Jenjang ${kelompokLabel(data.jenjang)}` : 'Semua kelompok');
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   const chunks = [];
@@ -146,7 +145,7 @@ export async function buildPdfBuffer({ periodeId, kelompok, jenjang }) {
         String(r.ranking),
         r.madrasah?.nomorMadrasah || '-',
         r.madrasah?.namaMadrasah || '-',
-        r.madrasah?.kelompok || g.kelompok || '-',
+        kelompokLabel(r.madrasah?.kelompok || g.kelompok) || '-',
         Number(r.totalScore).toFixed(2),
       ];
       row.forEach((cell, i) => {
@@ -191,7 +190,7 @@ function addExcelRankingRows(ws, group) {
       ranking: r.ranking,
       bmu: r.madrasah?.nomorMadrasah || '-',
       nama: r.madrasah?.namaMadrasah || '-',
-      kelompok: r.madrasah?.kelompok || group.kelompok || '-',
+      kelompok: kelompokLabel(r.madrasah?.kelompok || group.kelompok) || '-',
       skor: Number(r.totalScore.toFixed(2)),
     });
   });
@@ -214,7 +213,7 @@ export async function buildExcelBuffer({ periodeId, kelompok, jenjang }) {
     // Multi-kelompok — baris judul grup (bold, merged) + header kolom + baris ranking per section
     ws.columns = XLSX_COLUMNS.map(({ key, width }) => ({ key, width }));
     for (const g of data.groups) {
-      const title = ws.addRow([`LEADERBOARD — ${g.kelompok}`]);
+      const title = ws.addRow([`LEADERBOARD — ${kelompokLabel(g.kelompok)}`]);
       const rowNo = title.number;
       ws.mergeCells(rowNo, 1, rowNo, XLSX_COLUMNS.length);
       title.font = { bold: true, size: 12 };
@@ -230,7 +229,7 @@ export async function buildExcelBuffer({ periodeId, kelompok, jenjang }) {
 
   // Baris metadata
   ws.addRow([]);
-  const scopeLabel = data.kelompok || (data.jenjang ? `Jenjang ${data.jenjang}` : 'Semua');
+  const scopeLabel = kelompokLabel(data.kelompok) || (data.jenjang ? `Jenjang ${kelompokLabel(data.jenjang)}` : 'Semua');
   ws.addRow([`Periode: ${data.periode.namaPeriode} | Kelompok: ${scopeLabel} | ${new Date().toLocaleString('id-ID')}`]);
 
   const buf = await wb.xlsx.writeBuffer();

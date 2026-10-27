@@ -7,10 +7,10 @@ import LeaderboardChart from '../../components/public/leaderboard/LeaderboardCha
 import LeaderboardTable from '../../components/public/leaderboard/LeaderboardTable';
 import useRevealOnScroll from '../../hooks/useRevealOnScroll';
 import { apiGet } from '../../lib/api';
-import { KELOMPOKS } from '../../constants/indikator';
+import { KELOMPOKS, kelompokLabel, normalizeKelompok } from '../../constants/indikator';
 
 // kelompoks eksplisit untuk fallback auto-latest
-const KELOMPOK_FALLBACK = 'MI Negeri';
+const KELOMPOK_FALLBACK = 'MI';
 
 function mapRankingToUi(entry) {
   return {
@@ -53,7 +53,16 @@ function SkeletonCard() {
 export default function Leaderboard() {
   const [params, setParams] = useSearchParams();
   const periode = params.get('periode') || '';
-  const kelompok = params.get('kelompok') || KELOMPOK_FALLBACK;
+  const requestedKelompok = params.get('kelompok');
+  const kelompok = normalizeKelompok(requestedKelompok) || KELOMPOK_FALLBACK;
+  useEffect(() => {
+    if (requestedKelompok === kelompok) return;
+    setParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('kelompok', kelompok);
+      return next;
+    }, { replace: true });
+  }, [requestedKelompok, kelompok, setParams]);
   const ref = useRef(null);
   useRevealOnScroll(ref);
 
@@ -78,7 +87,11 @@ export default function Leaderboard() {
         // default periode: dari URL, kalau kosong pakai yang statusEfektif aktif
         if (!params.get('periode')) {
           const aktif = list.find((p) => p.statusEfektif === 'aktif') || list[0];
-          if (aktif) setParams((prev) => ({ ...prev, periode: aktif.namaPeriode }), { replace: true });
+          if (aktif) setParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('periode', aktif.namaPeriode);
+            return next;
+          }, { replace: true });
         }
       } catch { /* biarkan kosong — fetch leaderboard tetap jalan tanpa periodeId */ }
       finally { if (!ignore) setPeriodesLoaded(true); }
@@ -109,7 +122,7 @@ export default function Leaderboard() {
         const periodeResp = json.periode || null;
         setPeriodeInfo(periodeResp);
         if (typeof json.madrasahCount === 'number') setMadrasahCount(json.madrasahCount);
-        // normalize rankings: backend bisa return { rankings: [...] } atau { rankings: { "MI Negeri": [...] } }
+        // Backend bisa mengembalikan satu kelompok atau object empat kelompok.
         let raw = json.rankings;
         let arr = [];
         if (Array.isArray(raw)) arr = raw;
@@ -193,7 +206,7 @@ export default function Leaderboard() {
               <span className="w-2 h-2 rounded-full bg-eager animate-pulse" style={{ animation: 'pulse-live 1.6s ease infinite' }} />
               <span className="text-charcoal font-black">{periodeInfo?.namaPeriode || periode}</span>
               <span className="w-px h-4 bg-zinc-200" />
-              <span className="text-pencil">{kelompok}</span>
+              <span className="text-pencil">{kelompokLabel(kelompok)}</span>
             </div>
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-faded bg-zinc-50 border border-zinc-200 rounded-full px-3 py-1.5">
               <Clock size={12} weight="regular" /> {timestamp ? `Diperbarui pada: ${timestamp} WIB` : 'Belum ada pembaruan skor'}
@@ -261,7 +274,7 @@ export default function Leaderboard() {
               <Trophy size={20} weight="regular" color="#afafaf" />
             </div>
             <div className="text-[14px] font-black text-charcoal mt-3">Belum ada data skor untuk kelompok ini</div>
-            <div className="text-[13px] font-medium text-pencil mt-1">Periode {periodeInfo?.namaPeriode || periode} • Kelompok {kelompok} belum memiliki capaian disetujui.</div>
+            <div className="text-[13px] font-medium text-pencil mt-1">Periode {periodeInfo?.namaPeriode || periode} • Kelompok {kelompokLabel(kelompok)} belum memiliki capaian disetujui.</div>
           </div>
         )}
 

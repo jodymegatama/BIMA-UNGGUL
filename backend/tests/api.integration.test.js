@@ -252,7 +252,7 @@ describe.skipIf(!dbGate())('Endpoint publik (tanpa auth)', () => {
     const res = await request(app).get('/api/stats');
     expect(res.status).toBe(200);
     expect(typeof res.body.madrasahCount).toBe('number');
-    expect(res.body.kelompokCount).toBe(6);
+    expect(res.body.kelompokCount).toBe(4);
   });
 
   it('GET /api/periode -> 200 daftar non-finalisasi/arsip', async () => {
@@ -331,7 +331,7 @@ describe('Madrasah CRUD admin (create → update → soft/hard delete)', () => {
     expect(mid).toBeTruthy();
     expect(c.body.data?.nomorMadrasah).toMatch(/^BMU-\d{6}$/);
     expect(c.body.data?.slug).toMatch(/^mi-vit-\d+$/);
-    expect(c.body.data?.kelompok).toBe('MI Swasta');
+    expect(c.body.data?.kelompok).toBe('MI');
 
     await request(app)
       .patch(`/api/admin/madrasah/${mid}`)

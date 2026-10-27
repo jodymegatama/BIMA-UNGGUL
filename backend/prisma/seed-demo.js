@@ -1,7 +1,7 @@
 /**
  * Seed Data Demo — BIMA UNGGUL (roadmap catatan.md #5)
  * Isi: 39 madrasah KAB. PASURUAN (data riil nama/lokasi dari daftarsekolah.net,
- * annibuku.com, kemenag jatim — 2026-08-30), 6 kelompok, bobot bervariasi,
+ * annibuku.com, kemenag jatim — 2026-08-30), 4 kelompok, bobot bervariasi,
  * submission + validasi + skor live-compute — SEMUA di periode target
  * yang SUDAH ADA (TARGET_PERIODE, default '2026/2027').
  *
@@ -164,11 +164,11 @@ async function main() {
   for (const m of MADRASAH_DEMO) {
     const row = await prisma.madrasah.upsert({
       where: { nomorMadrasah: m.nomorMadrasah },
-      update: {},
+      update: { kelompok: m.jenjang },
       create: {
         ...m,
         slug: `${slugify(m.namaMadrasah)}-${m.nomorMadrasah.slice(-3)}`,
-        kelompok: `${m.jenjang} ${m.statusKepemilikan}`,
+        kelompok: m.jenjang,
       },
     });
     madrasahList.push(row);

@@ -1,9 +1,9 @@
 import { Calendar, Funnel } from 'phosphor-react';
-import { KELOMPOKS as KELOMPOK_LIST } from '../../../constants/indikator';
+import { KELOMPOKS as KELOMPOK_LIST, kelompokLabel } from '../../../constants/indikator';
 import { deriveStatusClient, urgency, formatTanggal } from '../../../lib/periode';
 
 // render pill dari registry frontend (constants/indikator.js KELOMPOKS)
-const KELOMPOKS = KELOMPOK_LIST.map((k) => ({ id: k, label: k }));
+const KELOMPOKS = KELOMPOK_LIST.map((k) => ({ id: k, label: kelompokLabel(k) }));
 
 /**
  * FilterBar — pill solid eager untuk aktif (mirip badge "Nasional 3x" di Indikator), outline untuk non-aktif

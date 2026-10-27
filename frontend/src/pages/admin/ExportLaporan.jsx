@@ -4,9 +4,7 @@ import { apiFetch } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../lib/api';
 import { sharedFlight, getKey } from '../../lib/singleFlight';
-import { KELOMPOKS } from '../../constants/indikator';
-
-const JENJANGS = ['MI', 'MTs', 'MA'];
+import { KELOMPOKS, kelompokLabel } from '../../constants/indikator';
 
 export default function ExportLaporan() {
   const { token } = useAuth();
@@ -37,9 +35,8 @@ export default function ExportLaporan() {
     try {
       const isPdf = type === 'pdf';
       const ext = isPdf ? 'pdf' : 'xlsx';
-      const isJenjang = JENJANGS.includes(kelompok);
       const params = new URLSearchParams({ periodeId: periode });
-      if (kelompok) params.set(isJenjang ? 'jenjang' : 'kelompok', kelompok);
+      if (kelompok) params.set('kelompok', kelompok);
       const url = `/api/admin/export/${isPdf ? 'pdf' : 'excel'}?${params.toString()}`;
       // Use fetch with blob handling
       const headers = {};
@@ -69,8 +66,7 @@ export default function ExportLaporan() {
   };
 
   const periodeInfo = periodes.find((p) => String(p.id) === String(periode));
-  const isJenjang = JENJANGS.includes(kelompok);
-  const scopeLabel = !kelompok ? `Semua kelompok (${KELOMPOKS.length})` : isJenjang ? `Jenjang ${kelompok} (2 kelompok)` : kelompok;
+  const scopeLabel = !kelompok ? `Semua kelompok (${KELOMPOKS.length})` : kelompokLabel(kelompok);
 
   return (
     <div className="space-y-6">
@@ -92,12 +88,7 @@ export default function ExportLaporan() {
           </select>
           <select value={kelompok} onChange={(e) => setKelompok(e.target.value)} className="h-9 px-4 rounded-full border-2 border-zinc-200 bg-white text-[13px] font-black text-charcoal min-w-[160px]">
             <option value="">Semua kelompok</option>
-            <optgroup label="Per kelompok">
-              {KELOMPOKS.map((k) => <option key={k} value={k}>{k}</option>)}
-            </optgroup>
-            <optgroup label="Per jenjang (semua)">
-              {JENJANGS.map((j) => <option key={j} value={j}>{j}</option>)}
-            </optgroup>
+            {KELOMPOKS.map((k) => <option key={k} value={k}>{kelompokLabel(k)}</option>)}
           </select>
           <span className="inline-flex h-7 px-3 rounded-full bg-zinc-50 border-2 border-zinc-100 text-[11px] font-bold text-pencil">
             {periodeInfo?.status || '-'} • {periode||'-'}

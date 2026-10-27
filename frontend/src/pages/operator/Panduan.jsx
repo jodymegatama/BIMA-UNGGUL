@@ -28,7 +28,7 @@ const STEPS = [
         </p>
         <ul className="mt-2 space-y-1 list-disc pl-5">
           <li><b>Data Akun</b> — email (dipakai sebagai identitas login), nama lengkap, No. Telepon/WhatsApp, password minimal 8 karakter beserta konfirmasinya.</li>
-          <li><b>Data Madrasah</b> — nama madrasah, alamat, jumlah siswa, jenjang (MI/MTs/MA), dan status (Negeri/Swasta).</li>
+          <li><b>Data Madrasah</b> — nama madrasah, alamat, jumlah siswa, jenjang (RA/MI/MTS/MA), dan status (Negeri/Swasta).</li>
         </ul>
         <p className="mt-2">
           Centang pernyataan persetujuan, lalu klik tombol <b>Daftar</b>.
@@ -61,7 +61,7 @@ const STEPS = [
         </p>
         <ul className="mt-2 space-y-1 list-disc pl-5">
           <li>Yang bisa diedit: <b>nama madrasah</b>, <b>alamat</b>, dan <b>jumlah siswa</b>.</li>
-          <li><b>Kelompok</b> (mis. MI Negeri) dan <b>status</b> madrasah terkunci — mengikuti data pendaftaran.</li>
+          <li><b>Kelompok</b> (mis. MI) dan <b>status</b> madrasah terkunci — mengikuti data pendaftaran.</li>
         </ul>
       </>
     ),

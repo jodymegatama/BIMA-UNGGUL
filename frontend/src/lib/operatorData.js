@@ -40,7 +40,7 @@ export async function fetchRank(kelompok, madrasahId) {
     rank: me.ranking ?? idx + 1,
     total: list.length,
     skor: me.totalScore != null ? Math.round(me.totalScore) : null,
-    kelompok,
+    kelompok: res.kelompok || kelompok,
     periode: res.periode?.namaPeriode || '',
     updatedAt: me.lastApprovedAt || res.periode?.updatedAt || null,
   };

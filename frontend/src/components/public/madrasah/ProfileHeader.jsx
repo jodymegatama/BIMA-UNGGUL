@@ -1,3 +1,4 @@
+import { kelompokLabel } from '../../../constants/indikator';
 import { Link } from 'react-router-dom';
 import { Trophy, Buildings, MapPin, Users, Hash, CaretRight, Clock, CheckCircle } from 'phosphor-react';
 import { formatSkor } from '../../../lib/format';
@@ -14,7 +15,7 @@ export default function ProfileHeader({ madrasah, periode = '2026/2027' }) {
     ? `Belum ada peringkat • ${madrasah.approved} capaian`
     : madrasah.rank <= 3
       ? `Peringkat #${madrasah.rank} dari ${madrasah.rankTotal ?? madrasah.kelompok} • ${madrasah.approved} capaian disetujui`
-      : `Peringkat #${madrasah.rank} dari ${madrasah.kelompok} • ${madrasah.approved} capaian disetujui`;
+      : `Peringkat #${madrasah.rank} dari ${kelompokLabel(madrasah.kelompok)} • ${madrasah.approved} capaian disetujui`;
   const rankBadge = isRanked ? `#${madrasah.rank}` : '#—';
 
   return (
@@ -37,7 +38,7 @@ export default function ProfileHeader({ madrasah, periode = '2026/2027' }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full border-2 text-[11px] font-black ${kelompokColor}`}>
                 <Buildings size={12} weight="fill" color={madrasah.status === 'Negeri' ? '#0b5cab' : '#777777'} />
-                {madrasah.kelompok}
+                {kelompokLabel(madrasah.kelompok)}
               </span>
               <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil">
                 <Hash size={12} weight="bold" /> {madrasah.bmuId}

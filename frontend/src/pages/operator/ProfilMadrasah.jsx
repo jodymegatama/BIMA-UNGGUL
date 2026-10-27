@@ -1,3 +1,4 @@
+import { kelompokLabel } from '../../constants/indikator';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
@@ -191,7 +192,7 @@ export default function ProfilMadrasah() {
                   <Hash size={12} weight="bold" /> {madrasah.bmuId}
                 </span>
                 <span className={`inline-flex h-7 px-3 rounded-full border-2 text-[11px] font-black ${madrasah.status === 'Negeri' ? 'bg-[#e0f2ff] border-[#cde9ff] text-[#0b5cab]' : 'bg-white border-zinc-200 text-pencil'}`}>
-                  {madrasah.kelompok}
+                  {kelompokLabel(madrasah.kelompok)}
                 </span>
                 <span className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
                   <ShieldCheck size={12} weight="fill" color="#4caf00" /> Terverifikasi
@@ -273,7 +274,7 @@ export default function ProfilMadrasah() {
                     </div>
                     <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-3 opacity-70">
                       <div className="text-[11px] font-black tracking-wide text-faded uppercase">Kelompok</div>
-                      <div className="text-[13px] font-black text-charcoal mt-1">{madrasah.kelompok}</div>
+                      <div className="text-[13px] font-black text-charcoal mt-1">{kelompokLabel(madrasah.kelompok)}</div>
                       <div className="text-[11px] font-bold text-faded">Derived, immutable</div>
                     </div>
                   </div>
@@ -311,7 +312,7 @@ export default function ProfilMadrasah() {
                 {formatSkor(skorTotal)} <span className="text-[12px] font-black text-pencil">poin</span>
               </div>
               <div className="text-[11px] font-bold text-pencil">
-                {ranking.rank != null ? `Rank #${ranking.rank} / ${ranking.total} di ${madrasah.kelompok}` : `Kelompok ${madrasah.kelompok}`}
+                {ranking.rank != null ? `Rank #${ranking.rank} / ${ranking.total} di ${kelompokLabel(madrasah.kelompok)}` : `Kelompok ${kelompokLabel(madrasah.kelompok)}`}
               </div>
             </div>
             <div className="rounded-[12px] bg-white border-2 border-zinc-200 p-3">

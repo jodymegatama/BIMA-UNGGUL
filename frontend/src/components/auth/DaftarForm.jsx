@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { JENJANG_OPTIONS } from '../../constants/indikator';
 import { Link } from 'react-router-dom';
 import {
   Envelope,
@@ -346,9 +347,7 @@ export default function DaftarForm({ onSuccess }) {
                 </span>
                 <select id="jenjang" value={f.jenjang} onChange={(e) => set('jenjang', e.target.value)} className={selectCls(!!errors.jenjang)}>
                   <option value="">Pilih jenjang</option>
-                  <option value="MI">MI</option>
-                  <option value="MTs">MTs</option>
-                  <option value="MA">MA</option>
+                  {JENJANG_OPTIONS.map((j) => <option key={j.value} value={j.value}>{j.label}</option>)}
                 </select>
               </div>
               {fieldErr('jenjang')}

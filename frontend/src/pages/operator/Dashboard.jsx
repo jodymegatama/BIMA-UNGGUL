@@ -1,3 +1,4 @@
+import { kelompokLabel } from '../../constants/indikator';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Clock, CheckCircle, XCircle, Trophy, TrendUp, PlusCircle, Bell, Buildings, ArrowRight, Info, SpinnerGap } from 'phosphor-react';
@@ -161,7 +162,7 @@ export default function OperatorDashboard() {
         </div>
         <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
           <span className="w-2 h-2 rounded-full bg-eager animate-pulse" style={{ animation: 'pulse-live 1.6s ease infinite' }} />
-          {ranking.kelompok !== '-' ? `${ranking.kelompok} • Rank #${ranking.rank ?? '-'}` : 'Rank belum tersedia'}
+          {ranking.kelompok !== '-' ? `${kelompokLabel(ranking.kelompok)} • Rank #${ranking.rank ?? '-'}` : 'Rank belum tersedia'}
         </span>
       </div>
 
@@ -211,7 +212,7 @@ export default function OperatorDashboard() {
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-2">
               <div className="text-[11px] font-black text-faded uppercase">Kelompok</div>
-              <div className="text-[13px] font-black text-charcoal">{ranking.kelompok}</div>
+              <div className="text-[13px] font-black text-charcoal">{kelompokLabel(ranking.kelompok)}</div>
             </div>
             <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-2">
               <div className="text-[11px] font-black text-faded uppercase">Periode</div>

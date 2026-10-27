@@ -18,11 +18,20 @@ export const INDIKATORS = [
   { kode: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', short: 'Rasio' },
 ];
 
-export const KELOMPOKS = [
-  'MI Negeri', 'MI Swasta',
-  'MTs Negeri', 'MTs Swasta',
-  'MA Negeri', 'MA Swasta',
-];
+export const KELOMPOKS = ['RA', 'MI', 'MTs', 'MA'];
+
+export const kelompokLabel = (value) => value === 'MTs' ? 'MTS' : value;
+
+export const JENJANG_OPTIONS = KELOMPOKS.map((value) => ({
+  value,
+  label: `${kelompokLabel(value)} — ${{ RA: 'Raudhatul Athfal', MI: 'Madrasah Ibtidaiyah', MTs: 'Madrasah Tsanawiyah', MA: 'Madrasah Aliyah' }[value]}`,
+}));
+
+export function normalizeKelompok(value) {
+  if (typeof value !== 'string') return null;
+  const match = /^(RA|MI|MTS|MA)(?:\s+(?:Negeri|Swasta))?$/i.exec(value.trim());
+  return match ? KELOMPOKS.find((k) => k.toUpperCase() === match[1].toUpperCase()) : null;
+}
 
 /**
  * INDIKATOR_FIELDS — konfigurasi field dinamis per indikator (PRD §11).

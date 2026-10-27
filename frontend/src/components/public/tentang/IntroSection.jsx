@@ -23,7 +23,7 @@ export default function IntroSection() {
             </h2>
             <p className="text-[14px] leading-6 text-pencil font-medium mt-3">
               <span className="font-black text-charcoal">BIMA UNGGUL — Bina Madrasah Unggul</span> dikelola Seksi Pendidikan Madrasah (Pendma)
-              Kankemenag Kabupaten Pasuruan untuk seluruh madrasah <b>MI/MTs/MA, Negeri & Swasta</b> se-Kabupaten Pasuruan. Periode contoh:{' '}
+              Kankemenag Kabupaten Pasuruan untuk seluruh madrasah <b>RA/MI/MTS/MA, Negeri & Swasta</b> se-Kabupaten Pasuruan. Periode contoh:{' '}
               <span className="inline-flex h-6 px-2 rounded-full bg-story border border-[#b8eb8a] text-[11px] font-black text-eager-dark">2026/2027</span>
             </p>
 

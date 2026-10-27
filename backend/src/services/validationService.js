@@ -13,6 +13,7 @@ import { recordAuditLog } from './auditService.js';
 import { createNotification } from './notificationService.js';
 import { parseEnumParam } from '../utils/enumParam.js';
 import { StatusSubmission, StatusDeleteRequest } from '@prisma/client';
+import { normalizeKelompok } from '../constants/periode.constants.js';
 
 // ---------- Helpers ----------
 function parsePagination(query) {
@@ -44,7 +45,9 @@ export async function getValidasiQueue(query = {}) {
   if (indikatorId) where.indikatorId = parseInt(indikatorId, 10);
   if (periodeId) where.periodeId = parseInt(periodeId, 10);
   if (kelompok) {
-    where.madrasah = { kelompok };
+    const canonical = normalizeKelompok(kelompok);
+    if (!canonical) throw new HttpError(400, 'INVALID_KELOMPOK', 'Kelompok tidak valid');
+    where.madrasah = { kelompok: canonical };
   }
   if (q && String(q).trim().length > 0) {
     const keyword = String(q).trim();

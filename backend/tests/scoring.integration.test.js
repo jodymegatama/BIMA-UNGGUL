@@ -102,14 +102,14 @@ async function setupDummyData() {
  *               jumlah?, pembilang?, penyebut?, approvedAt? }
  */
 async function createMadrasahWithSubmissions(config) {
-  const { nomorMadrasah, nama, kelompok, periodeId, adminId, indikatorMap, submissions } = config;
+  const { nomorMadrasah, nama, kelompok, periodeId, adminId, indikatorMap, submissions, statusKepemilikan = 'Negeri' } = config;
 
   const madrasah = await prisma.madrasah.create({
     data: {
       nomorMadrasah,
       namaMadrasah: nama,
-      jenjang: kelompok.split(' ')[0],
-      statusKepemilikan: kelompok.split(' ')[1],
+      jenjang: kelompok,
+      statusKepemilikan,
       jumlahSiswa: 100,
       alamat: 'Alamat Test',
       slug: nama.toLowerCase().replace(/\s+/g, '-'),
@@ -181,7 +181,7 @@ describe.skipIf(!dbGate())('Scoring — formula', () => {
     const m = await createMadrasahWithSubmissions({
       nomorMadrasah: 'BMU-TEST-001',
       nama: 'MI Test PerCapaian',
-      kelompok: 'MI Negeri',
+      kelompok: 'MI', statusKepemilikan: 'Negeri',
       periodeId: ctx.periode.id,
       adminId: ctx.admin.id,
       indikatorMap: ctx.indikatorMap,
@@ -202,7 +202,7 @@ describe.skipIf(!dbGate())('Scoring — formula', () => {
     const m = await createMadrasahWithSubmissions({
       nomorMadrasah: 'BMU-TEST-002',
       nama: 'MI Test Persentase',
-      kelompok: 'MI Negeri',
+      kelompok: 'MI', statusKepemilikan: 'Negeri',
       periodeId: ctx.periode.id,
       adminId: ctx.admin.id,
       indikatorMap: ctx.indikatorMap,
@@ -220,7 +220,7 @@ describe.skipIf(!dbGate())('Scoring — formula', () => {
     const m = await createMadrasahWithSubmissions({
       nomorMadrasah: 'BMU-TEST-020',
       nama: 'MI Test LiveCompute',
-      kelompok: 'MA Swasta',
+      kelompok: 'MA', statusKepemilikan: 'Swasta',
       periodeId: ctx.periode.id,
       adminId: ctx.admin.id,
       indikatorMap: ctx.indikatorMap,
@@ -254,9 +254,9 @@ describe.skipIf(!dbGate())('Scoring — formula', () => {
     const subsM3 = subsDiklat(10);
 
     const [m1, m2, m3] = await Promise.all([
-      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-010', nama: 'MI Test Tie A', kelompok: 'MTs Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM1 }),
-      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-011', nama: 'MI Test Tie B', kelompok: 'MTs Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM2 }),
-      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-012', nama: 'MI Test Tie C', kelompok: 'MTs Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM3 }),
+      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-010', nama: 'MI Test Tie A', kelompok: 'MTs', statusKepemilikan: 'Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM1 }),
+      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-011', nama: 'MI Test Tie B', kelompok: 'MTs', statusKepemilikan: 'Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM2 }),
+      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-012', nama: 'MI Test Tie C', kelompok: 'MTs', statusKepemilikan: 'Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subsM3 }),
     ]);
 
     // Invariant: semua skor identik (tie sungguhan) — kalau tidak, test ini tidak menguji tie-breaker
@@ -277,12 +277,16 @@ describe.skipIf(!dbGate())('Scoring — formula', () => {
     const subs = [{ indikatorSlug: 'giat_inovatif', approvedAt: sameTime }];
 
     await Promise.all([
-      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-030', nama: 'MI Test BMU A', kelompok: 'MA Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subs }),
-      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-031', nama: 'MI Test BMU B', kelompok: 'MA Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: [...subs] }),
+      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-030', nama: 'MI Test BMU A', kelompok: 'MA', statusKepemilikan: 'Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: subs }),
+      createMadrasahWithSubmissions({ nomorMadrasah: 'BMU-TEST-031', nama: 'MI Test BMU B', kelompok: 'MA', statusKepemilikan: 'Negeri', periodeId: ctx.periode.id, adminId: ctx.admin.id, indikatorMap: ctx.indikatorMap, submissions: [...subs] }),
     ]);
 
     const ranking = await calculateRanking('MA Negeri', ctx.periode.id);
-    const fixture = rankingFixtureOnly(ranking);
+    // MA Swasta fixture 020 kini ikut ranking gabungan dengan skor lebih tinggi.
+    // Bandingkan urutan pasangan yang memang memiliki skor/waktu identik.
+    const fixture = rankingFixtureOnly(ranking).filter((r) => ['BMU-TEST-030', 'BMU-TEST-031'].includes(r.madrasah.nomorMadrasah));
+    expect(fixture).toHaveLength(2);
+    expect(fixture.every((r) => r.totalScore === 12)).toBe(true);
     expect(fixture[0]?.madrasah?.nomorMadrasah).toBe('BMU-TEST-030');
     expect(fixture[1]?.madrasah?.nomorMadrasah).toBe('BMU-TEST-031');
   });
