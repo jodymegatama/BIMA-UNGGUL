@@ -2,7 +2,7 @@
 
 Sistem Informasi Input, Validasi, dan Pemeringkatan Capaian Mutu Madrasah di lingkungan Kantor Kementerian Agama Kabupaten Pasuruan.
 
-Dikelola oleh **Seksi Pendidikan Madrasah (Pendma) Kankemenag Kab. Pasuruan** untuk seluruh madrasah MI / MTs / MA (Negeri & Swasta).
+Dikelola oleh **Seksi Pendidikan Madrasah (Pendma) Kankemenag Kab. Pasuruan** untuk seluruh madrasah RA / MI / MTS / MA (Negeri & Swasta).
 
 Alur: **Input Operator → Validasi Admin → Skor Otomatis → Leaderboard Publik**
 
@@ -12,13 +12,17 @@ Alur: **Input Operator → Validasi Admin → Skor Otomatis → Leaderboard Publ
 
 - **3 Zona Role**: Publik (read-only), Operator Madrasah, Admin Pendma
 - **9 Indikator Mutu** berbobot (konfigurasi per periode): diklat, penghargaan individu/institusi, prestasi siswa, lulus jenjang lanjutan, rapor >85, siswa lanjutan unggulan, giat inovatif, rasio penerimaan
-- **6 Kelompok Pemeringkatan** terpisah: MI/MTs/MA × Negeri/Swasta — ranking + tie-breaker deterministik
+- **4 Kelompok Pemeringkatan**: RA, MI, MTS, MA — negeri dan swasta digabung per jenjang, dengan tie-breaker deterministik
 - **Skor Live** — `Σ(capaian disetujui × bobot)` realtime tanpa cache, leaderboard update otomatis setelah approve/revoke/ubah bobot
 - **Validasi Berjenjang** — approve / reject (alasan wajib) / revoke, antrian dengan filter status/madrasah/indikator/periode
 - **Manajemen Periode** — lifecycle `belum_dimulai → aktif → cutoff → penyelesaian_validasi → finalisasi → arsip`, guard anti-overlap (1 periode aktif saja)
 - **Ekspor Laporan** — PDF (pdfkit) & Excel (exceljs) per periode/kelompok
 - **Audit Trail & Notifikasi** — log lengkap per aksi + notifikasi in-app
 - **Dark / Light Mode** — toggle persisten di semua zona
+
+Pengelompokan empat jenjang berlaku untuk semua periode, termasuk finalisasi/arsip. RA menggunakan sembilan indikator dan bobot periode yang sama. Nilai API `MTs` ditampilkan sebagai MTS; filter kelompok lama tetap diterima dan digabung per jenjang.
+
+Untuk data lama, terapkan migration Prisma lalu regenerasi client. Script `npm run db:migrate-kelompok -w backend` memeriksa data tanpa menulis; tambahkan `-- --apply` untuk memperbaiki kelompok yang belum sesuai. Script mencakup data nonaktif dan idempoten. Lihat [hasil implementasi dan verifikasi](tasks/hasil-implementasi-empat-kelompok.md).
 
 ## Tech Stack
 
