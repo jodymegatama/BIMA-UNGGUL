@@ -2,9 +2,10 @@ import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Stack, GraduationCap, Medal, Buildings, Trophy, Student, ChartLineUp, PaperPlaneTilt, Lightbulb, UsersThree } from 'phosphor-react';
 import useIndikatorCatalog from '../../hooks/useIndikatorCatalog';
+import { customTypeLabels } from '../../lib/customFields';
 import DeskripsiIndikator from '../shared/DeskripsiIndikator';
 const icons = { diklat: GraduationCap, penghargaan_individu: Medal, penghargaan_institusi: Buildings, prestasi_siswa: Trophy, lulus_jenjang_lanjutan: Student, rapor_rata_rata: ChartLineUp, siswa_lanjutan_unggulan: PaperPlaneTilt, giat_inovatif: Lightbulb, rasio_penerimaan: UsersThree };
-const formulas = { per_capaian: 'Jumlah capaian disetujui × bobot', per_tingkat_wilayah: 'Jumlah capaian tiap wilayah × bobot wilayah, lalu dijumlahkan', per_jenjang: 'Jumlah lulusan tiap jenjang × bobot jenjang, lalu dijumlahkan', persentase: 'Total pembilang ÷ total penyebut × bobot (0 dari 0 = 0)' };
+const formulas = { per_jumlah: 'Total nilai field jumlah terpilih × bobot', per_kategori: 'Nilai pengali (atau satu capaian) × bobot pilihan kategori, lalu dijumlahkan', per_capaian: 'Jumlah capaian disetujui × bobot', per_tingkat_wilayah: 'Jumlah capaian tiap wilayah × bobot wilayah, lalu dijumlahkan', per_jenjang: 'Jumlah lulusan tiap jenjang × bobot jenjang, lalu dijumlahkan', persentase: 'Total pembilang ÷ total penyebut × bobot (0 dari 0 = 0)' };
 
 export default function IndikatorCatalog({ lengkap = false }) {
   const { data, loading, error } = useIndikatorCatalog();
@@ -21,7 +22,7 @@ export default function IndikatorCatalog({ lengkap = false }) {
         <div className="flex items-center justify-between"><span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border-2 border-eager-dark bg-eager text-white shadow-sticker"><Icon size={22} weight="fill" /></span><span className="font-black text-sm text-faded">{String(index + 1).padStart(2, '0')}</span></div>
         <h3 className="mt-5 font-display font-black text-lg leading-tight text-charcoal">{ind.nama}</h3>
         <DeskripsiIndikator deskripsi={ind.deskripsi} ringkas={!lengkap} href={!lengkap ? `/tentang#indikator-${ind.slug}` : undefined} />
-        {lengkap && <><h4 className="text-xs font-black uppercase text-pencil">Field capaian</h4><ul className="mt-2 flex flex-wrap gap-2">{(ind.fields || []).map((f) => <li key={f.key} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold">{f.label}{f.required ? ' *' : ''}</li>)}</ul><p className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm"><strong>Cara menghitung:</strong> {formulas[ind.tipeFormula]}. Bobot mengikuti periode penilaian.</p><Link className="mt-4 inline-block text-sm font-bold underline" to="/login">Masuk sebagai operator →</Link></>}
+        {lengkap && <><h4 className="text-xs font-black uppercase text-pencil">Field capaian</h4><ul className="mt-2 flex flex-wrap gap-2">{(ind.fields || []).map((f) => <li key={f.key} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-bold">{f.label}{f.required ? ' *' : ''} · {customTypeLabels[f.type] || ({ number: 'Bilangan bulat', ratio: 'Perbandingan' }[f.type]) || f.type}{f.help ? ` — ${f.help}` : ''}</li>)}</ul><p className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm"><strong>Cara menghitung:</strong> {formulas[ind.tipeFormula]}. Bobot mengikuti periode penilaian.</p><Link className="mt-4 inline-block text-sm font-bold underline" to="/login">Masuk sebagai operator →</Link></>}
       </article>;
     })}</div>
   </div></section>;

@@ -1,5 +1,6 @@
 import { Trash, Link as LinkIcon, WarningCircle } from 'phosphor-react';
 import StatusBadge from '../shared/StatusBadge';
+import CustomFieldInput from '../shared/CustomFieldInput';
 
 /**
  * CapaianRow — form dinamis per indikator berdasarkan INDIKATOR_FIELDS (PRD §11).
@@ -24,6 +25,7 @@ export default function CapaianRow({ row, onChange, onRemove, showStatus = true,
   const err = row._error || {};
 
   const renderField = (f) => {
+    if (f.source === 'custom') return <CustomFieldInput key={f.key} field={f} id={`row-${row.id}-${f.key}`} value={row.customValues?.[f.key]} error={err[f.key]} onChange={(v) => onChange(row.id, 'customValues', { ...row.customValues, [f.key]: v })} />;
     if (f.type === 'ratio') {
       return (
         <div key={f.key}>

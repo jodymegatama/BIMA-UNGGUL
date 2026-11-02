@@ -73,10 +73,10 @@ export default function PeriodeCutoffChip({ periode, compact = false, showIcon =
   return (
     <span
       title={tanggal ? `Cut-off periode: ${formatTanggal(periode.tanggalCutoff, true)}` : undefined}
-      className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-full border-2 text-[11px] font-black whitespace-nowrap ${VARIANTS[u]}`}
+      className={`inline-flex max-w-full items-center gap-1.5 px-3 rounded-full border-2 text-[11px] font-black ${compact ? 'h-7 whitespace-nowrap' : 'min-h-7 py-1 whitespace-normal break-words'} ${VARIANTS[u]}`}
     >
-      {Icon && <Icon size={12} weight={u === 'danger' ? 'fill' : 'regular'} color={ICON_COLOR[u]} />}
-      {label}
+      {Icon && <Icon className="shrink-0" size={12} weight={u === 'danger' ? 'fill' : 'regular'} color={ICON_COLOR[u]} />}
+      <span className="min-w-0">{label}</span>
     </span>
   );
 }

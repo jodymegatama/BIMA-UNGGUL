@@ -6,16 +6,16 @@ Keputusan dan kontrak, 2 November 2026. Implementasi memakai Prisma 5.18.0 yang 
 
 Master `Indikator` menyimpan identitas dan default untuk konfigurasi berikutnya. `BobotIndikator` menyimpan snapshot nama, deskripsi, label, urutan, formulir, dan metode pada setiap periode. Pemisahan ini diperlukan karena skor dihitung saat dibaca: jika engine terus mengambil metode dari master, perubahan admin akan mengubah hasil historis.
 
-`kode` dan `slug` permanen; urutan dapat diubah. `fields` adalah metadata kolom yang tersedia pada `SubmissionItem`, bukan skrip atau rumus bebas. Daftar field/metode yang diizinkan dan template awal diberikan oleh `/api/admin/indikator-contract`. Formulir frontend memakai metadata API; sembilan indikator lama hanya menjadi data bootstrap dan fixture regresi.
+`kode` dan `slug` permanen; urutan dapat diubah. `fields` mencakup metadata kolom bawaan dan field tambahan yang jawabannya disimpan dalam `SubmissionItem.customValues`. Binding sumber skor disimpan pada `scoringConfig`; keduanya mengikuti snapshot periode. Lihat [kontrak field kustom](custom-field-contract.md). Daftar field/metode yang diizinkan dan template awal diberikan oleh `/api/admin/indikator-contract`. Formulir frontend memakai metadata API; sembilan indikator lama hanya menjadi data bootstrap dan fixture regresi.
 
-Metode tersedia: jumlah baris × bobot; jumlah baris per wilayah × bobot wilayah; jumlah lulusan per jenjang × bobot jenjang; agregat pembilang ÷ agregat penyebut × bobot. Persentase 100% memperoleh seluruh nilai bobot; 0/0 menghasilkan nol. Hanya capaian disetujui dan tidak dihapus dihitung. Preview memakai engine yang sama tanpa menyimpan contoh.
+Metode tersedia: jumlah baris × bobot; jumlah baris per wilayah × bobot wilayah; jumlah lulusan per jenjang × bobot jenjang; agregat pembilang ÷ agregat penyebut × bobot. Persentase 100% memperoleh seluruh nilai bobot; 0/0 menghasilkan nol. Hanya capaian disetujui dan tidak dihapus dihitung. Preview memakai engine yang sama tanpa menyimpan contoh. Dua metode tambahan adalah per jumlah (nilai sumber × bobot) dan per kategori (nilai pengali × bobot ID opsi). Keempat metode awal juga dapat menggunakan sumber field kustom yang kompatibel.
 
 ## Operasional admin
 
 1. Buka `/admin/indikator`, tambah nama, kode unik, identitas tautan, deskripsi, metode, dan formulir. Aktifkan untuk menampilkannya pada katalog publik.
 2. Buka `/admin/bobot`, pilih periode, dan tambahkan indikator. Konfigurasi tidak otomatis masuk ke periode historis.
 3. Lengkapi bobot, periksa pratinjau deskripsi, simpan, lalu jalankan simulasi. Aktifkan penerimaan input apabila konfigurasi lengkap.
-4. Untuk memakai bobot periode lain, pilih periode sumber dan tindakan Salin bobot. Hanya indikator yang ada pada kedua periode dengan metode sama yang disalin; deskripsi dan formulir tujuan dipertahankan.
+4. Untuk memakai bobot periode lain, pilih periode sumber dan tindakan Salin bobot. Hanya indikator yang ada pada kedua periode dengan metode, binding dan opsi kategori yang kompatibel yang disalin; deskripsi, formulir dan sumber tujuan dipertahankan.
 5. Ubah default master untuk periode berikutnya. Koreksi deskripsi periode aktif dilakukan pada konfigurasi periode tersebut.
 
 Deskripsi menggunakan teks multibaris maksimal 10.000 karakter dan wajib sebelum publikasi/aktivasi baru. Komponen tampil pada beranda (ringkas), Tentang (lengkap), detail madrasah dan profil operator (panel info), input capaian, panduan operator, serta halaman pengelolaan/validasi admin. Konten di-render sebagai teks aman. Halaman berperiode memakai snapshot; katalog tanpa periode memakai master aktif.

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/api';
+import { scoringSources } from '../../lib/customFields';
 import IndikatorPeriodCard from '../../components/admin/IndikatorPeriodCard';
 import { inputStyle, buttonStyle } from '../../components/admin/IndikatorEditor';
 
@@ -34,11 +35,12 @@ export default function KonfigurasiBobot() {
     catch (e) { setError(e.message); } finally { setLoading(false); }
   }
   async function copy() {
-    if (!window.confirm('Salin bobot untuk indikator dengan metode yang sama? Bobot tujuan dan skor live periode ini akan diperbarui. Nama, deskripsi, serta formulir tetap.')) return;
+    const sources = configs.map((c) => `${c.nama}: ${scoringSources(c).map((s) => s.field.label).join(', ') || 'Jumlah capaian'}`).join('\n');
+    if (!window.confirm(`Salin bobot dengan metode dan sumber yang kompatibel? Bobot serta skor live periode tujuan akan diperbarui.\n\nSumber skor tujuan:\n${sources}`)) return;
     setLoading(true); setError('');
     try {
       const result = await apiFetch(`/api/admin/periode/${pid}/indikator/copy-bobot`, { auth: true, method: 'POST', body: { sourcePeriodeId: Number(sourcePeriod), revisions: Object.fromEntries(configs.map((c) => [c.id, c.revision])) } });
-      setMessage(`${result.copied} bobot disalin; ${result.skipped} indikator dilewati karena tidak ada pasangan metode yang sesuai.`); await load();
+      setMessage(`${result.copied} bobot disalin; ${result.skipped} indikator dilewati karena metode, sumber, atau opsi kategorinya tidak kompatibel.`); await load();
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
   return <div className="space-y-5">

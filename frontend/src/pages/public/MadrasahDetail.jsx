@@ -39,6 +39,8 @@ function mapPrestasi(apiList) {
       penyebut: p.penyebut ?? null,
       jenjangPendidikan: p.jenjangPendidikan || null,
       jumlah: p.jumlah ?? null,
+      customValues: Object.fromEntries((p.indikator?.fields || []).filter((f) => f.source === 'custom' && f.visibility === 'public' && Object.hasOwn(p.customValues || {}, f.key)).map((f) => [f.key, p.customValues[f.key]])),
+      customFields: (p.indikator?.fields || []).filter((f) => f.source === 'custom' && f.visibility === 'public'),
       // catatan intentionally not showing linkBukti
     };
   });

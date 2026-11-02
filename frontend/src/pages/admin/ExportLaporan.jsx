@@ -11,6 +11,7 @@ export default function ExportLaporan() {
   const [periodes, setPeriodes] = useState([]);
   const [periode, setPeriode] = useState('');
   const [kelompok, setKelompok] = useState('');
+  const [includeDetails, setIncludeDetails] = useState(false);
   const [loading, setLoading] = useState(null); // 'pdf' | 'excel' | null
   const [toast, setToast] = useState(null);
   const [err, setErr] = useState('');
@@ -37,6 +38,7 @@ export default function ExportLaporan() {
       const ext = isPdf ? 'pdf' : 'xlsx';
       const params = new URLSearchParams({ periodeId: periode });
       if (kelompok) params.set('kelompok', kelompok);
+      if (isPdf && includeDetails) params.set('includeDetails', 'true');
       const url = `/api/admin/export/${isPdf ? 'pdf' : 'excel'}?${params.toString()}`;
       // Use fetch with blob handling
       const headers = {};
@@ -116,6 +118,7 @@ export default function ExportLaporan() {
           </div>
         </div>
 
+        <label className="mt-5 flex items-center gap-2 text-sm"><input type="checkbox" checked={includeDetails} onChange={(e) => setIncludeDetails(e.target.checked)} />Sertakan lampiran rincian capaian pada PDF (termasuk jawaban internal)</label><p className="mt-2 text-xs text-pencil">Excel selalu memuat worksheet Rincian Capaian dengan label dan jawaban dari konfigurasi periode.</p>
         <div className="mt-5 grid sm:grid-cols-2 gap-3">
           <button
             onClick={() => triggerDownload('pdf')}

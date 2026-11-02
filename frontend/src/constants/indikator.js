@@ -1,3 +1,4 @@
+import { customPayload, customError, fieldValue, isEmpty } from '../lib/customFields';
 // Daftar kelompok dan helper formulir; metadata indikator berasal dari API periode.
 export const KELOMPOKS = ['RA', 'MI', 'MTs', 'MA'];
 
@@ -40,6 +41,7 @@ export const BUKTI_TAHUN_BERJALAN = 'Wajib bukti tahun berjalan';
 export function fieldKeysFor(fields = []) {
   const keys = new Set();
   for (const f of fields) {
+    if (f.source === 'custom') continue;
     if (f.type === 'ratio') {
       keys.add('pembilang');
       keys.add('penyebut');
@@ -54,6 +56,7 @@ export function fieldKeysFor(fields = []) {
 export function emptyRowFor(fields = []) {
   const row = {};
   for (const f of fields) {
+    if (f.source === 'custom') { row.customValues ??= {}; row.customValues[f.key] = f.type === 'multiselect' ? [] : null; continue; }
     if (f.type === 'ratio') {
       row.pembilang = '';
       row.penyebut = '';
@@ -64,6 +67,11 @@ export function emptyRowFor(fields = []) {
     }
   }
   return row;
+}
+
+export function hasFormContent(fields, row) {
+  const filled = (v) => !isEmpty(typeof v === 'string' ? v.trim() : v);
+  return fields.some((f) => f.type === 'ratio' ? filled(row.pembilang) || filled(row.penyebut) : filled(fieldValue(f, row)));
 }
 
 /**
@@ -83,6 +91,7 @@ export function validateRow(fields, row, { mode = 'submit' } = {}) {
   const isSubmit = mode === 'submit';
   const errors = {};
   for (const f of fields) {
+    if (f.source === 'custom') { const error = customError(f, row.customValues?.[f.key], mode); if (error) errors[f.key] = error; continue; }
     if (f.type === 'ratio') {
       const p = Number(row.pembilang);
       const s = Number(row.penyebut);
@@ -138,5 +147,6 @@ export function buildPayload(fields, row) {
       payload[key] = typeof v === 'string' ? v.trim() : v;
     }
   }
+  if (fields.some((f) => f.source === 'custom')) payload.customValues = customPayload(fields, row.customValues);
   return payload;
 }

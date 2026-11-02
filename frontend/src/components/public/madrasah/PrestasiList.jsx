@@ -1,4 +1,5 @@
 import { Trophy, Medal, GraduationCap, UsersThree, Lightbulb, Buildings, ChartBar, CheckCircle, Calendar } from 'phosphor-react';
+import { formatFieldValue } from '../../../lib/customFields';
 
 const tingkatStyle = {
   Kabupaten: 'bg-white border-zinc-200 text-charcoal',
@@ -122,6 +123,7 @@ export default function PrestasiList({ prestasi = [] }) {
                       </span>
                       )}
                     </div>
+                    <dl className="mt-3 grid gap-2 text-xs">{(p.customFields || []).filter((f) => Object.hasOwn(p.customValues || {}, f.key)).map((f) => <div key={f.key}><dt className="font-bold text-pencil">{f.label}</dt><dd className="break-words whitespace-pre-line text-charcoal">{formatFieldValue(f, p)}</dd></div>)}</dl>
                     <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-faded">
                       <Calendar size={12} weight="regular" /> Tahun {p.tahun}
                       <span className="w-1 h-1 rounded-full bg-faded" />

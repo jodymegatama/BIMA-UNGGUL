@@ -9,7 +9,7 @@ import DraftPanel from '../../components/operator/DraftPanel';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
-import { emptyRowFor, validateRow, buildPayload } from '../../constants/indikator';
+import { emptyRowFor, validateRow, buildPayload, hasFormContent } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
 import { useOperator } from '../../context/OperatorContext';
 import { collectServerDrafts, groupDraftsByKode } from '../../lib/allDrafts';
@@ -70,6 +70,7 @@ export default function InputCapaian() {
             indikatorKode: kode,
             indikatorNama: r0.indikator?.nama,
             namaKegiatan: r0.namaKegiatan || '',
+            customValues: r0.customValues || {},
             institusi: r0.institusi || '',
             namaPeserta: r0.namaPeserta || '',
             statusPegawai: r0.statusPegawai || '',
@@ -164,9 +165,9 @@ export default function InputCapaian() {
     () =>
       Object.values(data)
         .flat()
-        .filter((r) => String(r.id).startsWith('new-') && Object.entries(r).some(([k, v]) => !k.startsWith('_') && !['id', 'indikatorKode', 'status'].includes(k) && String(v ?? '').trim() !== ''))
+        .filter((r) => String(r.id).startsWith('new-') && hasFormContent(indikators.find((i) => i.kode === r.indikatorKode)?.fields || [], r))
         .length,
-    [data]
+    [data, indikators]
   );
 
   // Jumlah draft server per indikator — badge angka di IndikatorTabs + panel tab aktif
@@ -204,7 +205,7 @@ export default function InputCapaian() {
     const kode = findRowKode(id);
     setData((prev) => ({
       ...prev,
-      [kode]: (prev[kode] || []).map((r) => (String(r.id) === String(id) ? { ...r, [field]: val, _error: { ...r._error, [field]: undefined } } : r)),
+      [kode]: (prev[kode] || []).map((r) => (String(r.id) === String(id) ? { ...r, [field]: val, _error: field === 'customValues' ? {} : { ...r._error, [field]: undefined } } : r)),
     }));
   };
 
@@ -275,7 +276,7 @@ export default function InputCapaian() {
 
   /** Baris dianggap "ada isi" jika minimal satu field dinamis terisi. */
   function rowHasContent(r) {
-    return Object.entries(r).some(([k, v]) => !k.startsWith('_') && !['id', 'indikatorKode', 'status'].includes(k) && String(v ?? '').trim() !== '');
+    return hasFormContent(activeFields, r);
   }
 
   const handleDraft = async () => {

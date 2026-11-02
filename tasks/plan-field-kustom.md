@@ -1,7 +1,7 @@
 # Rencana: field kustom operator dan sumber perhitungan skor
 
 Tanggal: 2 November 2026.
-Status: disetujui pengguna; implementasi bertahap sedang berjalan. Fondasi domain dan schema selesai; integrasi API/UI belum selesai. Lihat [progres](progres-field-kustom.md).
+Status: disetujui pengguna dan selesai diimplementasikan secara lokal pada 2 November 2026, termasuk integrasi API/UI, perhitungan skor, privasi dan ekspor. Lihat [progres](progres-field-kustom.md).
 Checklist: [todo-field-kustom.md](todo-field-kustom.md).
 Fondasi yang sudah selesai: [hasil indikator dinamis](hasil-implementasi-indikator-dinamis.md).
 

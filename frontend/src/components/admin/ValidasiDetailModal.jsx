@@ -1,3 +1,5 @@
+import { formatFieldValue } from '../../lib/customFields';
+import ScoreSourceSummary from '../shared/ScoreSourceSummary';
 import DeskripsiIndikator from '../shared/DeskripsiIndikator';
 import { useState } from 'react';
 import { X, Link as LinkIcon, CheckCircle, XCircle, ArrowClockwise, WarningCircle, Calendar } from 'phosphor-react';
@@ -53,11 +55,12 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
           <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-4 space-y-2">
             <div className="text-[11px] font-black tracking-wide text-faded uppercase">Detail capaian</div>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              {(item.indikatorConfig?.fields || []).filter((f) => f.key !== 'linkBukti').map((f) => <div key={f.key}><span className="font-bold text-pencil">{f.label}</span><div className="whitespace-pre-line break-words text-charcoal">{f.type === 'ratio' ? `${item.pembilang ?? '-'} dari ${item.penyebut ?? '-'}` : String(item._raw?.[f.key] ?? item[f.key] ?? '-')}</div></div>)}
+              {(item.indikatorConfig?.fields || []).filter((f) => f.key !== 'linkBukti').map((f) => <div key={f.key}><span className="font-bold text-pencil">{f.label}</span><div className="whitespace-pre-line break-words text-charcoal">{f.type === 'ratio' ? `${item.pembilang ?? '-'} dari ${item.penyebut ?? '-'}` : formatFieldValue(f, { ...item, ...item._raw })}</div></div>)}
             </div>
             {item.alasan && <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 text-[12px]"><span className="font-black text-red-900">Alasan penolakan sebelumnya:</span> <span className="font-medium text-red-800">{item.alasan}</span></div>}
           </div>
 
+          <ScoreSourceSummary config={item.indikatorConfig} row={{ ...item, ...item._raw }} />
           <DeskripsiIndikator deskripsi={item.indikatorConfig?.deskripsi} collapsible />
           {/* linkBukti nullable di DB (draft boleh tanpa bukti — migration
               20261002163000). Submit tetap mewajibkannya, jadi baris di antrean

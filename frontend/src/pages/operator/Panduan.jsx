@@ -8,6 +8,7 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
 import DeskripsiIndikator from '../../components/shared/DeskripsiIndikator';
 import { useOperator } from '../../context/OperatorContext';
+import { customTypeLabels } from '../../lib/customFields';
 import { deriveStatusClient, formatTanggal, countdownText } from '../../lib/periode';
 
 /**
@@ -188,6 +189,10 @@ function faqCutoffAnswer(periode) {
 
 /** Hint singkat tipe field untuk ringkasan indikator. */
 function fieldHint(f) {
+  if (f.source === 'custom') {
+    const bounds = ['integer', 'decimal'].includes(f.type) ? `, ${f.min ?? -1e9} sampai ${f.max ?? 1e9}${f.type === 'decimal' ? `, maksimal ${f.precision ?? 6} angka desimal` : ''}` : f.maxLen ? `, maksimal ${f.maxLen} karakter` : '';
+    return `${customTypeLabels[f.type] || f.type}${bounds}${f.options ? `: ${f.options.map((o) => o.label).join(' / ')}` : ''}`;
+  }
   if (f.type === 'ratio') return `${f.pembilangLabel} ÷ ${penyebutLabelSafe(f)} (%)`;
   if (f.type === 'select') return (f.options || []).map((o) => o.label).join(' / ');
   if (f.type === 'textarea') return 'teks panjang';
