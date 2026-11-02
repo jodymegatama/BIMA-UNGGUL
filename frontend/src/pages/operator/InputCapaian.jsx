@@ -1,3 +1,4 @@
+import DeskripsiIndikator from '../../components/shared/DeskripsiIndikator';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
@@ -8,7 +9,7 @@ import DraftPanel from '../../components/operator/DraftPanel';
 import CapaianRow from '../../components/operator/CapaianRow';
 import DeleteDraftModal from '../../components/operator/DeleteDraftModal';
 import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
-import { INDIKATORS, emptyRowFor, validateRow, buildPayload } from '../../constants/indikator';
+import { emptyRowFor, validateRow, buildPayload } from '../../constants/indikator';
 import { apiFetch } from '../../lib/api';
 import { useOperator } from '../../context/OperatorContext';
 import { collectServerDrafts, groupDraftsByKode } from '../../lib/allDrafts';
@@ -31,9 +32,10 @@ export default function InputCapaian() {
   const madrasahNama = madrasah?.nama || '-';
   const [searchParams, setSearchParams] = useSearchParams();
   const [periodeNama, setPeriodeNama] = useState('—');
-  const [indikators, setIndikators] = useState(INDIKATORS);
-  const [active, setActive] = useState('diklat');
-  const [data, setData] = useState(() => groupByIndikator([], INDIKATORS));
+  const [loadedPeriodId, setLoadedPeriodId] = useState(null);
+  const [indikators, setIndikators] = useState([]);
+  const [active, setActive] = useState('');
+  const [data, setData] = useState(() => groupByIndikator([], []));
   // busy: 'draft' | 'submit' | null — loading state tombol aksi (anti double-submit)
   const [busy, setBusy] = useState(null);
   const [lastAction, setLastAction] = useState(null); // {type:'success'|'error'|'info', msg} untuk status inline aria-live
@@ -106,11 +108,12 @@ export default function InputCapaian() {
         // sharedFlight: satu request dengan OperatorContext/Dashboard yang memuat
         // endpoint sama di halaman ini (dan StrictMode double-effect).
         const res = await sharedFlight.run(getKey('/api/operator/indikator'), () => apiFetch('/api/operator/indikator', { auth: true }));
-        if (!ignore && res?.periode?.namaPeriode) setPeriodeNama(res.periode.namaPeriode);
+        if (!ignore && res?.periode?.namaPeriode) { setPeriodeNama(res.periode.namaPeriode); setLoadedPeriodId(res.periode.id); }
         // backend may return { data: [...] } or array directly
         const list = Array.isArray(res) ? res : (res.data || res.indikators || res.indikator || []);
         if (!ignore && Array.isArray(list) && list.length) {
           const mapped = list.map((it) => ({
+            ...it,
             kode: it.slug || it.kode || it.indikatorKode,
             nama: it.nama || it.namaIndikator || it.kode,
             short: it.short || (it.nama || it.kode || '').slice(0, 12),
@@ -130,8 +133,8 @@ export default function InputCapaian() {
             if (res?.periode?.id && !ignore) loadDrafts();
           }
         }
-      } catch {
-        // keep skeleton constants — tidak error UI
+      } catch (e) {
+        if (!ignore) setLastAction({ type: 'error', msg: e.message || 'Gagal memuat indikator. Muat ulang halaman.' });
       }
     }
     fetchIndikator();
@@ -143,6 +146,8 @@ export default function InputCapaian() {
   const counts = useMemo(() => Object.fromEntries(indikators.map((ind) => [ind.kode, (data[ind.kode] || []).length])), [data, indikators]);
   const activeInd = indikators.find((i) => i.kode === active);
   const activeIndikatorId = activeInd?.id;
+  const activeFields = activeInd?.fields || [];
+  const inputClosed = !activeInd?.menerimaInput || (ctxPeriode?.id && loadedPeriodId !== ctxPeriode.id);
 
   // Draft server (id numeric) pada tab aktif — untuk strip info & intersep hapus
   const serverDraftRows = rows.filter((r) => typeof r.id === 'number');
@@ -245,10 +250,11 @@ export default function InputCapaian() {
   }
 
   const addRow = () => {
+    if (inputClosed) return;
     const newId = `new-${active}-${Date.now()}`;
     setData((prev) => ({
       ...prev,
-      [active]: [...prev[active], { id: newId, indikatorKode: active, status: 'Draft', ...emptyRowFor(active), _idx: prev[active].length + 1, _error: {} }],
+      [active]: [...(prev[active] || []), { id: newId, indikatorKode: active, status: 'Draft', ...emptyRowFor(activeFields), _idx: (prev[active] || []).length + 1, _error: {} }],
     }));
   };
 
@@ -257,7 +263,7 @@ export default function InputCapaian() {
     let hasErr = false;
     const updated = rows.map((r) => {
       // validasi config-driven per indikator (PRD §11) — required, URL, number, ratio
-      const e = validateRow(active, r, { mode });
+      const e = validateRow(activeFields, r, { mode });
       if (Object.keys(e).length) hasErr = true;
       return { ...r, _error: e };
     });
@@ -273,7 +279,7 @@ export default function InputCapaian() {
   }
 
   const handleDraft = async () => {
-    if (allMode) return; // tombol disembunyikan di mode semua — guard tambahan
+    if (allMode || inputClosed) return; // tombol disembunyikan di mode semua — guard tambahan
     if (!validateRows('draft')) {
       toast.error('Format kolom yang diisi belum sesuai.');
       return;
@@ -287,12 +293,12 @@ export default function InputCapaian() {
       setData((prev) => ({ ...prev, [active]: prev[active].map((r) => ({ ...r, status: 'Draft' })) }));
       if (activeIndikatorId) {
         // PERTAHANKAN id server → saveItems melakukan UPDATE, bukan membuat duplikat
-        const items = rows.filter(rowHasContent).map((r) => ({ ...(typeof r.id === 'number' ? { id: r.id } : {}), ...buildPayload(active, r) }));
+        const items = rows.filter(rowHasContent).map((r) => ({ ...(typeof r.id === 'number' ? { id: r.id } : {}), ...buildPayload(activeFields, r) }));
         if (items.length === 0) {
           setLastAction({ type: 'info', msg: 'Tidak ada baris berisi untuk disimpan.' });
           toast.info('Tidak ada baris berisi untuk disimpan.');
         } else {
-          await apiFetch(`/api/operator/indikator/${activeIndikatorId}/draft`, { method: 'POST', body: { items }, auth: true });
+          await apiFetch(`/api/operator/indikator/${activeIndikatorId}/draft`, { method: 'POST', body: { items, revision: activeInd.revision, periodeId: loadedPeriodId }, auth: true });
           const msg = `Draft tersimpan untuk ${activeInd?.nama} — ${items.length} baris.`;
           setLastAction({ type: 'success', msg });
           // Toast dengan angka + aksi "Lihat Draft" (API action: Sonner docs via Context7)
@@ -332,7 +338,7 @@ export default function InputCapaian() {
   };
 
   const handleSubmit = async () => {
-    if (allMode) return; // tombol disembunyikan di mode semua — guard tambahan
+    if (allMode || inputClosed) return; // tombol disembunyikan di mode semua — guard tambahan
     if (!validateRows()) {
       toast.error('Lengkapi field wajib sesuai indikator.');
       return;
@@ -342,14 +348,14 @@ export default function InputCapaian() {
     try {
       setData((prev) => ({ ...prev, [active]: prev[active].map((r) => ({ ...r, status: 'Menunggu' })) }));
       if (activeIndikatorId) {
-        const items = rows.filter(rowHasContent).map((r) => ({ ...(r.id && !String(r.id).startsWith('new-') ? { id: r.id } : {}), ...buildPayload(active, r) }));
+        const items = rows.filter(rowHasContent).map((r) => ({ ...(r.id && !String(r.id).startsWith('new-') ? { id: r.id } : {}), ...buildPayload(activeFields, r) }));
         if (items.length === 0) {
           const msg = 'Tidak ada baris berisi untuk dikirim.';
           setLastAction({ type: 'error', msg });
           toast.error(msg);
           setData((prev) => ({ ...prev, [active]: prev[active].map((r) => ({ ...r, status: 'Draft' })) }));
         } else {
-          await apiFetch(`/api/operator/indikator/${activeIndikatorId}/submit`, { method: 'POST', body: { items }, auth: true });
+          await apiFetch(`/api/operator/indikator/${activeIndikatorId}/submit`, { method: 'POST', body: { items, revision: activeInd.revision, periodeId: loadedPeriodId }, auth: true });
           const msg = `${items.length} baris dikirim untuk validasi (Menunggu).`;
           setLastAction({ type: 'success', msg });
           toast.success(msg, { description: `${activeInd?.nama} • ${madrasahNama}` });
@@ -383,13 +389,15 @@ export default function InputCapaian() {
             <Buildings size={12} weight="regular" /> {madrasahNama} • <span className="font-black text-charcoal">{activeInd?.nama}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
           <span className="hidden sm:inline-flex items-center h-7 px-3 rounded-full bg-white border-2 border-zinc-200 text-[11px] font-bold text-pencil whitespace-nowrap"><span className="font-black text-charcoal">Periode</span> {ctxPeriode?.namaPeriode || periodeNama}</span>
           <PeriodeCutoffChip periode={ctxPeriode} />
-          <span className="inline-flex items-center h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark whitespace-nowrap">{INDIKATORS.length} indikator</span>
+          <span className="inline-flex items-center h-7 px-3 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark whitespace-nowrap">{indikators.length} indikator</span>
         </div>
       </div>
 
+      {activeInd && <DeskripsiIndikator deskripsi={activeInd.deskripsi} konteks={`Periode ${periodeNama}`} />}
+      {inputClosed && <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm">Input indikator belum diaktifkan atau telah dihentikan admin. Data tersimpan tetap dapat dibaca.</p>}
       <IndikatorTabs
         activeKode={active}
         onChange={(kode) => {
@@ -447,7 +455,7 @@ export default function InputCapaian() {
       )}
 
       <div className="rounded-[16px] border-2 border-zinc-200 bg-white p-4 flex items-start gap-3 shadow-card">
-        <div className="w-9 h-9 rounded-[12px] bg-eager border-2 border-eager-dark shadow-sticker flex items-center justify-center shrink-0 text-white font-black text-[12px]">0{indikators.findIndex((i) => i.kode === active) + 1}</div>
+        <div className="w-9 h-9 rounded-[12px] bg-eager border-2 border-eager-dark shadow-sticker flex items-center justify-center shrink-0 text-white font-black text-[12px]">{String(indikators.findIndex((i) => i.kode === active) + 1).padStart(2, '0')}</div>
         <div>
           <div className="font-display font-black text-[15px] text-charcoal leading-tight">{activeInd?.nama}</div>
           <div className="text-[11px] font-mono font-bold text-faded">{activeInd?.kode}</div>
@@ -473,7 +481,7 @@ export default function InputCapaian() {
               return (
                 <div key={kode}>
                   <div className="flex items-center gap-2.5 mb-3">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-[10px] bg-eager border-2 border-eager-dark text-white text-[11px] font-black">0{indikators.findIndex((i) => i.kode === kode) + 1}</span>
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-[10px] bg-eager border-2 border-eager-dark text-white text-[11px] font-black">{String(indikators.findIndex((i) => i.kode === kode) + 1).padStart(2, '0')}</span>
                     <span className="font-display font-black text-[14px] text-charcoal">{ind?.nama || kode}</span>
                     <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-100 text-[11px] font-black text-pencil">{list.length} draft</span>
                     <button
@@ -497,7 +505,7 @@ export default function InputCapaian() {
                   <div className="grid gap-4">
                     {list.map((r) => (
                       <div key={r.id} data-row-id={r.id} className="rounded-[16px] scroll-mt-24 transition-shadow">
-                        <CapaianRow row={r} indikatorKode={kode} onChange={updateRow} onRemove={handleRemoveRequest} />
+                        <CapaianRow row={r} indikatorKode={kode} fields={ind?.fields || []} onChange={updateRow} onRemove={handleRemoveRequest} />
                       </div>
                     ))}
                   </div>
@@ -532,7 +540,7 @@ export default function InputCapaian() {
                   Tambahkan baris pertama untuk indikator <b>{activeInd?.nama}</b> — bisa lebih dari satu, tanpa batas jumlah.
                 </p>
                 <button
-                  onClick={addRow}
+                  onClick={addRow} disabled={inputClosed}
                   className="mt-5 inline-flex items-center gap-2 h-11 px-6 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition"
                 >
                   <PlusCircle size={18} weight="bold" color="white" /> Tambah Baris Baru
@@ -561,13 +569,13 @@ export default function InputCapaian() {
             <div className="grid gap-4">
               {rows.map((r) => (
                 <div key={r.id} data-row-id={r.id} className="rounded-[16px] scroll-mt-24 transition-shadow">
-                  <CapaianRow row={r} indikatorKode={active} onChange={updateRow} onRemove={handleRemoveRequest} />
+                  <CapaianRow row={r} indikatorKode={active} fields={activeFields} onChange={updateRow} onRemove={handleRemoveRequest} />
                 </div>
               ))}
             </div>
 
             <div className="flex flex-wrap items-center gap-3 mt-4">
-              <button onClick={addRow} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-charcoal">
+              <button onClick={addRow} disabled={inputClosed} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-charcoal">
                 <PlusCircle size={16} weight="bold" /> Tambah baris baru
               </button>
               <span className="text-[11px] font-medium text-faded">Tanpa batas jumlah (PRD anti-goal)</span>
@@ -615,7 +623,7 @@ export default function InputCapaian() {
             {!allMode && (
               <button
                 onClick={handleDraft}
-                disabled={!!busy || rows.length === 0}
+                disabled={inputClosed || !!busy || rows.length === 0}
                 title={rows.length === 0 ? 'Tambahkan baris terlebih dahulu' : undefined}
                 className="flex-1 inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[14px] hover:border-charcoal hover:bg-zinc-50 disabled:opacity-60 disabled:pointer-events-none transition"
               >
@@ -626,7 +634,7 @@ export default function InputCapaian() {
             {!allMode && (
               <button
                 onClick={handleSubmit}
-                disabled={!!busy || rows.length === 0}
+                disabled={inputClosed || !!busy || rows.length === 0}
                 title={rows.length === 0 ? 'Tambahkan baris terlebih dahulu' : undefined}
                 className="flex-1 inline-flex items-center justify-center gap-2 h-11 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none disabled:opacity-60 disabled:pointer-events-none disabled:shadow-none transition"
               >

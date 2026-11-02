@@ -11,7 +11,7 @@ Alur: **Input Operator → Validasi Admin → Skor Otomatis → Leaderboard Publ
 ## Fitur Utama
 
 - **3 Zona Role**: Publik (read-only), Operator Madrasah, Admin Pendma
-- **9 Indikator Mutu** berbobot (konfigurasi per periode): diklat, penghargaan individu/institusi, prestasi siswa, lulus jenjang lanjutan, rapor >85, siswa lanjutan unggulan, giat inovatif, rasio penerimaan
+- **Indikator Mutu dinamis** dengan CRUD admin, deskripsi publik/operator, formulir, metode skor, dan bobot per periode. Sembilan indikator awal: diklat, penghargaan individu/institusi, prestasi siswa, lulus jenjang lanjutan, rapor >85, siswa lanjutan unggulan, giat inovatif, rasio penerimaan
 - **4 Kelompok Pemeringkatan**: RA, MI, MTS, MA — negeri dan swasta digabung per jenjang, dengan tie-breaker deterministik
 - **Skor Live** — `Σ(capaian disetujui × bobot)` realtime tanpa cache, leaderboard update otomatis setelah approve/revoke/ubah bobot
 - **Validasi Berjenjang** — approve / reject (alasan wajib) / revoke, antrian dengan filter status/madrasah/indikator/periode
@@ -20,7 +20,7 @@ Alur: **Input Operator → Validasi Admin → Skor Otomatis → Leaderboard Publ
 - **Audit Trail & Notifikasi** — log lengkap per aksi + notifikasi in-app
 - **Dark / Light Mode** — toggle persisten di semua zona
 
-Pengelompokan empat jenjang berlaku untuk semua periode, termasuk finalisasi/arsip. RA menggunakan sembilan indikator dan bobot periode yang sama. Nilai API `MTs` ditampilkan sebagai MTS; filter kelompok lama tetap diterima dan digabung per jenjang.
+Pengelompokan empat jenjang berlaku untuk semua periode, termasuk finalisasi/arsip. RA menggunakan konfigurasi indikator dan bobot periode yang sama dengan jenjang lain. Nilai API `MTs` ditampilkan sebagai MTS; filter kelompok lama tetap diterima dan digabung per jenjang.
 
 Untuk data lama, terapkan migration Prisma lalu regenerasi client. Script `npm run db:migrate-kelompok -w backend` memeriksa data tanpa menulis; tambahkan `-- --apply` untuk memperbaiki kelompok yang belum sesuai. Script mencakup data nonaktif dan idempoten. Lihat [hasil implementasi dan verifikasi](tasks/hasil-implementasi-empat-kelompok.md).
 
@@ -109,7 +109,7 @@ VITE_API_URL=https://domain-anda/api
 ```bash
 npx prisma generate --schema=backend/prisma/schema.prisma
 npm run db:migrate        # atau: npx prisma migrate dev --schema=backend/prisma/schema.prisma
-npm run db:seed           # seed 9 indikator master (wajib); admin awal opsional via INITIAL_ADMIN_*
+npm run db:seed           # bootstrap indikator awal dan backfill konfigurasi periode (wajib); admin awal opsional via INITIAL_ADMIN_*
 # opsional dev:
 node backend/prisma/seed-demo.js   # 39 madrasah demo Pasuruan → periode 2026/2027 (jangan di produksi)
 ```
@@ -147,7 +147,7 @@ npm run frontend:dev
 
 ## Deploy Produksi
 
-Pada startup backend, Docker menjalankan `prisma migrate deploy`, seed 9 indikator,
+Pada startup backend, Docker menjalankan `prisma migrate deploy`, bootstrap indikator awal dan backfill konfigurasi periode,
 dan bootstrap admin opsional sebelum server mulai. Kredensial admin awal dibaca
 dari environment server dan tidak disimpan di repository.
 
@@ -186,3 +186,5 @@ Auth: `Authorization: Bearer <accessToken>` + refresh via httpOnly cookie, auto-
 ## Lisensi
 
 Internal — Kantor Kementerian Agama Kabupaten Pasuruan. Tidak untuk distribusi publik tanpa izin.
+
+Panduan CRUD indikator, konfigurasi/deskripsi per periode, dan migrasi: [Indikator dinamis](backend/docs/indikator-dinamis.md).

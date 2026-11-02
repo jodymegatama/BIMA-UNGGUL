@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IdentificationCard, Envelope, Lock, Eye, EyeSlash, WarningCircle, CheckCircle, SpinnerGap, Buildings, ShieldCheck } from 'phosphor-react';
 import { useAuth } from '../../context/AuthContext';
-import { INDIKATORS } from '../../constants/indikator';
 
 /**
  * LoginForm - identitas + password, kondisional per role pill:
@@ -106,7 +105,7 @@ if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$/.test(ident)) return set
           </button>
         </div>
         <div className="text-[11px] font-medium text-faded mt-1.5">
-          {isOperator ? `Akun madrasah — kelola ${INDIKATORS.length} indikator` : 'Seksi Pendma — validasi & kelola periode'}
+          {isOperator ? 'Akun madrasah — kelola capaian indikator' : 'Seksi Pendma — validasi & kelola periode'}
         </div>
       </div>
 

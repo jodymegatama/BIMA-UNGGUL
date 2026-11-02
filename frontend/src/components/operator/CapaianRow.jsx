@@ -1,6 +1,5 @@
 import { Trash, Link as LinkIcon, WarningCircle } from 'phosphor-react';
 import StatusBadge from '../shared/StatusBadge';
-import { INDIKATOR_FIELDS } from '../../constants/indikator';
 
 /**
  * CapaianRow — form dinamis per indikator berdasarkan INDIKATOR_FIELDS (PRD §11).
@@ -20,8 +19,8 @@ function RatioPreview({ pembilang, penyebut }) {
   );
 }
 
-export default function CapaianRow({ row, indikatorKode, onChange, onRemove, showStatus = true }) {
-  const fields = INDIKATOR_FIELDS[indikatorKode] || [];
+export default function CapaianRow({ row, onChange, onRemove, showStatus = true, fields: configuredFields }) {
+  const fields = configuredFields || [];
   const err = row._error || {};
 
   const renderField = (f) => {

@@ -24,16 +24,14 @@ import {
   WarningCircle,
   SpinnerGap,
 } from 'phosphor-react';
-import { INDIKATORS } from '../../constants/indikator';
 import { formatSkor } from '../../lib/format';
 import IndikatorTable from '../../components/public/madrasah/IndikatorTable';
 
-function mapIndikatorSkor(breakdown) {
-  if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0 }));
-  return INDIKATORS.map((ind) => ({
-    ...ind,
-    skor: typeof breakdown[ind.kode] === 'number' ? Math.round(breakdown[ind.kode]) : 0,
-  }));
+function mapIndikatorSkor(breakdown, indicators = []) {
+  return indicators.map((ind) => {
+    const raw = typeof breakdown?.[ind.slug] === 'number' ? breakdown[ind.slug] : 0;
+    return { ...ind, kode: ind.slug, short: ind.short || ind.nama, skor: raw, skorRaw: raw };
+  });
 }
 
 export default function ProfilMadrasah() {
@@ -74,7 +72,7 @@ export default function ProfilMadrasah() {
           const detail = await fetchSkorDetail(m.slug);
           if (ignore) return;
           if (detail?.skor) setSkorTotal(detail.skor.totalScore ?? 0);
-          setIndikatorSkor(mapIndikatorSkor(detail?.skor?.breakdown));
+          setIndikatorSkor(mapIndikatorSkor(detail?.skor?.breakdown, detail?.indikators));
         } catch { /* skor belum tersedia */ }
       }
       // rank per kelompok

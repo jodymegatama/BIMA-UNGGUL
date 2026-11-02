@@ -1,5 +1,5 @@
 import { Trophy, CheckCircle } from 'phosphor-react';
-import { INDIKATORS } from '../../../constants/indikator';
+import DeskripsiIndikator from '../../shared/DeskripsiIndikator';
 import { formatSkor } from '../../../lib/format';
 
 /**
@@ -18,7 +18,7 @@ export default function IndikatorTable({ data = [] }) {
           </span>
           <div>
             <div className="text-[13px] font-black text-charcoal leading-none">Rincian skor per indikator</div>
-            <div className="text-[11px] font-bold text-pencil">{INDIKATORS.length} indikator • total {totalDisplay} poin</div>
+            <div className="text-[11px] font-bold text-pencil">{data.length} indikator • total {totalDisplay} poin</div>
           </div>
         </div>
         <span className="hidden sm:inline-flex items-center shrink-0 gap-1 text-[11px] font-bold text-faded bg-white border-2 border-zinc-200 rounded-full px-3 h-7 whitespace-nowrap">
@@ -44,7 +44,7 @@ export default function IndikatorTable({ data = [] }) {
                 <tr key={row.kode} className="hover:bg-zinc-50/70">
                   <td className="px-4 py-3">
                     <div className="text-[13px] font-black text-charcoal leading-tight">{row.nama}</div>
-                    <div className="text-[11px] font-bold text-pencil">{row.kode}</div>
+                    <DeskripsiIndikator deskripsi={row.deskripsi} collapsible />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center justify-center h-7 px-3 rounded-full bg-charcoal text-white text-[12px] font-black">

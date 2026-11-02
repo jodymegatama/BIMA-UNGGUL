@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, Info, ShareNetwork, Trophy, WarningCircle, ArrowsClockwise } from 'phosphor-react';
 import ProfileHeader from '../../components/public/madrasah/ProfileHeader';
 import IndikatorChart from '../../components/public/madrasah/IndikatorChart';
@@ -7,8 +7,6 @@ import IndikatorTable from '../../components/public/madrasah/IndikatorTable';
 import PrestasiList from '../../components/public/madrasah/PrestasiList';
 import useRevealOnScroll from '../../hooks/useRevealOnScroll';
 import { apiGet } from '../../lib/api';
-import { INDIKATORS } from '../../constants/indikator';
-import { formatSkor } from '../../lib/format';
 
 /**
  * MadrasahDetail — /madrasah/:slug (PRD US9)
@@ -46,16 +44,17 @@ function mapPrestasi(apiList) {
   });
 }
 
-function mapIndikatorSkor(breakdown) {
-  if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0, skorRaw: 0 }));
-  return INDIKATORS.map((ind) => {
-    const raw = typeof breakdown[ind.kode] === 'number' && Number.isFinite(breakdown[ind.kode]) ? breakdown[ind.kode] : 0;
-    return { ...ind, skor: raw, skorRaw: raw, skorDisplay: formatSkor(raw) };
+function mapIndikatorSkor(breakdown, indicators = []) {
+  return indicators.map((ind) => {
+    const raw = typeof breakdown?.[ind.slug] === 'number' ? breakdown[ind.slug] : 0;
+    return { ...ind, kode: ind.slug, short: ind.short || ind.nama, skor: raw, skorRaw: raw };
   });
 }
 
 export default function MadrasahDetail() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const periodeId = searchParams.get("periodeId");
   const ref = useRef(null);
   useRevealOnScroll(ref);
 
@@ -74,7 +73,7 @@ export default function MadrasahDetail() {
       setError(null);
       setNotFound(false);
       try {
-        const data = await apiGet(`/api/madrasah/${encodeURIComponent(slug)}`);
+        const data = await apiGet(`/api/madrasah/${encodeURIComponent(slug)}${periodeId ? `?periodeId=${encodeURIComponent(periodeId)}` : ""}`);
         if (ignore) return;
         const m = data.madrasah;
         const skor = data.skor;
@@ -99,7 +98,7 @@ export default function MadrasahDetail() {
           updatedAt: m.updatedAt || per?.updatedAt || new Date().toISOString(),
         };
         setMadrasahUi(adapted);
-        setIndikatorSkor(mapIndikatorSkor(skor?.breakdown));
+        setIndikatorSkor(mapIndikatorSkor(skor?.breakdown, data.indikators));
         const cleanPrestasi = mapPrestasi(data.prestasi);
         // final guarantee: ensure no item contains linkBukti key
         cleanPrestasi.forEach((p) => {
@@ -116,7 +115,7 @@ export default function MadrasahDetail() {
     }
     fetchDetail();
     return () => { ignore = true; };
-  }, [slug]);
+  }, [slug, periodeId]);
 
   // 404 fallback — reuse style sebelumnya tapi tanpa mock list yang menyesatkan
   if (notFound) {

@@ -32,6 +32,7 @@ const EMPTY_PERIODE = null;
 export function OperatorProvider({ children }) {
   const { token, user } = useAuth();
   const [madrasah, setMadrasah] = useState(EMPTY);
+  const [indikators, setIndikators] = useState([]);
   const [periode, setPeriode] = useState(EMPTY_PERIODE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,6 +53,7 @@ export function OperatorProvider({ children }) {
     try {
       const data = await sharedFlight.run(getKey('/api/operator/indikator'), () => apiFetch('/api/operator/indikator', { auth: true }));
       setPeriode(data?.periode || EMPTY_PERIODE);
+      setIndikators(data?.indikators || []);
       return data || null;
     } catch {
       // gagal — biarkan periode sebelumnya / null; halaman tetap berfungsi
@@ -133,6 +135,7 @@ export function OperatorProvider({ children }) {
 
   const value = useMemo(() => ({
     madrasah,
+    indikators,
     periode,
     loading,
     error,
@@ -140,7 +143,7 @@ export function OperatorProvider({ children }) {
     refreshIndikator,
     updateMadrasah,
     setMadrasah,
-  }), [madrasah, periode, loading, error, refresh, refreshIndikator, updateMadrasah]);
+  }), [madrasah, indikators, periode, loading, error, refresh, refreshIndikator, updateMadrasah]);
 
   return <OperatorContext.Provider value={value}>{children}</OperatorContext.Provider>;
 }

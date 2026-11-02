@@ -77,7 +77,9 @@ export default function RiwayatSubmission() {
   const [deletingDraft, setDeletingDraft] = useState(false);
 
   // Periode aktif dari context (single-flight GET /api/operator/indikator)
-  const { periode: ctxPeriode } = useOperator();
+  const { periode: ctxPeriode, indikators = [] } = useOperator();
+  const fieldsFor = (kode) => indikators.find((i) => i.slug === kode)?.fields || [];
+  const revisionFor = (kode) => indikators.find((i) => i.slug === kode)?.revision;
   const periodeU = urgency(ctxPeriode); // 'closed' berarti tidak bisa tulis (setara guard requireWritablePeriod)
   const periodeClosed = periodeU === 'closed';
   const cutTgl = ctxPeriode?.tanggalCutoff ? formatTanggal(ctxPeriode.tanggalCutoff) : null;
@@ -162,7 +164,7 @@ export default function RiwayatSubmission() {
       setTimeout(() => setToast(null), 3000);
       return;
     }
-    const e = validateRow(editing.indikatorKode, editing);
+    const e = validateRow(fieldsFor(editing.indikatorKode), editing);
     if (Object.keys(e).length) {
       setEditing((prev) => ({ ...prev, _error: e }));
       return;
@@ -173,7 +175,7 @@ export default function RiwayatSubmission() {
     const editingSnapshot = editing;
     setEditing(null);
     try {
-      await apiFetch(`/api/operator/submission-item/${editingSnapshot.id}`, { method: 'PATCH', body: buildPayload(editingSnapshot.indikatorKode, editingSnapshot), auth: true });
+      await apiFetch(`/api/operator/submission-item/${editingSnapshot.id}`, { method: 'PATCH', body: { ...buildPayload(fieldsFor(editingSnapshot.indikatorKode), editingSnapshot), revision: revisionFor(editingSnapshot.indikatorKode) }, auth: true });
       setToast({ type: 'success', msg: 'Perubahan dikirim ulang — status Menunggu.' });
     } catch (e2) {
       // rollback HANYA baris ini — memulihkan seluruh array akan menghidupkan
@@ -196,7 +198,7 @@ export default function RiwayatSubmission() {
     const prevRow = rows.find((r) => r.id === id);
     setRows((prevR) => prevR.map((r) => (r.id === id ? { ...r, status: 'Menunggu', updatedAt: new Date().toISOString() } : r)));
     try {
-      await apiFetch(`/api/operator/submission-item/${id}`, { method: 'PATCH', body: { status: 'menunggu' }, auth: true });
+      await apiFetch(`/api/operator/submission-item/${id}`, { method: 'PATCH', body: { status: 'menunggu', revision: revisionFor(prevRow?.indikatorKode) }, auth: true });
       setToast({ type: 'success', msg: 'Dikirim ulang untuk validasi.' });
     } catch (e) {
       // rollback per-baris (bukan seluruh array) — lihat catatan di handleSaveEdit
@@ -311,7 +313,7 @@ export default function RiwayatSubmission() {
           </div>
           <p className="text-[11px] font-bold text-faded mt-1">ID tetap: {editing.id} • Status akan kembali Menunggu</p>
           <div className="mt-4">
-            <CapaianRow row={editing} indikatorKode={editing.indikatorKode} onChange={(id, f, v) => updateRow(id, f, v) || setEditing((e) => ({ ...e, [f]: v }))} onRemove={() => setEditing(null)} showStatus={false} />
+            <CapaianRow row={editing} indikatorKode={editing.indikatorKode} fields={fieldsFor(editing.indikatorKode)} onChange={(id, f, v) => updateRow(id, f, v) || setEditing((e) => ({ ...e, [f]: v }))} onRemove={() => setEditing(null)} showStatus={false} />
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={handleSaveEdit} className="flex-1 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
