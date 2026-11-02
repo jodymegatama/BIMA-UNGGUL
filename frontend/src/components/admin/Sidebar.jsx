@@ -5,6 +5,7 @@ const menu = [
   { to: '/admin', label: 'Dashboard', icon: SquaresFour, end: true },
   { to: '/admin/validasi', label: 'Antrian Validasi', icon: ClipboardText, badge: true },
   { to: '/admin/periode', label: 'Manajemen Periode', icon: Calendar },
+  { to: '/admin/indikator', label: 'Master Indikator', icon: ClipboardText },
   { to: '/admin/bobot', label: 'Konfigurasi Bobot', icon: Sliders },
   { to: '/admin/akun', label: 'Manajemen Akun & MA', icon: Users },
   { to: '/admin/laporan', label: 'Laporan / Export', icon: FileArrowDown },
