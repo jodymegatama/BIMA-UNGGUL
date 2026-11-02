@@ -1,3 +1,4 @@
+import { snapshot } from '../src/services/indikatorService.js';
 /**
  * Validasi Admin Integration Test — BIMA UNGGUL (port legacy tests/testValidationE2E.js).
  * Alur: Operator submit (menunggu) → Admin approve/reject/revoke → skor & AuditLog atomic.
@@ -50,7 +51,7 @@ async function setup() {
   for (const [slug, bobot] of [['diklat', 10], ['giat_inovatif', 12]]) {
     const ind = bySlug.get(slug);
     await prisma.bobotIndikator.create({
-      data: { indikatorId: ind.id, periodeId: periode.id, nilaiBobot: bobot, terkunci: false },
+      data: { ...snapshot(ind), menerimaInput: true, indikatorId: ind.id, periodeId: periode.id, nilaiBobot: bobot, terkunci: false },
     });
   }
 

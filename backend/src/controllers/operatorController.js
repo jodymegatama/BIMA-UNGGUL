@@ -1,3 +1,4 @@
+import { listPeriod, attachPeriodConfig } from '../services/indikatorService.js';
 import { prisma } from '../db/prisma.js';
 import { resolveAktifPeriode } from '../services/periodService.js';
 import * as submissionService from '../services/submissionService.js';
@@ -120,7 +121,7 @@ export const getIndikatorStatus = async (req, res) => {
     const periodeId = periode?.id ?? null;
 
     const [indikators, groups] = await Promise.all([
-      prisma.indikator.findMany({ orderBy: { kode: 'asc' } }),
+      periodeId ? listPeriod(periodeId) : Promise.resolve([]),
       periodeId
         ? prisma.submissionItem.groupBy({
             by: ['indikatorId', 'status'],
@@ -144,6 +145,7 @@ export const getIndikatorStatus = async (req, res) => {
       stats.disetujui += s.disetujui;
       stats.ditolak += s.ditolak;
       return {
+        ...ind,
         id: ind.id,
         kode: ind.kode,
         slug: ind.slug,
@@ -202,7 +204,7 @@ export const listSubmissionItems = async (req, res) => {
     });
 
     return res.status(200).json({
-      data: items,
+      data: await attachPeriodConfig(items),
       total: items.length,
       periode: periode ? { id: periode.id, namaPeriode: periode.namaPeriode, status: periode.status } : null,
     });
@@ -247,6 +249,8 @@ export async function draftIndikatorItems(req, res) {
     const result = await submissionService.saveItems({
       indikatorId: req.params.id,
       items: req.body?.items,
+      revision: req.body?.revision,
+      periodeId: req.body?.periodeId,
       targetStatus: 'draft',
       userId,
       madrasahId,
@@ -271,6 +275,8 @@ export async function submitIndikatorItems(req, res) {
     const result = await submissionService.saveItems({
       indikatorId: req.params.id,
       items: req.body?.items,
+      revision: req.body?.revision,
+      periodeId: req.body?.periodeId,
       targetStatus: 'menunggu',
       userId,
       madrasahId,

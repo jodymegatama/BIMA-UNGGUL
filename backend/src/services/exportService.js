@@ -10,6 +10,7 @@ import ExcelJS from 'exceljs';
 import { calculateRanking, calculateRankingAllGroups } from './scoringService.js';
 import { KELOMPOKS_LIST, normalizeKelompok } from '../constants/periode.constants.js';
 import { prisma } from '../db/prisma.js';
+import { listPeriod } from './indikatorService.js';
 
 const kelompokLabel = (value) => value === 'MTs' ? 'MTS' : value;
 
@@ -44,11 +45,12 @@ export async function getLeaderboardData({ periodeId, kelompok, jenjang }) {
   if (!periode) throw httpError(404, 'Periode tidak ditemukan');
 
   const filter = resolveKelompoks({ kelompok, jenjang });
+  const indikators = await listPeriod(pid);
 
   // Kelompok spesifik → bentuk lama (back-compatible dengan pemanggil/test lama)
   if (filter.kelompok) {
     const rankings = await calculateRanking(filter.kelompok, pid);
-    return { periode, kelompok: filter.kelompok, jenjang: null, groups: [{ kelompok: filter.kelompok, rankings }], rankings };
+    return { periode, indikators, kelompok: filter.kelompok, jenjang: null, groups: [{ kelompok: filter.kelompok, rankings }], rankings };
   }
 
   // Semua kelompok / per jenjang → satu section per kelompok (yang kosong dilewati)
@@ -56,7 +58,7 @@ export async function getLeaderboardData({ periodeId, kelompok, jenjang }) {
   const groups = filter.kelompoks
     .map((k) => ({ kelompok: k, rankings: all[k] || [] }))
     .filter((g) => g.rankings.length > 0);
-  return { periode, kelompok: null, jenjang: filter.jenjang, groups, rankings: groups.flatMap((g) => g.rankings) };
+  return { periode, indikators, kelompok: null, jenjang: filter.jenjang, groups, rankings: groups.flatMap((g) => g.rankings) };
 }
 
 const PDF_HEADERS = ['Rank', 'BMU', 'Madrasah', 'Kelompok', 'Skor'];
@@ -172,6 +174,17 @@ export async function buildPdfBuffer({ periodeId, kelompok, jenjang }) {
   doc.font('Helvetica').fontSize(7).fillColor('#666')
     .text(`Diperbarui: ${new Date().toISOString()} | Hanya data berstatus disetujui & tidak soft-deleted (scoringService)`, 40, doc.y + 8, { width: 515, align: 'center' });
 
+  if (data.indikators.length && groups.length) {
+    doc.addPage();
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('#111827').text(`Rincian indikator - ${periode.namaPeriode}`, 40, 40, { width: 515 });
+    for (const group of groups) for (const r of group.rankings) {
+      doc.font('Helvetica').fontSize(8);
+      const height = data.indikators.reduce((sum, ind) => sum + doc.heightOfString(`${ind.nama}: ${(r.breakdown?.[ind.slug] || 0).toFixed(2)}`, { width: 515 }), 30);
+      if (height < doc.page.height - 80 && doc.y + height > doc.page.height - 40) doc.addPage();
+      doc.moveDown().font('Helvetica-Bold').fontSize(9).text(`${r.madrasah.nomorMadrasah} - ${r.madrasah.namaMadrasah}`, { width: 515 });
+      for (const ind of data.indikators) doc.font('Helvetica').fontSize(8).text(`${ind.nama}: ${(r.breakdown?.[ind.slug] || 0).toFixed(2)}`, { width: 515 });
+    }
+  }
   doc.end();
   return done;
 }
@@ -228,6 +241,13 @@ export async function buildExcelBuffer({ periodeId, kelompok, jenjang }) {
   }
 
   // Baris metadata
+  const detail = wb.addWorksheet('Rincian Indikator');
+  detail.columns = [
+    { header: 'BMU', key: 'bmu', width: 18 }, { header: 'Madrasah', key: 'nama', width: 40 },
+    ...data.indikators.map((ind) => ({ header: ind.nama, key: ind.slug, width: 24 })),
+  ];
+  detail.getRow(1).font = { bold: true };
+  for (const g of data.groups) for (const r of g.rankings) detail.addRow({ bmu: r.madrasah.nomorMadrasah, nama: r.madrasah.namaMadrasah, ...Object.fromEntries(data.indikators.map((ind) => [ind.slug, r.breakdown?.[ind.slug] || 0])) });
   ws.addRow([]);
   const scopeLabel = kelompokLabel(data.kelompok) || (data.jenjang ? `Jenjang ${kelompokLabel(data.jenjang)}` : 'Semua');
   ws.addRow([`Periode: ${data.periode.namaPeriode} | Kelompok: ${scopeLabel} | ${new Date().toLocaleString('id-ID')}`]);

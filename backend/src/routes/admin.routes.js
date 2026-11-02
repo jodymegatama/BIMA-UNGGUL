@@ -3,6 +3,7 @@
  * Semua route di sini: authMiddleware + roleMiddleware(['admin'])
  */
 import express from 'express';
+import * as indikatorController from '../controllers/admin/indikatorController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { roleMiddleware } from '../middlewares/roleMiddleware.js';
 import * as validationController from '../controllers/admin/validationController.js';
@@ -19,6 +20,17 @@ const router = express.Router();
 
 // Semua endpoint admin butuh admin role
 router.use(authMiddleware, roleMiddleware(['admin']));
+router.get('/indikator', indikatorController.list);
+router.get('/indikator-contract', indikatorController.contract);
+router.post('/indikator', indikatorController.create);
+router.get('/indikator/:id', indikatorController.detail);
+router.patch('/indikator/:id', indikatorController.update);
+router.delete('/indikator/:id', indikatorController.remove);
+router.get('/periode/:periodeId/indikator', indikatorController.periodList);
+router.post('/periode/:periodeId/indikator/copy-bobot', indikatorController.copy);
+router.post('/periode/:periodeId/indikator', indikatorController.periodAdd);
+router.patch('/periode/:periodeId/indikator/:indikatorId', indikatorController.periodUpdate);
+router.post('/periode/:periodeId/indikator/:indikatorId/preview', indikatorController.preview);
 
 // Validasi queue
 router.get('/validasi', validationController.getQueue);

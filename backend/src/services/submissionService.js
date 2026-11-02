@@ -19,6 +19,8 @@ import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 import { resolveAktifPeriode, deriveStatus } from './periodService.js';
+import { lockPeriod } from './indikatorService.js';
+import { rulesFromFields } from './indikatorConfig.js';
 
 // ==================== Field rules per indikator (PRD §11) ====================
 
@@ -95,7 +97,7 @@ export const FIELD_RULES = {
 
 // Whitelist key yang boleh masuk DB per indikator
 function allowedKeys(kode) {
-  const keys = new Set(Object.keys(FIELD_RULES[kode] || {}));
+  const keys = new Set(Object.keys(typeof kode === 'object' ? kode : FIELD_RULES[kode] || {}));
   keys.add('id'); // optional id existing item saat submit (edit-resubmit)
   return keys;
 }
@@ -111,7 +113,7 @@ function sanitizePayload(kode, raw) {
       if (Number.isFinite(n)) out.id = n;
       continue;
     }
-    const rule = FIELD_RULES[kode][k];
+    const rule = (typeof kode === 'object' ? kode : FIELD_RULES[kode])[k];
     if (!rule) continue;
     if (v === undefined || v === null) { out[k] = null; continue; }
     // String kosong/spasi berarti "belum diisi" -> NULL, bukan ''.
@@ -142,7 +144,7 @@ function sanitizePayload(kode, raw) {
  * @returns array pesan error per field {field, message}
  */
 export function validateItem(kode, payload, mode = 'submit') {
-  const rules = FIELD_RULES[kode];
+  const rules = typeof kode === 'object' ? kode : FIELD_RULES[kode];
   if (!rules) return [{ field: '_', message: `Indikator ${kode} tidak dikenal` }];
 
   const errors = [];
@@ -199,6 +201,15 @@ async function requireWritablePeriod() {
   return periode;
 }
 
+async function writableRules(tx, periodeId, indikatorId, revision) {
+  const p = await lockPeriod(tx, periodeId);
+  if (deriveStatus(p) !== 'aktif') throw new HttpError(403, 'PERIOD_CLOSED', 'Periode telah melewati cutoff');
+  const config = await tx.bobotIndikator.findUnique({ where: { indikatorId_periodeId: { indikatorId, periodeId } } });
+  if (!config?.menerimaInput || !config.fields) throw new HttpError(423, 'INDIKATOR_INPUT_CLOSED', 'Input indikator belum diaktifkan atau telah dihentikan oleh admin');
+  if (revision !== undefined && revision !== config.revision) throw new HttpError(409, 'CONFIG_CHANGED', 'Konfigurasi berubah. Muat ulang sebelum mengirim; isian Anda tetap tersedia.');
+  return rulesFromFields(config.fields);
+}
+
 async function getOwnedItem(itemId, madrasahId) {
   const item = await prisma.submissionItem.findUnique({ where: { id: itemId } });
   if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
@@ -214,7 +225,7 @@ async function getOwnedItem(itemId, madrasahId) {
  * @param {'draft'|'menunggu'} targetStatus
  * items: [{ id?, ...fields }]
  */
-export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, userId, madrasahId, ip }) {
+export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, userId, madrasahId, ip, revision, periodeId: expectedPeriodeId }) {
   const iid = parseInt(indikatorId, 10);
   if (!Number.isFinite(iid)) throw new HttpError(400, 'INVALID_ID', 'ID indikator tidak valid');
 
@@ -226,11 +237,14 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
   if (items.length > 100) throw new HttpError(400, 'TOO_MANY_ITEMS', 'Maksimal 100 baris per permintaan');
 
   const periode = await requireWritablePeriod();
+  if (expectedPeriodeId !== undefined && Number(expectedPeriodeId) !== periode.id) throw new HttpError(409, 'PERIOD_CHANGED', 'Periode aktif berubah. Simpan isian Anda lalu muat ulang halaman.');
 
-  // validasi semua dulu — all-or-nothing
+  return prisma.$transaction(async (tx) => {
+  const rules = await writableRules(tx, periode.id, iid, revision);
+  // validasi semua dulu — all-or-nothing, di dalam lock konfigurasi periode
   for (let i = 0; i < items.length; i++) {
-    const clean = sanitizePayload(indikator.slug, items[i]);
-    const errs = validateItem(indikator.slug, clean, targetStatus === 'menunggu' ? 'submit' : 'draft');
+    const clean = sanitizePayload(rules, items[i]);
+    const errs = validateItem(rules, clean, targetStatus === 'menunggu' ? 'submit' : 'draft');
     if (errs.length) {
       const e = new HttpError(400, 'VALIDATION_ERROR', `Baris ${i + 1}: ${errs.map((er) => er.message).join('; ')}`);
       e.fields = errs;
@@ -239,10 +253,9 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
     }
   }
 
-  return prisma.$transaction(async (tx) => {
     const results = [];
     for (const raw of items) {
-      const clean = sanitizePayload(indikator.slug, raw);
+      const clean = sanitizePayload(rules, raw);
       const { id: existingId, ...fields } = clean;
 
       let saved;
@@ -251,6 +264,7 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
         if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', `Submission ID ${existingId} tidak ditemukan`);
         if (item.madrasahId !== Number(madrasahId)) throw new HttpError(403, 'FORBIDDEN', `Submission ID ${existingId} bukan milik madrasah Anda`);
         if (item.indikatorId !== iid) throw new HttpError(400, 'INDIKATOR_MISMATCH', `Submission ID ${existingId} bukan milik indikator ini`);
+        if (item.periodeId !== periode.id) throw new HttpError(403, 'PERIOD_CLOSED', 'Capaian berasal dari periode lain');
         if (item.deletedAt) throw new HttpError(400, 'ALREADY_DELETED', `Submission ID ${existingId} sudah dihapus`);
         if (!['draft', 'ditolak'].includes(item.status)) {
           throw new HttpError(400, 'INVALID_STATUS', `Baris ID ${existingId} berstatus ${item.status} — hanya draft/ditolak yang bisa diubah`);
@@ -315,17 +329,15 @@ export async function updateOwnItem({ id, body = {}, userId, madrasahId, ip }) {
   const indikator = await prisma.indikator.findUnique({ where: { id: item.indikatorId } });
   if (!indikator) throw new HttpError(404, 'INDIKATOR_NOT_FOUND', 'Indikator tidak ditemukan');
 
-  const merged = { ...item, ...(body || {}) };
-  const clean = sanitizePayload(indikator.slug, merged);
-  delete clean.id;
-
   const targetStatus = body.status === 'draft' ? 'draft' : 'menunggu';
-  const errs = validateItem(indikator.slug, clean, targetStatus === 'menunggu' ? 'submit' : 'draft');
-  if (errs.length) {
-    throw Object.assign(new HttpError(400, 'VALIDATION_ERROR', errs.map((e) => e.message).join('; ')), { fields: errs });
-  }
-
   return prisma.$transaction(async (tx) => {
+    const rules = await writableRules(tx, periode.id, item.indikatorId, body.revision);
+    const current = await tx.submissionItem.findUnique({ where: { id: itemId } });
+    if (!current || current.deletedAt || !['draft', 'ditolak'].includes(current.status)) throw new HttpError(409, 'ITEM_CHANGED', 'Status capaian telah berubah');
+    const clean = sanitizePayload(rules, { ...current, ...body });
+    delete clean.id;
+    const errs = validateItem(rules, clean, targetStatus === 'menunggu' ? 'submit' : 'draft');
+    if (errs.length) throw Object.assign(new HttpError(400, 'VALIDATION_ERROR', errs.map((e) => e.message).join('; ')), { fields: errs });
     const updated = await tx.submissionItem.update({
       where: { id: itemId },
       data: { ...clean, status: targetStatus, alasanPenolakan: targetStatus === 'menunggu' ? null : undefined },

@@ -2,6 +2,14 @@
  * Public Controller — leaderboard & madrasah profil (tanpa auth, tanpa linkBukti)
  */
 import { prisma } from '../db/prisma.js';
+import { listPeriod, parseId } from '../services/indikatorService.js';
+
+export async function indikatorCatalog(req, res) {
+  const data = req.query.periodeId
+    ? await listPeriod(parseId(req.query.periodeId))
+    : await prisma.indikator.findMany({ where: { aktif: true }, orderBy: [{ urutan: 'asc' }, { id: 'asc' }] });
+  res.json({ data: data.map(({ id, kode, slug, nama, deskripsi, short, urutan, tipeFormula, fields }) => ({ id, kode, slug, nama, deskripsi, short, urutan, tipeFormula, fields })) });
+}
 import { HttpError } from '../utils/httpError.js';
 import { calculateRanking, calculateSkorMadrasah } from '../services/scoringService.js';
 import { resolveAktifPeriode, deriveStatus } from '../services/periodService.js';
@@ -74,7 +82,10 @@ export async function madrasahDetail(req,res){
       ranking = null;
     }
   }
-  res.json({ madrasah, periode, skor, prestasi, ranking });
+  const indikators = periode ? await listPeriod(periode.id) : [];
+  const byId = new Map(indikators.map((i) => [i.id, i]));
+  prestasi = prestasi.map((p) => ({ ...p, indikator: byId.get(p.indikator.id) || p.indikator }));
+  res.json({ madrasah, periode, skor, prestasi, ranking, indikators });
 }
 
 export default { leaderboard, madrasahDetail, listPeriodePublik, statsPublik };

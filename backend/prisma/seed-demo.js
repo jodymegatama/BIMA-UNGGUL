@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { snapshot } from '../src/services/indikatorService.js';
 /**
  * Seed Data Demo — BIMA UNGGUL (roadmap catatan.md #5)
  * Isi: 39 madrasah KAB. PASURUAN (data riil nama/lokasi dari daftarsekolah.net,
@@ -118,12 +120,13 @@ async function main() {
     { kode: '8', slug: 'giat_inovatif', nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah', tipeFormula: 'per_capaian' },
     { kode: '9', slug: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', tipeFormula: 'persentase' },
   ];
+  const defaults = JSON.parse(await readFile(new URL('./indikator-defaults.json', import.meta.url), 'utf8'));
   for (const i of indikators) {
-    // update nama/tipeFormula → master ikut sinkron saat rename (bukan hanya saat create)
+    // Bootstrap non-destruktif: perubahan admin dipertahankan.
     await prisma.indikator.upsert({
       where: { slug: i.slug },
-      update: { nama: i.nama, tipeFormula: i.tipeFormula },
-      create: i,
+      update: {},
+      create: { ...i, ...Object.fromEntries(Object.entries(defaults.find((d) => d.slug === i.slug) || {}).filter(([k]) => ['deskripsi', 'short', 'urutan', 'fields'].includes(k))) },
     });
   }
   console.log(`✓ ${indikators.length} indikator siap`);
@@ -141,13 +144,10 @@ async function main() {
     if (!ind) continue;
     await prisma.bobotIndikator.upsert({
       where: { indikatorId_periodeId: { indikatorId: ind.id, periodeId: periode.id } },
-      update: {
-        nilaiBobot: b.nilaiBobot ?? null,
-        bobotTingkatWilayah: b.tingkat || null,
-        bobotJenjang: b.jenjang || null,
-        terkunci: false,
-      },
+      update: {},
       create: {
+        ...snapshot(ind),
+        menerimaInput: true,
         indikatorId: ind.id,
         periodeId: periode.id,
         nilaiBobot: b.nilaiBobot ?? null,

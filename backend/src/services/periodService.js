@@ -4,6 +4,8 @@
  * Prisma 5.18: prisma.$transaction(async (tx)=>{})
  */
 import { prisma } from '../db/prisma.js';
+import { snapshot, lockPeriod } from './indikatorService.js';
+import { completeConfig } from './indikatorConfig.js';
 import { TX_OPTS } from '../config/transaction.js';
 import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
@@ -110,17 +112,22 @@ export async function createPeriode({ namaPeriode, tanggalMulai, tanggalCutoff }
   // status awal mengikuti posisi now terhadap jendela tanggal
   const initialStatus = deriveStatus({ status: null, tanggalMulai: mulai, tanggalCutoff: cutoff });
 
-  const created = await prisma.periodePenilaian.create({
-    data: { namaPeriode, tahunCapaian, tanggalMulai: mulai, tanggalCutoff: cutoff, status: initialStatus },
+  return prisma.$transaction(async (tx) => {
+  const created = await tx.periodePenilaian.create({
+    data: { namaPeriode, tahunCapaian, tanggalMulai: mulai, tanggalCutoff: cutoff, status: initialStatus, configInitialized: true },
   });
-  await recordAuditLog({ userId, action: 'create_periode', entity: 'PeriodePenilaian', entityId: created.id, dataSesudah: created, ipAddress: ip });
+  const masters = await tx.indikator.findMany({ where: { aktif: true } });
+  for (const ind of masters) await tx.bobotIndikator.create({ data: { indikatorId: ind.id, periodeId: created.id, ...snapshot(ind), menerimaInput: false } });
+  await recordAuditLog({ userId, action: 'create_periode', entity: 'PeriodePenilaian', entityId: created.id, dataSesudah: created, ipAddress: ip }, tx);
   return created;
+  }, TX_OPTS);
 }
 
 export async function updatePeriode(id, patch, { userId, ip }) {
   const pid = parseInt(id, 10);
   if (!Number.isFinite(pid)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
-  const existing = await prisma.periodePenilaian.findUnique({ where: { id: pid } });
+  return prisma.$transaction(async (tx) => {
+  const existing = await lockPeriod(tx, pid);
   if (!existing) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');
   if (existing.status === 'finalisasi' || existing.status === 'arsip') throw new HttpError(423, 'PERIOD_LOCKED', 'Periode sudah finalisasi/arsip, tidak bisa diedit');
   // allow patch tanggalMulai/tanggalCutoff/status/namaPeriode
@@ -133,7 +140,10 @@ export async function updatePeriode(id, patch, { userId, ip }) {
   }
   if (patch.tanggalMulai !== undefined) data.tanggalMulai = new Date(patch.tanggalMulai);
   if (patch.tanggalCutoff !== undefined) data.tanggalCutoff = new Date(patch.tanggalCutoff);
-  if (patch.status !== undefined) data.status = patch.status;
+  if (patch.status !== undefined) {
+    if (['finalisasi', 'arsip'].includes(patch.status)) throw new HttpError(400, 'USE_FINALIZE', 'Gunakan aksi finalisasi untuk mengunci konfigurasi periode');
+    data.status = patch.status;
+  }
   if (data.tanggalMulai && data.tanggalCutoff && data.tanggalMulai >= data.tanggalCutoff) throw new HttpError(400, 'INVALID_RANGE', 'tanggalMulai harus sebelum tanggalCutoff');
 
   // Guard anti-overlap: hanya berlaku utk periode yang masih jalan
@@ -145,20 +155,24 @@ export async function updatePeriode(id, patch, { userId, ip }) {
   }
 
   const before = { ...existing };
-  const updated = await prisma.periodePenilaian.update({ where: { id: pid }, data });
-  await recordAuditLog({ userId, action: 'update_periode', entity: 'PeriodePenilaian', entityId: pid, dataSebelum: before, dataSesudah: updated, ipAddress: ip });
+  const updated = await tx.periodePenilaian.update({ where: { id: pid }, data });
+  await recordAuditLog({ userId, action: 'update_periode', entity: 'PeriodePenilaian', entityId: pid, dataSebelum: before, dataSesudah: updated, ipAddress: ip }, tx);
   // konsisten dengan listPeriode: status efektif di-derive dari tanggal, bukan raw DB
   return { ...updated, status: deriveStatus(updated) };
+  }, TX_OPTS);
 }
 
 export async function finalizePeriode(id, { userId, ip }) {
   const pid = parseInt(id, 10);
   if (!Number.isFinite(pid)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
   return prisma.$transaction(async (tx) => {
+    await lockPeriod(tx, pid, false);
     const p = await tx.periodePenilaian.findUnique({ where: { id: pid } });
     if (!p) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');
     if (p.status === 'finalisasi') throw new HttpError(400, 'ALREADY_FINALIZED', 'Periode sudah finalisasi');
     if (p.status === 'arsip') throw new HttpError(400, 'ARCHIVED', 'Periode sudah diarsip');
+    const configs = await tx.bobotIndikator.findMany({ where: { periodeId: pid } });
+    if (!configs.length || configs.some((c) => !completeConfig(c))) throw new HttpError(400, 'INCOMPLETE_CONFIG', 'Lengkapi deskripsi, formulir dan bobot setiap indikator sebelum finalisasi');
     const before = { status: p.status };
     const updated = await tx.periodePenilaian.update({ where: { id: pid }, data: { status: 'finalisasi' } });
     await tx.bobotIndikator.updateMany({ where: { periodeId: pid }, data: { terkunci: true } });
@@ -173,6 +187,7 @@ export async function reopenPeriode(id, { alasan, userId, ip }) {
   if (!alasan || String(alasan).trim().length === 0) throw new HttpError(400, 'MISSING_ALASAN', 'alasan wajib diisi');
   const clean = String(alasan).trim();
   return prisma.$transaction(async (tx) => {
+    await lockPeriod(tx, pid, false);
     const p = await tx.periodePenilaian.findUnique({ where: { id: pid } });
     if (!p) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');
     if (p.status !== 'finalisasi') throw new HttpError(400, 'NOT_FINALIZED', 'Hanya periode finalisasi yang bisa di-reopen');
@@ -198,6 +213,7 @@ export async function deletePeriode(id, { userId, ip }) {
   // Semua data terkait di-cascade manual dalam satu transaction (prisma deleteMany),
   // jumlah data dikembalikan untuk ditampilkan di toast/modal konfirmasi.
   return prisma.$transaction(async (tx) => {
+    await lockPeriod(tx, pid);
     // Re-check status DI DALAM txn (anti-TOCTOU: finalize/reopen bisa terjadi antar-sesi)
     const locked = await tx.periodePenilaian.findUnique({ where: { id: pid }, select: { status: true } });
     if (!locked) throw new HttpError(404, 'NOT_FOUND', 'Periode tidak ditemukan');

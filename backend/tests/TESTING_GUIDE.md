@@ -223,3 +223,7 @@ Antrian Validasi + modal detail. Admin memverifikasi isi link bukti; jika bukan 
 | QB-2 | Operator input ratio `0 dari 0` (indikator 6/9) | Tersimpan, preview `0%`, skor indikator 0 — tidak error validasi |
 | QB-3 | Draft parsial tanpa link bukti → klik Kirim | Draft boleh; submit ditolak `linkBukti wajib diisi` |
 | QB-4 | Semua indikator: submit tanpa link bukti | Ditolak (linkBukti wajib di 9 indikator) |
+
+## Indikator dinamis (2 November 2026)
+
+Kontrak sembilan slug di atas menguji fixture bootstrap lama, bukan batas jumlah master. `indikatorConfig`, `indikatorSnapshot`, `indikator.integration` dan `indikatorFlow.integration` menguji master tambahan, empat metode, snapshot periode, konflik revisi, Restrict, salin bobot, finalisasi, dan alur draft sampai ekspor. Formulir dan validasi write memakai metadata konfigurasi periode.
