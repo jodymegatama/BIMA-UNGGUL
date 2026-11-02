@@ -26,6 +26,8 @@ enum TipeFormula {
   per_tingkat_wilayah
   per_jenjang
   persentase
+  per_jumlah
+  per_kategori
 }
 
 enum StatusSubmission {
@@ -180,6 +182,7 @@ model Indikator {
   urutan      Int              @default(0)
   aktif       Boolean          @default(true)
   fields      Json?
+  scoringConfig Json?
   revision    Int              @default(1)
   bobots      BobotIndikator[]
   submissions SubmissionItem[]
@@ -201,6 +204,7 @@ model BobotIndikator {
   urutan              Int              @default(0)
   tipeFormula         TipeFormula?
   fields              Json?
+  scoringConfig       Json?
   menerimaInput       Boolean          @default(false)
   revision            Int              @default(1)
   createdAt           DateTime         @default(now())
@@ -245,6 +249,7 @@ model SubmissionItem {
   // (skenario QB-3), sementara submit tetap divalidasi di service layer.
   linkBukti         String?
   catatan           String?            @db.Text // Catatan tambahan (opsional)
+  customValues      Json?
   
   // Status & Scoring
   skorBaris         Float?             // Dihitung setelah disetujui
