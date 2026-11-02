@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { readFile } from 'node:fs/promises';
 
 const prisma = new PrismaClient();
 
@@ -112,15 +113,13 @@ async function main() {
     },
   ];
 
-  // Upsert setiap indikator
+  const defaults = JSON.parse(await readFile(new URL('./indikator-defaults.json', import.meta.url), 'utf8'));
+  // Bootstrap only: never overwrite edits made by the administrator.
   for (const indikator of indikators) {
     const created = await prisma.indikator.upsert({
       where: { slug: indikator.slug },
-      update: {
-        nama: indikator.nama,
-        tipeFormula: indikator.tipeFormula,
-      },
-      create: indikator,
+      update: {},
+      create: { ...indikator, ...Object.fromEntries(Object.entries(defaults.find((d) => d.slug === indikator.slug) || {}).filter(([k]) => ['deskripsi', 'short', 'urutan', 'fields'].includes(k))) },
     });
     console.log(`✓ Indikator ${created.kode}: ${created.nama} (${created.tipeFormula})`);
   }

@@ -50,9 +50,11 @@ export function computeSkorBreakdown(items, bobots) {
 
     let skorIndikator = 0;
     if (bobot) {
-      if (indikator.tipeFormula === 'per_capaian') {
+      // Nullable only during expand/backfill; migrated configurations are authoritative.
+      const tipeFormula = bobot.tipeFormula ?? indikator.tipeFormula;
+      if (tipeFormula === 'per_capaian') {
         skorIndikator = indikatorItems.length * bobot.nilaiBobot;
-      } else if (indikator.tipeFormula === 'per_tingkat_wilayah') {
+      } else if (tipeFormula === 'per_tingkat_wilayah') {
         const tingkatMap = {};
         for (const item of indikatorItems) {
           if (item.tingkatWilayah) {
@@ -63,7 +65,7 @@ export function computeSkorBreakdown(items, bobots) {
           const bobotTingkat = bobot.bobotTingkatWilayah?.[tingkat] || 0;
           return sum + (count * bobotTingkat);
         }, 0);
-      } else if (indikator.tipeFormula === 'per_jenjang') {
+      } else if (tipeFormula === 'per_jenjang') {
         const jenjangMap = {};
         for (const item of indikatorItems) {
           if (item.jenjangPendidikan && item.jumlah) {
@@ -74,7 +76,7 @@ export function computeSkorBreakdown(items, bobots) {
           const bobotJenjang = bobot.bobotJenjang?.[jenjang] || 0;
           return sum + (jumlah * bobotJenjang);
         }, 0);
-      } else if (indikator.tipeFormula === 'persentase') {
+      } else if (tipeFormula === 'persentase') {
         const totalPembilang = indikatorItems.reduce((sum, item) => sum + (item.pembilang || 0), 0);
         const totalPenyebut = indikatorItems.reduce((sum, item) => sum + (item.penyebut || 0), 0);
         const persentase = totalPenyebut > 0 ? (totalPembilang / totalPenyebut) * 100 : 0;
@@ -179,6 +181,7 @@ export async function calculateRanking(kelompok, periodeId) {
     results.push({
       madrasah,
       totalScore: scoreData.totalScore,
+      breakdown: scoreData.breakdown,
       submissionCount: madrasahItems.length,
       lastApprovedAt,
     });

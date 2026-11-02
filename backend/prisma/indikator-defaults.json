@@ -1,0 +1,459 @@
+[
+  {
+    "kode": "1",
+    "nama": "Diklat Pendidik dan Tenaga Kependidikan",
+    "short": "Diklat",
+    "slug": "diklat",
+    "deskripsi": "Bukti diklat yang dilaksanakan pada tahun berjalan wajib dilampirkan: nama diklat, nama institusi penyelenggara, nama pelaksana ASN atau non-ASN, dan status kepegawaian.",
+    "urutan": 1,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Diklat",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Diklat Kurikulum Merdeka Angkatan 3"
+      },
+      {
+        "key": "institusi",
+        "label": "Nama Institusi Penyelenggara Diklat",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Balai Diklat Keagamaan Surabaya"
+      },
+      {
+        "key": "namaPeserta",
+        "label": "Nama ASN/non-ASN Pelaksana Diklat",
+        "type": "text",
+        "required": true,
+        "placeholder": "Nama lengkap pelaksana"
+      },
+      {
+        "key": "statusPegawai",
+        "label": "Status Pegawai",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "asn",
+            "label": "ASN"
+          },
+          {
+            "value": "non_asn",
+            "label": "non-ASN"
+          }
+        ],
+        "placeholder": "Pilih status pegawai"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "2",
+    "nama": "Penghargaan Individu Pendidik dan Tenaga Kependidikan",
+    "short": "Pengh. Individu",
+    "slug": "penghargaan_individu",
+    "deskripsi": "Bukti penghargaan yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan, nama institusi penyelenggara, nama penerima ASN atau non-ASN, dan status kepegawaian.",
+    "urutan": 2,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Guru Berprestasi Kab. Pasuruan"
+      },
+      {
+        "key": "institusi",
+        "label": "Nama Institusi Penyelenggara Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Balai Diklat Keagamaan Surabaya"
+      },
+      {
+        "key": "namaPeserta",
+        "label": "Nama ASN/non-ASN Penerima Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Nama lengkap penerima"
+      },
+      {
+        "key": "statusPegawai",
+        "label": "Status Pegawai",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "asn",
+            "label": "ASN"
+          },
+          {
+            "value": "non_asn",
+            "label": "non-ASN"
+          }
+        ],
+        "placeholder": "Pilih status pegawai"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "3",
+    "nama": "Penghargaan Institusi",
+    "short": "Pengh. Institusi",
+    "slug": "penghargaan_institusi",
+    "deskripsi": "Bukti fisik penghargaan pada tahun berjalan wajib dilampirkan: nama penghargaan, institusi penerbit, dan tingkat wilayah prestasi — kabupaten, provinsi, nasional, atau internasional.",
+    "urutan": 3,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Madrasah Adiwiyata Tingkat Provinsi"
+      },
+      {
+        "key": "institusi",
+        "label": "Institusi Penerbit Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Balai Diklat Keagamaan Surabaya"
+      },
+      {
+        "key": "tingkatWilayah",
+        "label": "Tingkat Wilayah Prestasi",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "kabupaten",
+            "label": "Kabupaten"
+          },
+          {
+            "value": "provinsi",
+            "label": "Provinsi"
+          },
+          {
+            "value": "nasional",
+            "label": "Nasional"
+          },
+          {
+            "value": "internasional",
+            "label": "Internasional"
+          }
+        ],
+        "placeholder": "Pilih tingkat wilayah"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "4",
+    "nama": "Prestasi Siswa",
+    "short": "Prestasi Siswa",
+    "slug": "prestasi_siswa",
+    "deskripsi": "Bukti prestasi yang diterima pada tahun berjalan wajib dilampirkan: nama penghargaan atau prestasi, institusi penerbit, nama murid, dan tingkat wilayah prestasi (kabupaten, provinsi, nasional, internasional).",
+    "urutan": 4,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Penghargaan atau Prestasi",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Juara 1 Olimpiade Matematika"
+      },
+      {
+        "key": "institusi",
+        "label": "Nama Institusi Penerbit Penghargaan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Balai Diklat Keagamaan Surabaya"
+      },
+      {
+        "key": "namaPeserta",
+        "label": "Nama Murid",
+        "type": "text",
+        "required": true,
+        "placeholder": "Nama lengkap murid"
+      },
+      {
+        "key": "tingkatWilayah",
+        "label": "Tingkat Wilayah Prestasi",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "kabupaten",
+            "label": "Kabupaten"
+          },
+          {
+            "value": "provinsi",
+            "label": "Provinsi"
+          },
+          {
+            "value": "nasional",
+            "label": "Nasional"
+          },
+          {
+            "value": "internasional",
+            "label": "Internasional"
+          }
+        ],
+        "placeholder": "Pilih tingkat wilayah"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "5",
+    "nama": "Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan",
+    "short": "Lulus Jenjang",
+    "slug": "lulus_jenjang_lanjutan",
+    "deskripsi": "Bukti ijazah jenjang lanjutan pendidik dan tenaga kependidikan pada tahun berjalan wajib dilampirkan: jenjang pendidikan S1, S2, atau S3 beserta jumlah ASN.",
+    "urutan": 5,
+    "fields": [
+      {
+        "key": "jenjangPendidikan",
+        "label": "Jenjang Pendidikan",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "s1",
+            "label": "S1"
+          },
+          {
+            "value": "s2",
+            "label": "S2"
+          },
+          {
+            "value": "s3",
+            "label": "S3"
+          }
+        ],
+        "placeholder": "Pilih jenjang (S1/S2/S3)"
+      },
+      {
+        "key": "jumlah",
+        "label": "Jumlah ASN",
+        "type": "number",
+        "required": true,
+        "min": 1,
+        "placeholder": "Contoh: 2",
+        "help": "Integer lebih dari 0"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "6",
+    "nama": "Nilai Rata-rata Murid > 85",
+    "short": "Nilai > 85",
+    "slug": "rapor_rata_rata",
+    "deskripsi": "Bukti hasil TKA atau ANBK tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X dari Y = Z persen).",
+    "urutan": 6,
+    "fields": [
+      {
+        "key": "ratio",
+        "label": "Hasil TKA/ANBK Murid > 85",
+        "type": "ratio",
+        "required": true,
+        "pembilangLabel": "Murid > 85",
+        "penyebutLabel": "Total murid",
+        "help": "Format X dari Y = Z% — dihitung otomatis (0 dari 0 = 0%)"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "7",
+    "nama": "Murid Lanjutan Unggulan",
+    "short": "Lanjutan Unggulan",
+    "slug": "siswa_lanjutan_unggulan",
+    "deskripsi": "Bukti kelulusan tahun berjalan wajib dilampirkan: nama universitas atau sekolah unggulan tujuan dan nama murid yang diterima.",
+    "urutan": 7,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Universitas atau Sekolah Unggulan",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Universitas Airlangga"
+      },
+      {
+        "key": "namaPeserta",
+        "label": "Nama Murid",
+        "type": "text",
+        "required": true,
+        "placeholder": "Nama lengkap murid",
+        "help": "Bukti kelulusan tahun berjalan"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "8",
+    "nama": "Giat Inovatif dalam Pengembangan Mutu Madrasah",
+    "short": "Giat Inovatif",
+    "slug": "giat_inovatif",
+    "deskripsi": "Bukti laporan kegiatan tahun berjalan wajib dilampirkan, memuat nama giat inovatif pengembangan mutu madrasah.",
+    "urutan": 8,
+    "fields": [
+      {
+        "key": "namaKegiatan",
+        "label": "Nama Giat Inovatif",
+        "type": "text",
+        "required": true,
+        "placeholder": "Contoh: Gerakan Literasi Digital Madrasah",
+        "help": "Lampirkan laporan kegiatan (bukti tahun berjalan)"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  },
+  {
+    "kode": "9",
+    "nama": "Rasio Penerimaan Murid Baru",
+    "short": "Rasio",
+    "slug": "rasio_penerimaan",
+    "deskripsi": "Bukti penerimaan murid baru tahun berjalan wajib dilampirkan: jumlah murid diterima dari total pendaftar (format X dari Y = Z persen).",
+    "urutan": 9,
+    "fields": [
+      {
+        "key": "ratio",
+        "label": "Murid diterima dari jumlah pendaftar tahun berjalan",
+        "type": "ratio",
+        "required": true,
+        "pembilangLabel": "Murid diterima",
+        "penyebutLabel": "Jumlah pendaftar",
+        "help": "Format X dari Y = Z% — dihitung otomatis (0 dari 0 = 0%)"
+      },
+      {
+        "key": "linkBukti",
+        "label": "Link Bukti Fisik",
+        "type": "text",
+        "required": true,
+        "placeholder": "https://drive.google.com/...",
+        "help": "Wajib bukti tahun berjalan & akses publik (Anyone with link)"
+      },
+      {
+        "key": "catatan",
+        "label": "Catatan Tambahan",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Catatan..."
+      }
+    ]
+  }
+]
