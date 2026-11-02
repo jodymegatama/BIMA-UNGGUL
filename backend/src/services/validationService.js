@@ -1,4 +1,5 @@
 import { attachPeriodConfig, lockPeriod } from './indikatorService.js';
+import { calculateSkorMadrasah } from './scoringService.js';
 /**
  * Validation Service — BIMA UNGGUL Phase 3
  * 7 endpoint Admin: validasi queue + approve/reject/revoke + delete-requests
@@ -98,6 +99,8 @@ export async function approveSubmission({ id, adminId, ip }) {
       where: { id: itemId },
       data: { status: 'disetujui', alasanPenolakan: null },
     });
+    // Reject an invalid aggregate atomically before approval becomes visible.
+    await calculateSkorMadrasah(item.madrasahId, item.periodeId, tx);
 
     await tx.validation.create({
       data: { submissionItemId: itemId, validatorId: adminId, aksi: 'approve' },

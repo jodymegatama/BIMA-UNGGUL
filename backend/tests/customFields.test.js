@@ -37,4 +37,10 @@ describe('Kontrak field kustom', () => {
     expect(scoreCustomItems('per_kategori', [{ customValues: { cf_category: 'opt_online', cf_duration: 4 } }, { customValues: { cf_category: 'opt_offline', cf_duration: 3 } }], { category: ref(category.key), quantity: ref(number.key), weights: { opt_online: 2, opt_offline: 5 } }, {})).toBe(23);
     expect(() => scoreCustomItems('per_jumlah', [{}], { quantity: ref(number.key) }, { nilaiBobot: 2 })).toThrow();
   });
+  it('wilayah dan jenjang dapat membaca pilihan kustom dengan pemetaan kanonis', () => {
+    const items = [{ customValues: { cf_category: 'opt_online', cf_duration: 2 } }, { customValues: { cf_category: 'opt_offline', cf_duration: 3 } }];
+    expect(scoreCustomItems('per_tingkat_wilayah', items, { category: ref(category.key), categoryMap: { opt_online: 'kabupaten', opt_offline: 'nasional' } }, { bobotTingkatWilayah: { kabupaten: 3, nasional: 10 } })).toBe(13);
+    expect(scoreCustomItems('per_jenjang', items, { category: ref(category.key), quantity: ref(number.key), categoryMap: { opt_online: 's1', opt_offline: 's2' } }, { bobotJenjang: { s1: 2, s2: 5 } })).toBe(19);
+    expect(validateScoringConfig('per_tingkat_wilayah', [category], { category: ref(category.key) }).length).toBeGreaterThan(0);
+  });
 });

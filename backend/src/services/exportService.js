@@ -11,6 +11,14 @@ import { calculateRanking, calculateRankingAllGroups } from './scoringService.js
 import { KELOMPOKS_LIST, normalizeKelompok } from '../constants/periode.constants.js';
 import { prisma } from '../db/prisma.js';
 import { listPeriod } from './indikatorService.js';
+import { presentField } from './fieldPresentation.js';
+
+async function capaianRows(data) {
+  const ids = data.groups.flatMap((g) => g.rankings.map((r) => r.madrasah.id));
+  const configs = new Map(data.indikators.map((i) => [i.id, i]));
+  const items = await prisma.submissionItem.findMany({ where: { periodeId: data.periode.id, madrasahId: { in: ids }, status: 'disetujui', deletedAt: null }, include: { madrasah: { select: { nomorMadrasah: true, namaMadrasah: true } } }, orderBy: [{ indikatorId: 'asc' }, { madrasahId: 'asc' }, { id: 'asc' }] });
+  return items.map((item) => ({ item, config: configs.get(item.indikatorId) }));
+}
 
 const kelompokLabel = (value) => value === 'MTs' ? 'MTS' : value;
 
@@ -95,7 +103,7 @@ function drawPdfSectionTitle(doc, kelompok) {
   doc.x = 40;
 }
 
-export async function buildPdfBuffer({ periodeId, kelompok, jenjang }) {
+export async function buildPdfBuffer({ periodeId, kelompok, jenjang, includeDetails = false }) {
   const data = await getLeaderboardData({ periodeId, kelompok, jenjang });
   const { periode, groups } = data;
   const filterLabel = kelompokLabel(data.kelompok) || (data.jenjang ? `Jenjang ${kelompokLabel(data.jenjang)}` : 'Semua kelompok');
@@ -185,6 +193,15 @@ export async function buildPdfBuffer({ periodeId, kelompok, jenjang }) {
       for (const ind of data.indikators) doc.font('Helvetica').fontSize(8).text(`${ind.nama}: ${(r.breakdown?.[ind.slug] || 0).toFixed(2)}`, { width: 515 });
     }
   }
+  if (includeDetails) {
+    const rows = await capaianRows(data);
+    doc.addPage().font('Helvetica-Bold').fontSize(12).fillColor('#111827').text('Rincian Capaian', 40, 40, { width: 515 });
+    for (const { item, config } of rows) {
+      if (doc.y > 700) doc.addPage();
+      doc.moveDown().font('Helvetica-Bold').fontSize(9).text(`${item.madrasah.nomorMadrasah} - ${item.madrasah.namaMadrasah} | ${config?.nama || item.indikatorId} | #${item.id}`, 40, doc.y, { width: 515 });
+      for (const field of config?.fields || []) doc.font('Helvetica').fontSize(8).text(`${field.label}: ${presentField(field, item) || '-'}`, 40, doc.y + 3, { width: 515 });
+    }
+  }
   doc.end();
   return done;
 }
@@ -248,6 +265,15 @@ export async function buildExcelBuffer({ periodeId, kelompok, jenjang }) {
   ];
   detail.getRow(1).font = { bold: true };
   for (const g of data.groups) for (const r of g.rankings) detail.addRow({ bmu: r.madrasah.nomorMadrasah, nama: r.madrasah.namaMadrasah, ...Object.fromEntries(data.indikators.map((ind) => [ind.slug, r.breakdown?.[ind.slug] || 0])) });
+  // A long table keeps different indicator schemas and duplicate labels unambiguous.
+  const capaian = wb.addWorksheet('Rincian Capaian');
+  capaian.columns = [{ header: 'ID Capaian', key: 'id', width: 14 }, { header: 'BMU', key: 'bmu', width: 18 }, { header: 'Madrasah', key: 'madrasah', width: 36 }, { header: 'Indikator', key: 'indikator', width: 30 }, { header: 'Nama Field', key: 'field', width: 30 }, { header: 'Nilai', key: 'value', width: 55 }];
+  capaian.getRow(1).font = { bold: true };
+  capaian.views = [{ state: 'frozen', ySplit: 1 }];
+  for (const { item, config } of await capaianRows(data)) for (const field of config?.fields || []) {
+    const row = capaian.addRow({ id: item.id, bmu: item.madrasah.nomorMadrasah, madrasah: item.madrasah.namaMadrasah, indikator: config.nama, field: field.label, value: presentField(field, item) });
+    row.alignment = { vertical: 'top', wrapText: true };
+  }
   ws.addRow([]);
   const scopeLabel = kelompokLabel(data.kelompok) || (data.jenjang ? `Jenjang ${kelompokLabel(data.jenjang)}` : 'Semua');
   ws.addRow([`Periode: ${data.periode.namaPeriode} | Kelompok: ${scopeLabel} | ${new Date().toLocaleString('id-ID')}`]);

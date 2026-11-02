@@ -36,6 +36,7 @@ export function validateCustomFields(fields) {
     if (own(f, 'precision') && (f.type !== 'decimal' || !Number.isInteger(f.precision) || f.precision < 0 || f.precision > CUSTOM_LIMITS.precision)) errors.push(issue(key, 'Presisi desimal tidak valid'));
     const maxLength = f.type === 'textarea' ? 4000 : 2000;
     if (own(f, 'maxLen') && (!['text', 'textarea', 'url'].includes(f.type) || !Number.isInteger(f.maxLen) || f.maxLen < 1 || f.maxLen > maxLength)) errors.push(issue(key, 'Batas panjang tidak valid'));
+    if (own(f, 'options') && !['select', 'multiselect'].includes(f.type)) errors.push(issue(key, 'Opsi hanya berlaku untuk field pilihan'));
     if (['select', 'multiselect'].includes(f.type)) {
       if (!Array.isArray(f.options) || !f.options.length || f.options.length > CUSTOM_LIMITS.options) { errors.push(issue(key, 'Pilihan wajib berisi 1–50 opsi')); continue; }
       const seen = new Set();
@@ -97,7 +98,8 @@ export function mergeCustomValues(fields, before = {}, patch = {}, mode = 'draft
   return result;
 }
 
-const roles = { per_capaian: [], per_jumlah: ['quantity'], per_kategori: ['category'], persentase: ['numerator', 'denominator'], per_tingkat_wilayah: ['category'], per_jenjang: ['category', 'quantity'] };
+export const SCORE_ROLES = { per_capaian: [], per_jumlah: ['quantity'], per_kategori: ['category'], persentase: ['numerator', 'denominator'], per_tingkat_wilayah: ['category'], per_jenjang: ['category', 'quantity'] };
+const roles = SCORE_ROLES;
 const columns = { jumlah: 'number', pembilang: 'number', penyebut: 'number', tingkatWilayah: 'select', jenjangPendidikan: 'select' };
 export function validateScoringConfig(method, fields, config) {
   if (!own(roles, method)) return [issue('tipeFormula', 'Metode tidak dikenal')];
@@ -109,9 +111,11 @@ export function validateScoringConfig(method, fields, config) {
   for (const role of new Set([...roles[method], ...(config.quantity ? ['quantity'] : [])])) {
     const ref = config[role];
     let type, required = false;
+    if (record(ref) && Object.keys(ref).some((k) => !['source', 'key'].includes(k))) errors.push(issue(`scoringConfig.${role}`, 'Parameter sumber tidak dikenal'));
     if (record(ref) && ref.source === 'custom') {
       const f = fields.find((f) => f.source === 'custom' && f.key === ref.key);
       type = f?.type; required = f?.required;
+      if (role !== 'category' && f && (f.min === undefined || f.min < 0)) errors.push(issue(`scoringConfig.${role}`, 'Sumber angka untuk skor harus mempunyai minimum nonnegatif'));
     } else if (record(ref) && ref.source === 'builtin' && own(columns, ref.key)) {
       type = columns[ref.key];
       required = fields.some((f) => f.key === ref.key && f.required) || (['pembilang', 'penyebut'].includes(ref.key) && fields.some((f) => f.key === 'ratio' && f.required));

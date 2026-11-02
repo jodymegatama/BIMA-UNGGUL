@@ -1,18 +1,22 @@
 import { prisma } from '../db/prisma.js';
+import { isDeepStrictEqual } from 'node:util';
 import { Prisma } from '@prisma/client';
 import { HttpError } from '../utils/httpError.js';
 import { TX_OPTS } from '../config/transaction.js';
 import { recordAuditLog } from './auditService.js';
 import { validateConfig, completeConfig, defaultFields, rulesFromFields } from './indikatorConfig.js';
-import { computeSkorBreakdown } from './scoringService.js';
+import { computeSkorBreakdown, validatePeriodScores } from './scoringService.js';
+import { mergeCustomValues } from './customFields.js';
 
 export const parseId = (v) => {
   if (!/^\d+$/.test(String(v)) || !Number.isSafeInteger(Number(v)) || Number(v) < 1) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
   return Number(v);
 };
 const fail = (message) => { throw new HttpError(400, 'INVALID_CONFIG', message); };
-const META = ['nama', 'deskripsi', 'short', 'urutan', 'tipeFormula', 'fields'];
+const META = ['nama', 'deskripsi', 'short', 'urutan', 'tipeFormula', 'fields', 'scoringConfig'];
 export function snapshot(ind) { return Object.fromEntries(META.map((k) => [k, ind[k]])); }
+// Category weights may change during an open period, but source bindings cannot.
+const binding = (config) => config == null ? null : Object.fromEntries(Object.entries(config).filter(([k]) => k !== 'weights'));
 
 function validateMeta(data) {
   for (const [key, max] of [['nama', 191], ['deskripsi', 10000], ['short', 191]]) {
@@ -43,6 +47,7 @@ export async function listMaster() {
 
 export async function createMaster(body, actor) {
   const data = { ...Object.fromEntries(META.map((k) => [k, body[k]])), aktif: false };
+  data.scoringConfig ??= null;
   data.short ??= '';
   data.deskripsi ??= '';
   data.urutan ??= 0;
@@ -137,10 +142,10 @@ export async function updatePeriod(tx, periodeId, indikatorId, body, actor, requ
   if (before.terkunci) throw new HttpError(423, 'BOBOT_LOCKED', 'Konfigurasi terkunci');
   if (requireRevision) checkRevision(before, body.revision);
   const data = Object.fromEntries([...META, 'nilaiBobot', 'bobotTingkatWilayah', 'bobotJenjang', 'menerimaInput'].filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
-  const fallback = Object.fromEntries(META.filter((k) => before[k] == null).map((k) => [k, before.indikator[k]]));
+  const fallback = Object.fromEntries(META.filter((k) => k !== 'scoringConfig' && before[k] == null).map((k) => [k, before.indikator[k]]));
   const next = { ...before, ...fallback, ...data };
   validateMeta(next);
-  const structural = ['fields', 'tipeFormula'].some((k) => Object.hasOwn(data, k) && JSON.stringify(data[k]) !== JSON.stringify(before[k]));
+  const structural = ['fields', 'tipeFormula'].some((k) => Object.hasOwn(data, k) && !isDeepStrictEqual(data[k], before[k])) || (Object.hasOwn(data, 'scoringConfig') && !isDeepStrictEqual(binding(data.scoringConfig), binding(before.scoringConfig)));
   if (structural && await tx.submissionItem.count({ where: { indikatorId: iid, periodeId: p.id } })) throw new HttpError(409, 'CONFIG_IN_USE', 'Formulir/metode sudah digunakan capaian. Ubah pada periode berikutnya.');
   for (const k of ['nilaiBobot', 'bobotTingkatWilayah', 'bobotJenjang']) {
     if (data[k] === undefined || data[k] === null) continue;
@@ -154,8 +159,9 @@ export async function updatePeriod(tx, periodeId, indikatorId, body, actor, requ
   // Prisma JSON columns: explicit null is represented as DbNull by the caller if needed;
   // empty weights can remain unchanged until a concrete valid value is supplied.
   const write = { ...fallback, ...data, revision: { increment: 1 } };
-  for (const key of ['fields', 'bobotJenjang', 'bobotTingkatWilayah']) if (write[key] === null) write[key] = Prisma.DbNull;
+  for (const key of ['fields', 'bobotJenjang', 'bobotTingkatWilayah', 'scoringConfig']) if (write[key] === null) write[key] = Prisma.DbNull;
   const updated = await tx.bobotIndikator.update({ where, data: write });
+  if (['nilaiBobot', 'bobotTingkatWilayah', 'bobotJenjang', 'scoringConfig'].some((key) => Object.hasOwn(data, key))) await validatePeriodScores(tx, p.id);
   await audit(tx, actor, 'update_indikator_periode', 'BobotIndikator', updated.id, before, updated);
   return updated;
 }
@@ -166,19 +172,23 @@ export async function previewPeriod(periodeId, indikatorId, body) {
   checkRevision(config, body.revision);
   if (!completeConfig(config)) fail('Konfigurasi belum lengkap');
   if (!Array.isArray(body.items) || !body.items.length || body.items.length > 100) fail('Masukkan 1–100 contoh capaian');
-  const rules = rulesFromFields(config.fields);
+  const refs = Object.entries(config.scoringConfig || {}).filter(([key]) => ['quantity', 'category', 'numerator', 'denominator'].includes(key)).map(([, ref]) => ref);
+  const scoringFields = config.scoringConfig ? config.fields.filter((f) => refs.some((r) => r.source === 'builtin' && (r.key === f.key || (f.key === 'ratio' && ['pembilang', 'penyebut'].includes(r.key))))) : config.fields;
+  const rules = rulesFromFields(scoringFields);
+  const samples = body.items.map((item) => item && typeof item === 'object' && !Array.isArray(item) ? { ...item } : item);
   // Preview requires only scoring fields, not dummy names or evidence URLs.
-  for (const item of body.items) {
+  for (const item of samples) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) fail('Contoh capaian harus berupa objek');
+    if (config.scoringConfig) item.customValues = mergeCustomValues(config.fields.filter((f) => f.source === 'custom').map((f) => ({ ...f, required: refs.some((r) => r.source === 'custom' && r.key === f.key) })), {}, item.customValues, 'submit');
     for (const key of ['jumlah', 'pembilang', 'penyebut', 'tingkatWilayah', 'jenjangPendidikan']) {
       if (!rules[key]) continue;
       const value = item[key];
       if (rules[key].type === 'int' && (!Number.isInteger(value) || value < rules[key].min || value > rules[key].max)) fail(`Contoh ${key} tidak valid`);
       if (rules[key].type === 'enum' && !rules[key].values.includes(value)) fail(`Contoh ${key} tidak valid`);
     }
-    if (config.tipeFormula === 'persentase' && item.pembilang > item.penyebut) fail('Pembilang tidak boleh melebihi penyebut');
+    if (!config.scoringConfig && config.tipeFormula === 'persentase' && item.pembilang > item.penyebut) fail('Pembilang tidak boleh melebihi penyebut');
   }
-  const items = body.items.map((i) => ({ ...i, indikatorId: config.id, indikator: { slug: config.slug, tipeFormula: config.tipeFormula } }));
+  const items = samples.map((i) => ({ ...i, indikatorId: config.id, indikator: { slug: config.slug, tipeFormula: config.tipeFormula } }));
   return { ...computeSkorBreakdown(items, [{ ...config, indikatorId: config.id }]), tipeFormula: config.tipeFormula, periodeId: Number(periodeId), revision: config.revision };
 }
 
@@ -196,8 +206,10 @@ export async function copyWeights(periodeId, body, actor) {
     for (const row of dest) {
       const src = byId.get(row.indikatorId);
       if (!src || src.tipeFormula !== row.tipeFormula) continue;
+      if (!isDeepStrictEqual(binding(src.scoringConfig), binding(row.scoringConfig))) continue;
+      if (row.tipeFormula === 'per_kategori' && JSON.stringify(Object.keys(src.scoringConfig?.weights || {}).sort()) !== JSON.stringify(Object.keys(row.scoringConfig?.weights || {}).sort())) continue;
       if (!completeConfig(src)) fail('Konfigurasi periode sumber belum lengkap');
-      await updatePeriod(tx, p.id, row.indikatorId, { revision: revisions[row.indikatorId], nilaiBobot: src.nilaiBobot, bobotTingkatWilayah: src.bobotTingkatWilayah, bobotJenjang: src.bobotJenjang }, actor);
+      await updatePeriod(tx, p.id, row.indikatorId, { revision: revisions[row.indikatorId], nilaiBobot: src.nilaiBobot, bobotTingkatWilayah: src.bobotTingkatWilayah, bobotJenjang: src.bobotJenjang, ...(row.tipeFormula === 'per_kategori' ? { scoringConfig: { ...row.scoringConfig, weights: src.scoringConfig.weights } } : {}) }, actor);
       copied++;
     }
     if (!copied) fail('Tidak ada indikator dengan metode yang sama pada kedua periode');

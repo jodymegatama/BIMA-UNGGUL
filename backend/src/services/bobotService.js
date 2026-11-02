@@ -15,7 +15,7 @@ export async function listBobot({ periodeId }) {
   const raw = await prisma.periodePenilaian.findUnique({ where: { id: pid } });
   if (!raw) throw new HttpError(404, 'PERIODE_NOT_FOUND', 'Periode tidak ditemukan');
   const data = await listPeriod(pid);
-  return { periode: { ...raw, status: deriveStatus(raw) }, data: data.map((r) => ({ ...r, adaBobot: r.nilaiBobot !== null || r.bobotTingkatWilayah !== null || r.bobotJenjang !== null })) };
+  return { periode: { ...raw, status: deriveStatus(raw) }, data: data.map((r) => ({ ...r, adaBobot: r.nilaiBobot !== null || r.bobotTingkatWilayah !== null || r.bobotJenjang !== null || r.tipeFormula === 'per_kategori' })) };
 }
 export async function updateBobot({ periodeId, bobots }, actor) {
   const pid = parseId(periodeId);
@@ -38,7 +38,7 @@ export async function updateBobot({ periodeId, bobots }, actor) {
       await recordAuditLog({ userId: actor.userId, ipAddress: actor.ip, action: 'update_bobot', entity: 'BobotIndikator', entityId: updated.id, dataSesudah: updated }, tx);
     }
     const after = await tx.bobotIndikator.findMany({ where: { periodeId: pid } });
-    const total = after.reduce((sum, b) => sum + (b.nilaiBobot || 0) + Object.values(b.bobotTingkatWilayah || {}).reduce((a, v) => a + v, 0) + Object.values(b.bobotJenjang || {}).reduce((a, v) => a + v, 0), 0);
+    const total = after.reduce((sum, b) => sum + (b.nilaiBobot || 0) + Object.values(b.bobotTingkatWilayah || {}).reduce((a, v) => a + v, 0) + Object.values(b.bobotJenjang || {}).reduce((a, v) => a + v, 0) + Object.values(b.scoringConfig?.weights || {}).reduce((a, v) => a + v, 0), 0);
     if (total <= 0) throw new HttpError(400, 'ALL_BOBOT_ZERO', 'Minimal satu indikator harus punya bobot lebih dari 0');
     return result;
   }, TX_OPTS);

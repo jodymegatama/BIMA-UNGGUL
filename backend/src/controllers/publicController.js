@@ -3,6 +3,9 @@
  */
 import { prisma } from '../db/prisma.js';
 import { listPeriod, parseId } from '../services/indikatorService.js';
+export function publicCustomValues(fields = [], values = {}) {
+  return Object.fromEntries(fields.filter((f) => f.source === 'custom' && f.visibility === 'public' && values && Object.hasOwn(values, f.key)).map((f) => [f.key, values[f.key]]));
+}
 
 export async function indikatorCatalog(req, res) {
   const data = req.query.periodeId
@@ -66,7 +69,7 @@ export async function madrasahDetail(req,res){
     const items = await prisma.submissionItem.findMany({
       where:{ madrasahId: madrasah.id, periodeId: periode.id, status:'disetujui', deletedAt: null },
       select:{
-        id:true, namaKegiatan:true, institusi:true, namaPeserta:true, tingkatWilayah:true, jenjangPendidikan:true, jumlah:true, pembilang:true, penyebut:true, tahun:true, catatan:true, skorBaris:true, status:true, createdAt:true,
+        id:true, namaKegiatan:true, institusi:true, namaPeserta:true, tingkatWilayah:true, jenjangPendidikan:true, jumlah:true, pembilang:true, penyebut:true, tahun:true, catatan:true, skorBaris:true, status:true, createdAt:true, customValues:true,
         indikator:{ select:{ id:true, kode:true, slug:true, nama:true } },
         // linkBukti sengaja TIDAK di-select
       },
@@ -84,7 +87,7 @@ export async function madrasahDetail(req,res){
   }
   const indikators = periode ? await listPeriod(periode.id) : [];
   const byId = new Map(indikators.map((i) => [i.id, i]));
-  prestasi = prestasi.map((p) => ({ ...p, indikator: byId.get(p.indikator.id) || p.indikator }));
+  prestasi = prestasi.map((p) => { const config = byId.get(p.indikator.id); return { ...p, customValues: publicCustomValues(config?.fields, p.customValues), indikator: config || p.indikator }; });
   res.json({ madrasah, periode, skor, prestasi, ranking, indikators });
 }
 

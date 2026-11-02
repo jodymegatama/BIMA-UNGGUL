@@ -1,5 +1,6 @@
-// Only existing SubmissionItem columns are configurable. JSON is metadata, never executable code.
-export const FORMULAS = ['per_capaian', 'per_tingkat_wilayah', 'per_jenjang', 'persentase'];
+import { validateCustomFields, validateScoringConfig } from './customFields.js';
+// Fixed columns and custom JSON fields share metadata, never executable code.
+export const FORMULAS = ['per_capaian', 'per_tingkat_wilayah', 'per_jenjang', 'persentase', 'per_jumlah', 'per_kategori'];
 export const WILAYAH = ['kabupaten', 'provinsi', 'nasional', 'internasional'];
 export const JENJANG = ['s1', 's2', 's3'];
 export const FIELD_CATALOG = {
@@ -22,12 +23,15 @@ export function defaultFields(tipeFormula) {
   }));
 }
 
-export function validateConfig({ tipeFormula, fields }) {
+export function validateConfig({ tipeFormula, fields, scoringConfig = null }) {
   const errors = [];
   if (!FORMULAS.includes(tipeFormula)) errors.push('Metode perhitungan tidak dikenal');
-  if (!Array.isArray(fields) || fields.length > Object.keys(FIELD_CATALOG).length) return [...errors, 'Daftar field tidak valid'];
+  if (!Array.isArray(fields) || fields.length > Object.keys(FIELD_CATALOG).length + 25) return [...errors, 'Daftar field tidak valid'];
+  const custom = fields.filter((f) => f?.source === 'custom');
+  errors.push(...validateCustomFields(custom).map((e) => e.message));
   const keys = new Set();
   for (const f of fields) {
+    if (f?.source === 'custom') continue;
     if (!f || typeof f !== 'object' || !Object.hasOwn(FIELD_CATALOG, f.key)) { errors.push('Field tidak dikenal'); continue; }
     const catalog = FIELD_CATALOG[f.key];
     if (keys.has(f.key)) errors.push(`Field ${f.key} duplikat`);
@@ -42,15 +46,17 @@ export function validateConfig({ tipeFormula, fields }) {
       if (f[prop] !== undefined && (!Number.isFinite(f[prop]) || f[prop] < 0 || (catalog[prop] === undefined) || (prop === 'min' ? f[prop] < catalog[prop] : f[prop] > catalog[prop]))) errors.push(`Batas ${f.key} tidak valid`);
     }
   }
-  for (const key of ['linkBukti', ...(REQUIRED[tipeFormula] || [])]) {
+  for (const key of ['linkBukti', ...(scoringConfig ? [] : REQUIRED[tipeFormula] || [])]) {
     if (!fields.some((f) => f?.key === key && f.required === true)) errors.push(`${key} wajib untuk metode ini`);
   }
+  if (!errors.length) errors.push(...validateScoringConfig(tipeFormula, fields, scoringConfig).map((e) => e.message));
   return errors;
 }
 
 export function rulesFromFields(fields) {
   const rules = {};
   for (const f of fields) {
+    if (f.source === 'custom') continue;
     const catalog = FIELD_CATALOG[f.key];
     if (!catalog) continue;
     if (f.type === 'ratio') {
@@ -67,6 +73,7 @@ export function rulesFromFields(fields) {
 export function completeConfig(c) {
   if (!c || typeof c.deskripsi !== 'string' || !c.deskripsi.trim() || c.deskripsi.length > 10000 || validateConfig(c).length) return false;
   const finite = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+  if (c.tipeFormula === 'per_kategori') return true;
   if (c.tipeFormula === 'per_tingkat_wilayah') return WILAYAH.every((k) => finite(c.bobotTingkatWilayah?.[k]));
   if (c.tipeFormula === 'per_jenjang') return JENJANG.every((k) => finite(c.bobotJenjang?.[k]));
   return finite(c.nilaiBobot);

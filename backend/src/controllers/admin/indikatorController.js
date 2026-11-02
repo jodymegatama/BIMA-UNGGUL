@@ -2,8 +2,9 @@ import { prisma } from '../../db/prisma.js';
 import { TX_OPTS } from '../../config/transaction.js';
 import * as service from '../../services/indikatorService.js';
 import { FORMULAS, FIELD_CATALOG, defaultFields } from '../../services/indikatorConfig.js';
+import { CUSTOM_TYPES, CUSTOM_LIMITS, SCORE_ROLES } from '../../services/customFields.js';
 const actor = (req) => ({ userId: req.user.userId, ip: req.ip });
-export function contract(_req, res) { res.json({ formulas: FORMULAS, fields: FIELD_CATALOG, defaults: Object.fromEntries(FORMULAS.map((f) => [f, defaultFields(f)])) }); }
+export function contract(_req, res) { res.json({ formulas: FORMULAS, fields: FIELD_CATALOG, defaults: Object.fromEntries(FORMULAS.map((f) => [f, defaultFields(f)])), customTypes: CUSTOM_TYPES, customLimits: CUSTOM_LIMITS, scoreRoles: SCORE_ROLES }); }
 export async function list(_req, res) { res.json({ data: await service.listMaster() }); }
 export async function detail(req, res) { res.json({ data: (await service.listMaster()).find((r) => r.id === service.parseId(req.params.id)) ?? null }); }
 export async function create(req, res) { res.status(201).json({ data: await service.createMaster(req.body, actor(req)) }); }

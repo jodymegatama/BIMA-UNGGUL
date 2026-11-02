@@ -1,3 +1,4 @@
+import { scoreCustomItems, CUSTOM_LIMITS } from './customFields.js';
 /**
  * Scoring Service — BIMA UNGGUL Phase 3
  * Hitung skor per madrasah dan ranking dengan tie-breaker 4 level
@@ -52,7 +53,11 @@ export function computeSkorBreakdown(items, bobots) {
     if (bobot) {
       // Nullable only during expand/backfill; migrated configurations are authoritative.
       const tipeFormula = bobot.tipeFormula ?? indikator.tipeFormula;
-      if (tipeFormula === 'per_capaian') {
+      if (bobot.scoringConfig) {
+        skorIndikator = scoreCustomItems(tipeFormula, indikatorItems, bobot.scoringConfig, bobot);
+      } else if (['per_jumlah', 'per_kategori'].includes(tipeFormula)) {
+        throw new HttpError(400, 'INVALID_SCORE_SOURCE', 'Sumber skor belum dikonfigurasi');
+      } else if (tipeFormula === 'per_capaian') {
         skorIndikator = indikatorItems.length * bobot.nilaiBobot;
       } else if (tipeFormula === 'per_tingkat_wilayah') {
         const tingkatMap = {};
@@ -87,12 +92,23 @@ export function computeSkorBreakdown(items, bobots) {
     breakdown[indikator.slug] = skorIndikator;
     totalScore += skorIndikator;
   }
+  if (bobots.some((b) => b.scoringConfig) && (!Number.isFinite(totalScore) || totalScore > CUSTOM_LIMITS.score)) throw new HttpError(400, 'INVALID_SCORE_VALUE', 'Total skor melebihi batas perhitungan');
 
   return {
     totalScore,
     breakdown,
     indikatorCount: Object.keys(itemsByIndikator).length,
   };
+}
+
+// Validate weight changes in one batch before making them visible to readers.
+export async function validatePeriodScores(client, periodeId) {
+  const bobots = await client.bobotIndikator.findMany({ where: { periodeId } });
+  if (!bobots.some((b) => b.scoringConfig)) return;
+  const items = await client.submissionItem.findMany({ where: { periodeId, status: 'disetujui', deletedAt: null }, include: { indikator: true } });
+  const schools = new Map();
+  for (const item of items) { if (!schools.has(item.madrasahId)) schools.set(item.madrasahId, []); schools.get(item.madrasahId).push(item); }
+  for (const rows of schools.values()) computeSkorBreakdown(rows, bobots);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { mergeCustomValues, scoreCustomItems } from './customFields.js';
 /**
  * Submission Service — BIMA UNGGUL (Operator write endpoints)
  * Endpoint: PRD §13 —
@@ -207,7 +208,7 @@ async function writableRules(tx, periodeId, indikatorId, revision) {
   const config = await tx.bobotIndikator.findUnique({ where: { indikatorId_periodeId: { indikatorId, periodeId } } });
   if (!config?.menerimaInput || !config.fields) throw new HttpError(423, 'INDIKATOR_INPUT_CLOSED', 'Input indikator belum diaktifkan atau telah dihentikan oleh admin');
   if (revision !== undefined && revision !== config.revision) throw new HttpError(409, 'CONFIG_CHANGED', 'Konfigurasi berubah. Muat ulang sebelum mengirim; isian Anda tetap tersedia.');
-  return rulesFromFields(config.fields);
+  return config;
 }
 
 async function getOwnedItem(itemId, madrasahId) {
@@ -240,7 +241,8 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
   if (expectedPeriodeId !== undefined && Number(expectedPeriodeId) !== periode.id) throw new HttpError(409, 'PERIOD_CHANGED', 'Periode aktif berubah. Simpan isian Anda lalu muat ulang halaman.');
 
   return prisma.$transaction(async (tx) => {
-  const rules = await writableRules(tx, periode.id, iid, revision);
+  const config = await writableRules(tx, periode.id, iid, revision);
+  const rules = rulesFromFields(config.fields);
   // validasi semua dulu — all-or-nothing, di dalam lock konfigurasi periode
   for (let i = 0; i < items.length; i++) {
     const clean = sanitizePayload(rules, items[i]);
@@ -269,11 +271,13 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
         if (!['draft', 'ditolak'].includes(item.status)) {
           throw new HttpError(400, 'INVALID_STATUS', `Baris ID ${existingId} berstatus ${item.status} — hanya draft/ditolak yang bisa diubah`);
         }
+        fields.customValues = mergeCustomValues(config.fields.filter((f) => f.source === 'custom'), item.customValues, raw.customValues, targetStatus === 'menunggu' ? 'submit' : 'draft');
         saved = await tx.submissionItem.update({
           where: { id: existingId },
           data: { ...fields, status: targetStatus, alasanPenolakan: targetStatus === 'menunggu' ? null : undefined },
         });
       } else {
+        fields.customValues = mergeCustomValues(config.fields.filter((f) => f.source === 'custom'), {}, raw.customValues, targetStatus === 'menunggu' ? 'submit' : 'draft');
         saved = await tx.submissionItem.create({
           data: {
             ...fields,
@@ -286,6 +290,7 @@ export async function saveItems({ indikatorId, kodeSlug, items, targetStatus, us
           },
         });
       }
+      if (targetStatus === 'menunggu' && config.scoringConfig) scoreCustomItems(config.tipeFormula, [saved], config.scoringConfig, config);
       results.push(saved);
 
       await recordAuditLog(
@@ -331,17 +336,20 @@ export async function updateOwnItem({ id, body = {}, userId, madrasahId, ip }) {
 
   const targetStatus = body.status === 'draft' ? 'draft' : 'menunggu';
   return prisma.$transaction(async (tx) => {
-    const rules = await writableRules(tx, periode.id, item.indikatorId, body.revision);
+    const config = await writableRules(tx, periode.id, item.indikatorId, body.revision);
+    const rules = rulesFromFields(config.fields);
     const current = await tx.submissionItem.findUnique({ where: { id: itemId } });
     if (!current || current.deletedAt || !['draft', 'ditolak'].includes(current.status)) throw new HttpError(409, 'ITEM_CHANGED', 'Status capaian telah berubah');
     const clean = sanitizePayload(rules, { ...current, ...body });
     delete clean.id;
+    clean.customValues = mergeCustomValues(config.fields.filter((f) => f.source === 'custom'), current.customValues, body.customValues, targetStatus === 'menunggu' ? 'submit' : 'draft');
     const errs = validateItem(rules, clean, targetStatus === 'menunggu' ? 'submit' : 'draft');
     if (errs.length) throw Object.assign(new HttpError(400, 'VALIDATION_ERROR', errs.map((e) => e.message).join('; ')), { fields: errs });
     const updated = await tx.submissionItem.update({
       where: { id: itemId },
       data: { ...clean, status: targetStatus, alasanPenolakan: targetStatus === 'menunggu' ? null : undefined },
     });
+    if (targetStatus === 'menunggu' && config.scoringConfig) scoreCustomItems(config.tipeFormula, [updated], config.scoringConfig, config);
     await recordAuditLog(
       {
         userId,

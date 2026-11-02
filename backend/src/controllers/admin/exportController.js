@@ -1,6 +1,6 @@
 import * as exportService from '../../services/exportService.js';
 export async function pdf(req,res){
-  const buf = await exportService.buildPdfBuffer({ periodeId: req.query.periodeId, kelompok: req.query.kelompok, jenjang: req.query.jenjang });
+  const buf = await exportService.buildPdfBuffer({ periodeId: req.query.periodeId, kelompok: req.query.kelompok, jenjang: req.query.jenjang, includeDetails: req.query.includeDetails === 'true' });
   res.setHeader('Content-Type','application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=leaderboard-${req.query.periodeId||'all'}.pdf`);
   res.send(buf);
