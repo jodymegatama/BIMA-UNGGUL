@@ -1,4 +1,3 @@
-import { formatFieldValue } from '../../lib/customFields';
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -42,11 +41,9 @@ function normalizeApiRows(apiData) {
   return arr.map((r, i) => ({
     id: r.id,
     indikatorKode: r.indikator?.slug || r.indikatorKode || r.indikatorId || 'diklat',
-    indikatorConfig: r.indikator,
     indikatorNama: r.indikator?.nama || r.indikatorNama || r.indikatorKode || '-',
     // field dinamis schema — dipakai ulang oleh CapaianRow saat edit (US4)
     namaKegiatan: r.namaKegiatan || '',
-    customValues: r.customValues || {},
     institusi: r.institusi || '',
     namaPeserta: r.namaPeserta || '',
     statusPegawai: r.statusPegawai || '',
@@ -80,9 +77,7 @@ export default function RiwayatSubmission() {
   const [deletingDraft, setDeletingDraft] = useState(false);
 
   // Periode aktif dari context (single-flight GET /api/operator/indikator)
-  const { periode: ctxPeriode, indikators = [] } = useOperator();
-  const fieldsFor = (kode) => indikators.find((i) => i.slug === kode)?.fields || [];
-  const revisionFor = (kode) => indikators.find((i) => i.slug === kode)?.revision;
+  const { periode: ctxPeriode } = useOperator();
   const periodeU = urgency(ctxPeriode); // 'closed' berarti tidak bisa tulis (setara guard requireWritablePeriod)
   const periodeClosed = periodeU === 'closed';
   const cutTgl = ctxPeriode?.tanggalCutoff ? formatTanggal(ctxPeriode.tanggalCutoff) : null;
@@ -167,7 +162,7 @@ export default function RiwayatSubmission() {
       setTimeout(() => setToast(null), 3000);
       return;
     }
-    const e = validateRow((editing.indikatorConfig?.fields || fieldsFor(editing.indikatorKode)), editing);
+    const e = validateRow(editing.indikatorKode, editing);
     if (Object.keys(e).length) {
       setEditing((prev) => ({ ...prev, _error: e }));
       return;
@@ -178,7 +173,7 @@ export default function RiwayatSubmission() {
     const editingSnapshot = editing;
     setEditing(null);
     try {
-      await apiFetch(`/api/operator/submission-item/${editingSnapshot.id}`, { method: 'PATCH', body: { ...buildPayload((editingSnapshot.indikatorConfig?.fields || fieldsFor(editingSnapshot.indikatorKode)), editingSnapshot), revision: revisionFor(editingSnapshot.indikatorKode) }, auth: true });
+      await apiFetch(`/api/operator/submission-item/${editingSnapshot.id}`, { method: 'PATCH', body: buildPayload(editingSnapshot.indikatorKode, editingSnapshot), auth: true });
       setToast({ type: 'success', msg: 'Perubahan dikirim ulang — status Menunggu.' });
     } catch (e2) {
       // rollback HANYA baris ini — memulihkan seluruh array akan menghidupkan
@@ -186,7 +181,6 @@ export default function RiwayatSubmission() {
       if (prevRow) {
         setRows((prev) => prev.map((r) => (r.id === editingSnapshot.id ? { ...prevRow } : r)));
       }
-      setEditing(editingSnapshot);
       const msg = e2.status === 403 && /cutoff|periode/i.test(e2.message) ? 'Periode sudah cutoff — tidak bisa edit.' : (e2.message || 'Gagal kirim ulang.');
       setToast({ type: 'error', msg });
     }
@@ -202,7 +196,7 @@ export default function RiwayatSubmission() {
     const prevRow = rows.find((r) => r.id === id);
     setRows((prevR) => prevR.map((r) => (r.id === id ? { ...r, status: 'Menunggu', updatedAt: new Date().toISOString() } : r)));
     try {
-      await apiFetch(`/api/operator/submission-item/${id}`, { method: 'PATCH', body: { status: 'menunggu', revision: revisionFor(prevRow?.indikatorKode) }, auth: true });
+      await apiFetch(`/api/operator/submission-item/${id}`, { method: 'PATCH', body: { status: 'menunggu' }, auth: true });
       setToast({ type: 'success', msg: 'Dikirim ulang untuk validasi.' });
     } catch (e) {
       // rollback per-baris (bukan seluruh array) — lihat catatan di handleSaveEdit
@@ -317,7 +311,7 @@ export default function RiwayatSubmission() {
           </div>
           <p className="text-[11px] font-bold text-faded mt-1">ID tetap: {editing.id} • Status akan kembali Menunggu</p>
           <div className="mt-4">
-            <CapaianRow row={editing} indikatorKode={editing.indikatorKode} fields={(editing.indikatorConfig?.fields || fieldsFor(editing.indikatorKode))} onChange={(id, f, v) => updateRow(id, f, v) || setEditing((e) => ({ ...e, [f]: v }))} onRemove={() => setEditing(null)} showStatus={false} />
+            <CapaianRow row={editing} indikatorKode={editing.indikatorKode} onChange={(id, f, v) => updateRow(id, f, v) || setEditing((e) => ({ ...e, [f]: v }))} onRemove={() => setEditing(null)} showStatus={false} />
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={handleSaveEdit} className="flex-1 h-10 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
@@ -353,7 +347,6 @@ export default function RiwayatSubmission() {
                     <div className="text-[11px] font-medium text-pencil truncate">
                       {r.summary.slice(1).join(' • ')} {r.linkBukti && <>• <a href={r.linkBukti} target="_blank" rel="noreferrer" className="text-spark hover:underline inline-flex items-center gap-1">Bukti <Eye size={10} weight="regular" /></a></>}
                     </div>
-                    <dl className="mt-2 space-y-1">{(r.indikatorConfig?.fields || []).filter((f) => f.source === 'custom').map((f) => <div key={f.key} className="text-xs break-words"><dt className="font-bold inline">{f.label}: </dt><dd className="inline whitespace-pre-line">{formatFieldValue(f, r)}</dd></div>)}</dl>
                     {r.status === 'Ditolak' && r.alasan && (
                       <div className="mt-1.5 rounded-[10px] bg-red-50 border border-red-200 px-2.5 py-1.5">
                         <div className="text-[11px] font-black text-red-900">Alasan Ditolak</div>

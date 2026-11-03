@@ -46,7 +46,6 @@ const Panduan = lazy(() => import('./pages/operator/Panduan'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AntreanValidasi = lazy(() => import('./pages/admin/AntreanValidasi'));
 const ManajemenPeriode = lazy(() => import('./pages/admin/ManajemenPeriode'));
-const ManajemenIndikator = lazy(() => import('./pages/admin/ManajemenIndikator'));
 const KonfigurasiBobot = lazy(() => import('./pages/admin/KonfigurasiBobot'));
 const ManajemenAkun = lazy(() => import('./pages/admin/ManajemenAkun'));
 const ExportLaporan = lazy(() => import('./pages/admin/ExportLaporan'));
@@ -87,7 +86,6 @@ function AppRoutes() {
         <Route path="validasi" element={<Zone><AntreanValidasi /></Zone>} />
         <Route path="validasi/:id" element={<Zone><AntreanValidasi /></Zone>} />
         <Route path="periode" element={<Zone><ManajemenPeriode /></Zone>} />
-        <Route path="indikator" element={<Zone><ManajemenIndikator /></Zone>} />
         <Route path="bobot" element={<Zone><KonfigurasiBobot /></Zone>} />
         <Route path="akun" element={<Zone><ManajemenAkun /></Zone>} />
         <Route path="laporan" element={<Zone><ExportLaporan /></Zone>} />

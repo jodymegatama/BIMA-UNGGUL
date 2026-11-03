@@ -1,6 +1,6 @@
-import useIndikatorCatalog from '../../hooks/useIndikatorCatalog';
 import { Link } from 'react-router-dom';
 import { Trophy, EnvelopeSimple, Phone, MapPin } from 'phosphor-react';
+import { INDIKATORS } from '../../constants/indikator';
 
 /**
  * Footer — ekstrak persis dari _backup/index.html <footer>
@@ -11,7 +11,6 @@ import { Trophy, EnvelopeSimple, Phone, MapPin } from 'phosphor-react';
  * - Bottom bar year dynamic via new Date().getFullYear()
  */
 export default function Footer({ activePeriod = '2026/2027' }) {
-  const { data: INDIKATORS } = useIndikatorCatalog();
   const year = new Date().getFullYear();
 
   return (

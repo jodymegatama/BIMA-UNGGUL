@@ -1,6 +1,3 @@
-import { formatFieldValue } from '../../lib/customFields';
-import ScoreSourceSummary from '../shared/ScoreSourceSummary';
-import DeskripsiIndikator from '../shared/DeskripsiIndikator';
 import { useState } from 'react';
 import { X, Link as LinkIcon, CheckCircle, XCircle, ArrowClockwise, WarningCircle, Calendar } from 'phosphor-react';
 import StatusBadge from '../shared/StatusBadge';
@@ -54,14 +51,29 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
         <div className="p-5 space-y-4">
           <div className="rounded-[12px] bg-zinc-50 border-2 border-zinc-100 p-4 space-y-2">
             <div className="text-[11px] font-black tracking-wide text-faded uppercase">Detail capaian</div>
-            <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              {(item.indikatorConfig?.fields || []).filter((f) => f.key !== 'linkBukti').map((f) => <div key={f.key}><span className="font-bold text-pencil">{f.label}</span><div className="whitespace-pre-line break-words text-charcoal">{f.type === 'ratio' ? `${item.pembilang ?? '-'} dari ${item.penyebut ?? '-'}` : formatFieldValue(f, { ...item, ...item._raw })}</div></div>)}
+            <div className="grid sm:grid-cols-2 gap-3 text-[12px]">
+              {item.namaKegiatan && <div><span className="font-bold text-faded">Nama Kegiatan/Penghargaan</span><div className="font-black text-charcoal">{item.namaKegiatan}</div></div>}
+              {item.institusi && <div><span className="font-bold text-faded">Institusi Penerbit</span><div className="font-black text-charcoal">{item.institusi}</div></div>}
+              {item.namaPeserta && <div><span className="font-bold text-faded">Nama Peserta/Murid</span><div className="font-black text-charcoal">{item.namaPeserta}</div></div>}
+              {item.statusPegawai && <div><span className="font-bold text-faded">Status Pegawai</span><div className="font-black text-charcoal">{item.statusPegawai === 'non_asn' ? 'non-ASN' : 'ASN'}</div></div>}
+              {item.tingkatWilayah && <div><span className="font-bold text-faded">Tingkat Wilayah</span><div className="font-black text-charcoal">{item.tingkatWilayah.charAt(0).toUpperCase() + item.tingkatWilayah.slice(1)}</div></div>}
+              {item.jenjangPendidikan && <div><span className="font-bold text-faded">Jenjang Pendidikan</span><div className="font-black text-charcoal">{item.jenjangPendidikan.toUpperCase()}</div></div>}
+              {item.jumlah != null && item.jumlah !== '' && <div><span className="font-bold text-faded">Jumlah ASN</span><div className="font-black text-charcoal">{item.jumlah}</div></div>}
+              {item.pembilang != null && item.penyebut != null && (
+                <div>
+                  <span className="font-bold text-faded">Rasio</span>
+                  <div className="font-black text-charcoal">
+                    {item.pembilang} dari {item.penyebut}
+                    {Number(item.penyebut) > 0 ? ` = ${((Number(item.pembilang) / Number(item.penyebut)) * 100).toFixed(1).replace(/\.0$/, '')}%` : ' = 0%'}
+                  </div>
+                </div>
+              )}
+              {item.tahun != null && <div><span className="font-bold text-faded">Tahun Bukti</span><div className="font-black text-charcoal">{item.tahun}</div></div>}
+              <div className="sm:col-span-2"><span className="font-bold text-faded">Catatan</span><div className="font-medium text-charcoal">{item.catatan || '-'}</div></div>
             </div>
             {item.alasan && <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 text-[12px]"><span className="font-black text-red-900">Alasan penolakan sebelumnya:</span> <span className="font-medium text-red-800">{item.alasan}</span></div>}
           </div>
 
-          <ScoreSourceSummary config={item.indikatorConfig} row={{ ...item, ...item._raw }} />
-          <DeskripsiIndikator deskripsi={item.indikatorConfig?.deskripsi} collapsible />
           {/* linkBukti nullable di DB (draft boleh tanpa bukti — migration
               20261002163000). Submit tetap mewajibkannya, jadi baris di antrean
               validasi selalu punya bukti; guard ini supaya modal tidak

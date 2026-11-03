@@ -1,8 +1,8 @@
-import useIndikatorCatalog from '../../hooks/useIndikatorCatalog';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Info, ArrowRight, Buildings, Trophy } from 'phosphor-react';
 import useRevealOnScroll from '../../hooks/useRevealOnScroll';
+import { INDIKATORS } from '../../constants/indikator';
 import IntroSection from '../../components/public/tentang/IntroSection';
 import IndikatorDetailSection from '../../components/public/tentang/IndikatorDetailSection';
 import MetodologiSection from '../../components/public/tentang/MetodologiSection';
@@ -13,7 +13,6 @@ import MetodologiSection from '../../components/public/tentang/MetodologiSection
  * JANGAN ubah Navbar/Footer — ini halaman mandiri, link Navbar masih anchor #indikator/#metode (update terpisah nanti).
  */
 export default function Tentang() {
-  const { data: INDIKATORS } = useIndikatorCatalog();
   const ref = useRef(null);
   useRevealOnScroll(ref);
 
@@ -39,7 +38,7 @@ export default function Tentang() {
               Tentang BIMA UNGGUL
             </h1>
             <p className="text-[14px] leading-6 text-pencil font-medium mt-3">
-              Halaman ini merangkum <b>identitas, {INDIKATORS.length} indikator, dan metodologi</b> untuk memahami penilaian mutu madrasah. Ringkasan di Home hanya teaser — di sini versi lengkap untuk publik & operator.
+              Halaman ini merangkum <b>identitas, {INDIKATORS.length} indikator, dan metodologi</b> dari PRD. Ringkasan di Home hanya teaser — di sini versi lengkap untuk publik & operator.
             </p>
           </div>
           <div className="hidden lg:flex flex-col items-end gap-2">

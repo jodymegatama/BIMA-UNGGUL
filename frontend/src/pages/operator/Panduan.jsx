@@ -6,9 +6,8 @@ import {
 } from 'phosphor-react';
 import StatusBadge from '../../components/shared/StatusBadge';
 import PeriodeCutoffChip from '../../components/operator/PeriodeCutoffChip';
-import DeskripsiIndikator from '../../components/shared/DeskripsiIndikator';
+import { INDIKATORS, INDIKATOR_FIELDS } from '../../constants/indikator';
 import { useOperator } from '../../context/OperatorContext';
-import { customTypeLabels } from '../../lib/customFields';
 import { deriveStatusClient, formatTanggal, countdownText } from '../../lib/periode';
 
 /**
@@ -90,7 +89,7 @@ const STEPS = [
     body: (
       <>
         <p>
-          Di halaman <b>Input Capaian</b> tersedia <b>tab indikator sesuai periode</b>. Untuk tiap indikator:
+          Di halaman <b>Input Capaian</b> tersedia <b>9 tab indikator</b>. Untuk tiap indikator:
         </p>
         <ul className="mt-2 space-y-1 list-disc pl-5">
           <li>Klik <b>Tambah Baris Baru</b>, lalu isi semua field wajib (bertanda *).</li>
@@ -98,7 +97,7 @@ const STEPS = [
           <li>Klik <b>Simpan Draft</b> untuk menyimpan sementara, atau langsung <b>Kirim untuk Validasi</b>.</li>
         </ul>
         <p className="mt-2">
-          Rincian field setiap indikator ada di bagian <a href="#ringkasan-indikator" className="font-black text-spark hover:underline">Ringkasan Indikator</a> di bawah.
+          Rincian field setiap indikator ada di bagian <a href="#ringkasan-indikator" className="font-black text-spark hover:underline">Ringkasan 9 Indikator</a> di bawah.
         </p>
       </>
     ),
@@ -189,10 +188,6 @@ function faqCutoffAnswer(periode) {
 
 /** Hint singkat tipe field untuk ringkasan indikator. */
 function fieldHint(f) {
-  if (f.source === 'custom') {
-    const bounds = ['integer', 'decimal'].includes(f.type) ? `, ${f.min ?? -1e9} sampai ${f.max ?? 1e9}${f.type === 'decimal' ? `, maksimal ${f.precision ?? 6} angka desimal` : ''}` : f.maxLen ? `, maksimal ${f.maxLen} karakter` : '';
-    return `${customTypeLabels[f.type] || f.type}${bounds}${f.options ? `: ${f.options.map((o) => o.label).join(' / ')}` : ''}`;
-  }
   if (f.type === 'ratio') return `${f.pembilangLabel} ÷ ${penyebutLabelSafe(f)} (%)`;
   if (f.type === 'select') return (f.options || []).map((o) => o.label).join(' / ');
   if (f.type === 'textarea') return 'teks panjang';
@@ -226,9 +221,6 @@ function AccordionItem({ open, onToggle, header, children }) {
 }
 
 export default function Panduan() {
-  const { indikators = [] } = useOperator();
-  const INDIKATORS = indikators.map((i) => ({ ...i, kode: i.slug }));
-  const INDIKATOR_FIELDS = Object.fromEntries(INDIKATORS.map((i) => [i.kode, i.fields || []]));
   const [openIndikator, setOpenIndikator] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
   // Periode aktif dari OperatorContext — single-flight GET /api/operator/indikator
@@ -320,7 +312,7 @@ export default function Panduan() {
           <span className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center">
             <Table size={16} weight="regular" color="#777777" />
           </span>
-          Ringkasan Indikator &amp; Field Lampiran
+          Ringkasan 9 Indikator &amp; Field Lampiran
         </h2>
         <p className="text-[12px] font-medium text-pencil mt-1.5">
           Klik indikator untuk melihat field yang harus diisi. Tanda <span className="text-red-500 font-black">*</span> berarti wajib diisi.
@@ -343,7 +335,6 @@ export default function Panduan() {
                   </span>
                 }
               >
-                <DeskripsiIndikator deskripsi={ind.deskripsi} />
                 <ul className="mt-3 space-y-2">
                   {fields.map((f) => (
                     <li key={f.key} className="flex flex-wrap items-baseline gap-x-2">

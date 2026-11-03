@@ -1,4 +1,3 @@
-import { prepareConfig } from './helpers/indikatorFixture.js';
 /**
  * Publik + Admin Integration Test — BIMA UNGGUL (port legacy tests/testPublicAndAdminE2E.js).
  * Verifikasi: linkBukti isolasi, finalisasi lock, bobot lock, PDF/Excel buffer, periode, akun, audit-log.
@@ -77,7 +76,7 @@ async function setup() {
   const indikators = await prisma.indikator.findMany();
   const diklat = indikators.find((i) => i.slug === 'diklat');
   if (!diklat) throw new Error('Indikator diklat belum seeded. Jalankan prisma db seed dulu.');
-  await prepareConfig(periode.id, diklat, { nilaiBobot: 10 });
+  await prisma.bobotIndikator.create({ data: { indikatorId: diklat.id, periodeId: periode.id, nilaiBobot: 10, terkunci: false } });
   const item = await prisma.submissionItem.create({
     data: {
       madrasahId: madrasah.id,

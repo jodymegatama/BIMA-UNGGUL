@@ -1,5 +1,6 @@
 import LazyChart from '../../shared/LazyChart';
 import { ChartBar } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 import { formatSkor } from '../../../lib/format';
 import useTheme from '../../../hooks/useTheme';
 
@@ -60,7 +61,7 @@ export default function IndikatorChart({ data = [] }) {
             <ChartBar size={16} weight="regular" color="#777777" />
           </span>
           <div>
-            <div className="text-[13px] font-black text-charcoal leading-none">Skor {data.length} indikator</div>
+            <div className="text-[13px] font-black text-charcoal leading-none">Skor {INDIKATORS.length} indikator</div>
             <div className="text-[11px] font-bold text-pencil">Radar — distribusi per indikator</div>
           </div>
         </div>
@@ -69,7 +70,7 @@ export default function IndikatorChart({ data = [] }) {
         </span>
       </div>
       <div className="p-4 lg:p-5">
-        <LazyChart key={theme} options={options} series={series} type={data.length < 3 ? 'bar' : 'radar'} height={360} />
+        <LazyChart key={theme} options={options} series={series} type="radar" height={360} />
         <div className="mt-2 text-[11px] font-bold text-faded text-center">Semakin luas area hijau, semakin merata capaian. Skor = Σ capaian disetujui × bobot.</div>
       </div>
     </div>

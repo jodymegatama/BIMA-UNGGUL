@@ -1,12 +1,11 @@
-import useIndikatorCatalog from '../../../hooks/useIndikatorCatalog';
 import { Question, Plus, Minus, Chats, ArrowRight } from 'phosphor-react';
+import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * FaqSection — persis dari _backup/index.html #faq
  * 5 <details> + CTA "Masih ada pertanyaan?" — copy & class persis
  */
 export default function FaqSection() {
-  const { data: INDIKATORS } = useIndikatorCatalog();
   return (
     <section id="faq" className="py-14 lg:py-20 bg-white scroll-mt-[76px]">
       <div className="max-w-[1200px] mx-auto px-4 lg:px-6">

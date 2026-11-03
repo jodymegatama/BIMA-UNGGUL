@@ -146,7 +146,7 @@ export default function Navbar() {
           </Link>
           <Link
             to="/leaderboard"
-            className="hidden sm:inline-flex items-center justify-center h-10 lg:h-11 px-5 lg:px-6 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition-all gap-1.5"
+            className="inline-flex items-center justify-center h-10 lg:h-11 px-5 lg:px-6 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[14px] shadow-sticker hover:brightness-[1.03] active:translate-y-[2px] active:shadow-none transition-all gap-1.5"
           >
             Lihat Peringkat <ArrowRight weight="bold" size={14} />
           </Link>
@@ -196,7 +196,6 @@ export default function Navbar() {
             Tentang
           </Link>
         )}
-          <Link to="/leaderboard" onClick={() => setIsOpen(false)} className="block px-4 py-3 rounded-xl bg-eager text-white font-bold text-center">Lihat Peringkat</Link>
           <Link
             to="/login"
             onClick={() => setIsOpen(false)}

@@ -1,10 +1,10 @@
 import { Funnel, MagnifyingGlass } from 'phosphor-react';
-import { KELOMPOKS, kelompokLabel } from '../../constants/indikator';
+import { INDIKATORS, KELOMPOKS, kelompokLabel } from '../../constants/indikator';
 
 const statusOptions = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak', 'Draft'];
+const periodeOptions = ['2026/2027', '2025/2026'];
 
-
-export default function ValidasiFilterBar({ filters, onChange, indikators = [], periodes = [] }) {
+export default function ValidasiFilterBar({ filters, onChange }) {
   const set = (k, v) => onChange({ ...filters, [k]: v });
 
   return (
@@ -18,15 +18,14 @@ export default function ValidasiFilterBar({ filters, onChange, indikators = [], 
 
         <select value={filters.indikator} onChange={(e) => set('indikator', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal hover:border-zinc-300 transition">
           <option value="Semua">Semua Indikator</option>
-          {indikators.map((ind) => (
-            <option key={ind.id} value={ind.id}>{ind.nama}</option>
+          {INDIKATORS.map((ind) => (
+            <option key={ind.kode} value={ind.kode}>{ind.nama}</option>
           ))}
         </select>
 
         <select value={filters.periode} onChange={(e) => set('periode', e.target.value)} className="h-9 px-3 rounded-full border-2 border-zinc-200 bg-white text-[12px] font-bold text-charcoal hover:border-zinc-300 transition">
-          <option value="Semua">Semua Periode</option>
-          {periodes.map((p) => (
-            <option key={p.id} value={p.id}>{p.namaPeriode}</option>
+          {periodeOptions.map((p) => (
+            <option key={p} value={p}>{p}</option>
           ))}
         </select>
 

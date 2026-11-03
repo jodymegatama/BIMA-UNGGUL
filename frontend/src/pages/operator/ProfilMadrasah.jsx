@@ -24,14 +24,16 @@ import {
   WarningCircle,
   SpinnerGap,
 } from 'phosphor-react';
+import { INDIKATORS } from '../../constants/indikator';
 import { formatSkor } from '../../lib/format';
 import IndikatorTable from '../../components/public/madrasah/IndikatorTable';
 
-function mapIndikatorSkor(breakdown, indicators = []) {
-  return indicators.map((ind) => {
-    const raw = typeof breakdown?.[ind.slug] === 'number' ? breakdown[ind.slug] : 0;
-    return { ...ind, kode: ind.slug, short: ind.short || ind.nama, skor: raw, skorRaw: raw };
-  });
+function mapIndikatorSkor(breakdown) {
+  if (!breakdown || typeof breakdown !== 'object') return INDIKATORS.map((ind) => ({ ...ind, skor: 0 }));
+  return INDIKATORS.map((ind) => ({
+    ...ind,
+    skor: typeof breakdown[ind.kode] === 'number' ? Math.round(breakdown[ind.kode]) : 0,
+  }));
 }
 
 export default function ProfilMadrasah() {
@@ -72,7 +74,7 @@ export default function ProfilMadrasah() {
           const detail = await fetchSkorDetail(m.slug);
           if (ignore) return;
           if (detail?.skor) setSkorTotal(detail.skor.totalScore ?? 0);
-          setIndikatorSkor(mapIndikatorSkor(detail?.skor?.breakdown, detail?.indikators));
+          setIndikatorSkor(mapIndikatorSkor(detail?.skor?.breakdown));
         } catch { /* skor belum tersedia */ }
       }
       // rank per kelompok
@@ -369,7 +371,6 @@ export default function ProfilMadrasah() {
         <Link to="/operator/input" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-eager border-2 border-eager-dark text-white font-black text-[13px] shadow-sticker">
           <PencilSimple size={16} weight="bold" color="white" /> Input Capaian
         </Link>
-        <Link to="/operator/riwayat" className="inline-flex items-center h-10 px-5 rounded-xl border-2 border-zinc-200 bg-white text-sm font-bold text-charcoal">Lihat seluruh jawaban indikator</Link>
         {madrasah.slug && (
           <Link to={`/madrasah/${madrasah.slug}`} className="inline-flex items-center gap-1.5 h-10 px-5 rounded-[12px] bg-white border-2 border-zinc-200 text-charcoal font-black text-[13px] hover:border-charcoal">
             Lihat versi publik <ArrowSquareOut size={14} weight="regular" />

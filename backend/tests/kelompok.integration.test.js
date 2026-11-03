@@ -20,9 +20,7 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
   beforeAll(async () => {
     admin = await prisma.user.create({ data: { name: ns, email: `${ns}@example.test`, password: 'fixture', role: 'admin', status: 'aktif' } });
     userIds.push(admin.id);
-    // This regression fixture measures the nine original indicators; additional
-    // CRUD indicators are covered by indikatorFlow and must not change this baseline.
-    indikators = await prisma.indikator.findMany({ where: { slug: { in: ['diklat', 'penghargaan_individu', 'penghargaan_institusi', 'prestasi_siswa', 'lulus_jenjang_lanjutan', 'rapor_rata_rata', 'siswa_lanjutan_unggulan', 'giat_inovatif', 'rasio_penerimaan'] } }, orderBy: { id: 'asc' } });
+    indikators = await prisma.indikator.findMany({ orderBy: { id: 'asc' } });
     expect(indikators).toHaveLength(9);
     periods = [];
     for (const status of ['aktif', 'finalisasi', 'arsip']) {

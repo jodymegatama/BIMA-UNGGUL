@@ -1,4 +1,3 @@
-import useIndikatorCatalog from '../../../hooks/useIndikatorCatalog';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../../../lib/api';
@@ -19,7 +18,7 @@ import {
   CheckCircle,
 } from 'phosphor-react';
 import useMagnetic from '../../../hooks/useMagnetic';
-import { KELOMPOKS } from '../../../constants/indikator';
+import { KELOMPOKS, INDIKATORS } from '../../../constants/indikator';
 
 /**
  * HeroSection — persis dari _backup/index.html #beranda
@@ -29,7 +28,6 @@ import { KELOMPOKS } from '../../../constants/indikator';
  * JANGAN tambahkan/duplikasi dot-pattern global — itu sudah di PublicLayout
  */
 export default function HeroSection() {
-  const { data: INDIKATORS } = useIndikatorCatalog();
   const ctaPrimaryRef = useMagnetic(true);
   const ctaSecondaryRef = useMagnetic(true);
   const cardRef = useRef(null);

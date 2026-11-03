@@ -26,8 +26,6 @@ enum TipeFormula {
   per_tingkat_wilayah
   per_jenjang
   persentase
-  per_jumlah
-  per_kategori
 }
 
 enum StatusSubmission {
@@ -162,7 +160,6 @@ model PeriodePenilaian {
   tanggalMulai  DateTime
   tanggalCutoff DateTime
   status        StatusPeriode    @default(belum_dimulai)
-  configInitialized Boolean     @default(false)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   bobots        BobotIndikator[]
@@ -177,13 +174,6 @@ model Indikator {
   slug        String           @unique // "diklat", "penghargaan_individu", ... (indikatorKode PRD Section 11)
   nama        String
   tipeFormula TipeFormula
-  deskripsi   String           @default("") @db.VarChar(10000)
-  short       String           @default("")
-  urutan      Int              @default(0)
-  aktif       Boolean          @default(true)
-  fields      Json?
-  scoringConfig Json?
-  revision    Int              @default(1)
   bobots      BobotIndikator[]
   submissions SubmissionItem[]
 }
@@ -191,22 +181,13 @@ model Indikator {
 model BobotIndikator {
   id                  Int              @id @default(autoincrement())
   indikatorId         Int
-  indikator           Indikator        @relation(fields: [indikatorId], references: [id], onDelete: Restrict)
+  indikator           Indikator        @relation(fields: [indikatorId], references: [id], onDelete: Cascade)
   periodeId           Int
   periode             PeriodePenilaian @relation(fields: [periodeId], references: [id], onDelete: Cascade)
   nilaiBobot          Float?           // tipe per_capaian / persentase
   bobotTingkatWilayah Json?            // { kabupaten, provinsi, nasional, internasional } — penghargaan_institusi & prestasi_siswa
   bobotJenjang        Json?            // { s1, s2, s3 } — lulus_jenjang_lanjutan
   terkunci            Boolean          @default(false) // true setelah periode finalisasi
-  nama                String?
-  deskripsi           String?          @db.Text
-  short               String?
-  urutan              Int              @default(0)
-  tipeFormula         TipeFormula?
-  fields              Json?
-  scoringConfig       Json?
-  menerimaInput       Boolean          @default(false)
-  revision            Int              @default(1)
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
@@ -222,7 +203,7 @@ model SubmissionItem {
   madrasahId        Int
   madrasah          Madrasah          @relation(fields: [madrasahId], references: [id], onDelete: Cascade)
   indikatorId       Int
-  indikator         Indikator         @relation(fields: [indikatorId], references: [id], onDelete: Restrict)
+  indikator         Indikator         @relation(fields: [indikatorId], references: [id], onDelete: Cascade)
   periodeId         Int
   periode           PeriodePenilaian  @relation(fields: [periodeId], references: [id], onDelete: Cascade)
   createdById       Int
@@ -249,7 +230,6 @@ model SubmissionItem {
   // (skenario QB-3), sementara submit tetap divalidasi di service layer.
   linkBukti         String?
   catatan           String?            @db.Text // Catatan tambahan (opsional)
-  customValues      Json?
   
   // Status & Scoring
   skorBaris         Float?             // Dihitung setelah disetujui

@@ -1,5 +1,3 @@
-import { attachPeriodConfig, lockPeriod } from './indikatorService.js';
-import { calculateSkorMadrasah } from './scoringService.js';
 /**
  * Validation Service — BIMA UNGGUL Phase 3
  * 7 endpoint Admin: validasi queue + approve/reject/revoke + delete-requests
@@ -76,7 +74,7 @@ export async function getValidasiQueue(query = {}) {
     prisma.submissionItem.count({ where }),
   ]);
 
-  return { data: await attachPeriodConfig(data), total, page, limit };
+  return { data, total, page, limit };
 }
 
 // ---------- POST /api/admin/validasi/:id/approve ----------
@@ -85,10 +83,7 @@ export async function approveSubmission({ id, adminId, ip }) {
   if (!Number.isFinite(itemId)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
 
   return prisma.$transaction(async (tx) => {
-    let item = await tx.submissionItem.findUnique({ where: { id: itemId } });
-    if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
-    await lockPeriod(tx, item.periodeId);
-    item = await tx.submissionItem.findUnique({ where: { id: itemId } });
+    const item = await tx.submissionItem.findUnique({ where: { id: itemId } });
     if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
     if (item.deletedAt) throw new HttpError(400, 'ALREADY_DELETED', 'Submission sudah dihapus');
     if (item.status !== 'menunggu') throw new HttpError(400, 'INVALID_STATUS', `Hanya status menunggu yang bisa di-approve (saat ini: ${item.status})`);
@@ -99,8 +94,6 @@ export async function approveSubmission({ id, adminId, ip }) {
       where: { id: itemId },
       data: { status: 'disetujui', alasanPenolakan: null },
     });
-    // Reject an invalid aggregate atomically before approval becomes visible.
-    await calculateSkorMadrasah(item.madrasahId, item.periodeId, tx);
 
     await tx.validation.create({
       data: { submissionItemId: itemId, validatorId: adminId, aksi: 'approve' },
@@ -129,7 +122,7 @@ export async function approveSubmission({ id, adminId, ip }) {
     );
 
     return updated;
-  }, { ...TX_OPTS, isolationLevel: 'ReadCommitted' });
+  }, TX_OPTS);
 }
 
 // ---------- POST /api/admin/validasi/:id/reject ----------
@@ -139,10 +132,7 @@ export async function rejectSubmission({ id, adminId, alasan, ip }) {
   const cleanAlasan = requireAlasan(alasan, 'alasan');
 
   return prisma.$transaction(async (tx) => {
-    let item = await tx.submissionItem.findUnique({ where: { id: itemId } });
-    if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
-    await lockPeriod(tx, item.periodeId);
-    item = await tx.submissionItem.findUnique({ where: { id: itemId } });
+    const item = await tx.submissionItem.findUnique({ where: { id: itemId } });
     if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
     if (item.deletedAt) throw new HttpError(400, 'ALREADY_DELETED', 'Submission sudah dihapus');
     if (item.status !== 'menunggu') throw new HttpError(400, 'INVALID_STATUS', `Hanya status menunggu yang bisa di-reject (saat ini: ${item.status})`);
@@ -183,7 +173,7 @@ export async function rejectSubmission({ id, adminId, alasan, ip }) {
     );
 
     return updated;
-  }, { ...TX_OPTS, isolationLevel: 'ReadCommitted' });
+  }, TX_OPTS);
 }
 
 // ---------- POST /api/admin/validasi/:id/revoke ----------
@@ -194,10 +184,7 @@ export async function revokeSubmission({ id, adminId, alasan, ip }) {
   const cleanAlasan = requireAlasan(alasan, 'alasan');
 
   return prisma.$transaction(async (tx) => {
-    let item = await tx.submissionItem.findUnique({ where: { id: itemId } });
-    if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
-    await lockPeriod(tx, item.periodeId);
-    item = await tx.submissionItem.findUnique({ where: { id: itemId } });
+    const item = await tx.submissionItem.findUnique({ where: { id: itemId } });
     if (!item) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission tidak ditemukan');
     if (item.deletedAt) throw new HttpError(400, 'ALREADY_DELETED', 'Submission sudah dihapus');
     if (item.status !== 'disetujui') throw new HttpError(400, 'INVALID_STATUS', `Hanya status disetujui yang bisa di-revoke (saat ini: ${item.status})`);
@@ -237,7 +224,7 @@ export async function revokeSubmission({ id, adminId, alasan, ip }) {
     );
 
     return updated;
-  }, { ...TX_OPTS, isolationLevel: 'ReadCommitted' });
+  }, TX_OPTS);
 }
 
 // ---------- GET /api/admin/delete-requests ----------
@@ -289,13 +276,10 @@ export async function approveDeleteRequest({ id, adminId, ip }) {
   if (!Number.isFinite(reqId)) throw new HttpError(400, 'INVALID_ID', 'ID tidak valid');
 
   return prisma.$transaction(async (tx) => {
-    let req = await tx.deleteRequest.findUnique({
+    const req = await tx.deleteRequest.findUnique({
       where: { id: reqId },
       include: { submissionItem: true },
     });
-    if (!req) throw new HttpError(404, 'REQUEST_NOT_FOUND', 'Permintaan hapus tidak ditemukan');
-    await lockPeriod(tx, req.submissionItem.periodeId);
-    req = await tx.deleteRequest.findUnique({ where: { id: reqId }, include: { submissionItem: true } });
     if (!req) throw new HttpError(404, 'REQUEST_NOT_FOUND', 'Permintaan hapus tidak ditemukan');
     if (req.status !== 'menunggu') throw new HttpError(400, 'INVALID_STATUS', `Hanya status menunggu yang bisa di-approve (saat ini: ${req.status})`);
     if (!req.submissionItem) throw new HttpError(404, 'ITEM_NOT_FOUND', 'Submission terkait tidak ditemukan');
@@ -337,7 +321,7 @@ export async function approveDeleteRequest({ id, adminId, ip }) {
     );
 
     return updatedReq;
-  }, { ...TX_OPTS, isolationLevel: 'ReadCommitted' });
+  }, TX_OPTS);
 }
 
 // ---------- POST /api/admin/delete-requests/:id/reject ----------
@@ -347,13 +331,10 @@ export async function rejectDeleteRequest({ id, adminId, alasan, ip }) {
   const cleanAlasan = requireAlasan(alasan, 'alasan');
 
   return prisma.$transaction(async (tx) => {
-    let req = await tx.deleteRequest.findUnique({
+    const req = await tx.deleteRequest.findUnique({
       where: { id: reqId },
-      include: { submissionItem: { select: { namaKegiatan: true, periodeId: true } } },
+      include: { submissionItem: { select: { namaKegiatan: true } } },
     });
-    if (!req) throw new HttpError(404, 'REQUEST_NOT_FOUND', 'Permintaan hapus tidak ditemukan');
-    await lockPeriod(tx, req.submissionItem.periodeId);
-    req = await tx.deleteRequest.findUnique({ where: { id: reqId }, include: { submissionItem: true } });
     if (!req) throw new HttpError(404, 'REQUEST_NOT_FOUND', 'Permintaan hapus tidak ditemukan');
     if (req.status !== 'menunggu') throw new HttpError(400, 'INVALID_STATUS', `Hanya status menunggu yang bisa di-reject (saat ini: ${req.status})`);
 
@@ -389,7 +370,7 @@ export async function rejectDeleteRequest({ id, adminId, alasan, ip }) {
     );
 
     return updatedReq;
-  }, { ...TX_OPTS, isolationLevel: 'ReadCommitted' });
+  }, TX_OPTS);
 }
 
 export default {

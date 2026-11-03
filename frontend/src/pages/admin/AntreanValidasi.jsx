@@ -16,7 +16,6 @@ function mapApiRow(r) {
     id: r.id,
     madrasahNama: r.madrasah?.namaMadrasah || r.madrasahNama || '-',
     madrasahKelompok: r.madrasah?.kelompok || r.madrasahKelompok || '-',
-    indikatorConfig: r.indikator,
     indikatorNama: r.indikator?.nama || r.indikatorNama || '-',
     indikatorKode: r.indikator?.slug || r.indikator?.kode || r.indikatorKode || '-',
     namaKegiatan: r.namaKegiatan || r.nama || '-',
@@ -30,7 +29,6 @@ function mapApiRow(r) {
     status: r.status ? (r.status.charAt(0).toUpperCase() + r.status.slice(1)) : 'Menunggu', // menunggu->Menunggu
     tanggalSubmit: r.createdAt || r.tanggalSubmit || new Date().toISOString(),
     alasan: r.alasanPenolakan || r.alasan || null,
-    ...Object.fromEntries(['namaPeserta', 'statusPegawai', 'tingkatWilayah', 'jenjangPendidikan', 'jumlah', 'pembilang', 'penyebut'].map((k) => [k, r[k]])),
     _raw: r,
   };
 }
@@ -51,19 +49,11 @@ function mapDeleteRow(r) {
     reviewedBy: r.reviewedBy?.name || r.reviewedBy || null,
     linkBukti: si.linkBukti || '#',
     periode: si.periode?.namaPeriode || '-',
-    ...Object.fromEntries(['namaPeserta', 'statusPegawai', 'tingkatWilayah', 'jenjangPendidikan', 'jumlah', 'pembilang', 'penyebut'].map((k) => [k, r[k]])),
     _raw: r,
   };
 }
 
 export default function AntreanValidasi() {
-  const [indikatorOptions, setIndikatorOptions] = useState([]), [periodOptions, setPeriodOptions] = useState([]);
-  useEffect(() => {
-    let ignore = false;
-    Promise.all([apiFetch('/api/admin/indikator', { auth: true }), apiFetch('/api/admin/periode', { auth: true })]).then(([i, p]) => { if (!ignore) { setIndikatorOptions(i.data); setPeriodOptions(p.data); } }).catch(() => {});
-    return () => { ignore = true; };
-  }, []);
-
   const { token } = useAuth();
   const { refreshPending } = (useOutletContext() || {});
   const [activeTab, setActiveTab] = useState('validasi'); // 'validasi' | 'hapus'
@@ -230,7 +220,7 @@ export default function AntreanValidasi() {
 
       {activeTab === 'validasi' ? (
         <>
-          <ValidasiFilterBar indikators={indikatorOptions} periodes={periodOptions} filters={filters} onChange={handleFilterChange} />
+          <ValidasiFilterBar filters={filters} onChange={handleFilterChange} />
 
           {toast && <div className="rounded-[12px] bg-emerald-50 border-2 border-emerald-200 text-emerald-900 px-4 py-3 flex gap-2 text-[13px] font-bold"><CheckCircle size={18} weight="fill" color="#059669" className="shrink-0 mt-0.5" /><span>{toast}</span></div>}
 

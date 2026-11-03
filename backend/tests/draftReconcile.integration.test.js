@@ -1,4 +1,3 @@
-import { prepareConfig } from './helpers/indikatorFixture.js';
 /**
  * Rekonsiliasi draft nyangkut — integrasi.
  *
@@ -41,7 +40,6 @@ async function cleanup() {
 }
 
 let ctx;
-let originalConfig;
 
 async function setup() {
   // Periode lama: status historis (arsip) sehingga tidak pernah dipilih sebagai
@@ -100,8 +98,6 @@ async function setup() {
       },
     });
   }
-  originalConfig = await prisma.bobotIndikator.findUnique({ where: { indikatorId_periodeId: { indikatorId: diklat.id, periodeId: aktif.id } } });
-  await prepareConfig(aktif.id, diklat, { nilaiBobot: 10 });
   const draftSehat = await buatDraft(`${NS} draft sehat`, aktif.id, aktif.tahunCapaian);
 
   return { periodeLama, operator, madrasah, diklat, draftNyangkut, draftSehat, aktif };
@@ -114,13 +110,6 @@ describe.skipIf(!dbGate())('Rekonsiliasi draft nyangkut (E2E-REC)', () => {
   });
 
   afterAll(async () => {
-    if (originalConfig) {
-      const { id } = originalConfig;
-      const data = Object.fromEntries(Object.entries(originalConfig).filter(([key]) => !['id', 'indikatorId', 'periodeId', 'createdAt', 'updatedAt'].includes(key)));
-      await prisma.bobotIndikator.update({ where: { id }, data });
-    } else if (ctx) {
-      await prisma.bobotIndikator.deleteMany({ where: { periodeId: ctx.aktif.id, indikatorId: ctx.diklat.id } });
-    }
     await cleanup();
   });
 
