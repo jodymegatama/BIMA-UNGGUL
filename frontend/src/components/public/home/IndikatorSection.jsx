@@ -16,7 +16,7 @@ import { INDIKATORS } from '../../../constants/indikator';
 
 /**
  * IndikatorSection — persis dari _backup/index.html #indikator
- * 9 kartu, grid 1 / md:2 / lg:3, stagger reveal, copy & badge persis.
+ * 10 kartu, grid 1 / md:2 / lg:3, stagger reveal, copy & badge persis.
  * Revisi 2026-09-14: nama indikator + deskripsi + istilah "Murid" mengikuti spesifikasi baru.
  * Revisi 2026-09-25 (SEO + info bukti): tiap kartu memuat deskripsi yang menjelaskan bukti
  * wajib tahun berjalan + chip nama field lampiran persis dari spesifikasi input Operator.
@@ -187,31 +187,31 @@ export default function IndikatorSection() {
             />
           </article>
 
-          {/* 6 Nilai rata-rata TKA/ANBK */}
+          {/* 6 Nilai rata-rata TKA */}
           <article className="group rounded-[16px] border-2 border-zinc-200 bg-white p-5 hover:shadow-card transition-all">
             <div className="w-11 h-11 rounded-[12px] bg-ink border-2 border-black flex items-center justify-center group-hover:rotate-3 transition-transform">
               <ChartLineUp size={20} weight="fill" color="white" />
             </div>
             <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Nilai Rata-rata Murid Lebih dari 85</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
-              Bukti hasil TKA atau ANBK tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X
+              Bukti hasil TKA tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X
               dari Y = Z persen).
             </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-ink text-white border-2 border-black text-[11px] font-black">
               <Calculator size={14} weight="fill" color="#ffffff" />
               persentase x bobot
             </div>
-            <LampiranWajib fields={['Hasil TKA/ANBK Murid > 85 (0 dari 0 = 0%)']} />
+            <LampiranWajib fields={['Hasil TKA Murid > 85 (0 dari 0 = 0%)']} />
           </article>
 
-          {/* 7 Murid Lanjutan Unggulan */}
+          {/* 7 Murid Lanjutan Unggulan Terakreditasi A */}
           <article className="group rounded-[16px] border-2 border-zinc-200 bg-white p-5 hover:shadow-card transition-all lg:col-span-1">
             <div className="w-11 h-11 rounded-[12px] bg-[#ffe4e6] border-2 border-[#fecdd3] flex items-center justify-center group-hover:rotate-3 transition-transform">
               <PaperPlaneTilt size={20} weight="fill" color="#e11d48" />
             </div>
-            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan</h3>
+            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan Terakreditasi A</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
-              Bukti kelulusan tahun berjalan wajib dilampirkan: nama universitas atau sekolah unggulan tujuan dan nama murid yang diterima.
+              Murid diterima di universitas atau sekolah unggulan tujuan yang terakreditasi A. Lampirkan satu tautan publik berisi bukti kelulusan tahun berjalan dan bukti akreditasi A institusi tujuan. Kedua bukti diperiksa admin.
             </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
@@ -221,6 +221,7 @@ export default function IndikatorSection() {
               fields={[
                 'Nama Universitas atau Sekolah Unggulan',
                 'Nama Murid',
+                'Link bukti kelulusan dan akreditasi A',
               ]}
             />
           </article>
@@ -255,6 +256,22 @@ export default function IndikatorSection() {
               persentase x bobot
             </div>
             <LampiranWajib fields={['Murid diterima dari jumlah pendaftar tahun berjalan (0 dari 0 = 0%)']} />
+          </article>
+
+          {/* 10 Guru Bersertifikasi */}
+          <article className="group rounded-[16px] border-2 border-zinc-200 bg-white p-5 hover:shadow-card transition-all">
+            <div className="w-11 h-11 rounded-[12px] bg-[#e0e7ff] border-2 border-[#c7d2fe] flex items-center justify-center group-hover:rotate-3 transition-transform">
+              <UsersThree size={20} weight="fill" color="#4f46e5" />
+            </div>
+            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Jumlah Guru Bersertifikasi</h3>
+            <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
+              Persentase guru aktif pemilik sertifikat pendidik dari seluruh guru aktif ASN dan non-ASN. Lampirkan bukti sertifikasi dan rekap guru aktif tahun berjalan.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#e0e7ff] border-2 border-[#c7d2fe] text-[11px] font-black text-[#4f46e5]">
+              <Calculator size={14} weight="fill" color="#4f46e5" />
+              persentase x bobot
+            </div>
+            <LampiranWajib fields={['Jumlah guru bersertifikasi dari jumlah total guru (0 dari 0 = 0%)']} />
           </article>
         </div>
       </div>

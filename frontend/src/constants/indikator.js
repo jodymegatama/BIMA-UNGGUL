@@ -1,8 +1,8 @@
 /**
- * Konstanta 9 Indikator Mutu — PRD Section 11 (bukan mock)
+ * Konstanta 10 Indikator Mutu — PRD Section 11 (bukan mock)
  * Dipakai sebagai skeleton mapping di UI; nilai skor riil dari backend.
  *
- * Revisi 2026-09-14 (spesifikasi baru user): nama indikator + label field + basis bukti TKA/ANBK,
+ * Revisi 2026-09-14 (spesifikasi baru user): nama indikator + label field + basis bukti TKA,
  * istilah "Murid" diseragamkan, dan penyebut ratio 0 diizinkan (0 dari 0 = 0%).
  * Slug/kode/tipeFormula TIDAK berubah — kontrak API & skor tetap sama.
  */
@@ -13,9 +13,10 @@ export const INDIKATORS = [
   { kode: 'prestasi_siswa', nama: 'Prestasi Siswa', short: 'Prestasi Siswa' },
   { kode: 'lulus_jenjang_lanjutan', nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan', short: 'Lulus Jenjang' },
   { kode: 'rapor_rata_rata', nama: 'Nilai Rata-rata Murid > 85', short: 'Nilai > 85' },
-  { kode: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan', short: 'Lanjutan Unggulan' },
+  { kode: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan Terakreditasi A', short: 'Lanjutan Unggulan A' },
   { kode: 'giat_inovatif', nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah', short: 'Giat Inovatif' },
   { kode: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', short: 'Rasio' },
+  { kode: 'guru_bersertifikasi', nama: 'Jumlah Guru Bersertifikasi', short: 'Sertifikasi' },
 ];
 
 export const KELOMPOKS = ['RA', 'MI', 'MTs', 'MA'];
@@ -66,6 +67,19 @@ const F_LINK_BUKTI = { key: 'linkBukti', label: 'Link Bukti Fisik', type: 'text'
 const F_CATATAN = { key: 'catatan', label: 'Catatan Tambahan', type: 'textarea', required: false, placeholder: 'Catatan...' };
 
 export const INDIKATOR_FIELDS = {
+  guru_bersertifikasi: [
+    {
+      key: 'ratio',
+      label: 'Jumlah guru bersertifikasi dari jumlah total guru',
+      type: 'ratio',
+      required: true,
+      pembilangLabel: 'Jumlah guru bersertifikasi',
+      penyebutLabel: 'Jumlah total guru',
+      help: 'Guru aktif pemilik sertifikat pendidik dari seluruh guru aktif ASN dan non-ASN. Dihitung otomatis (0 dari 0 = 0%). Jika beberapa baris, gunakan kelompok guru yang tidak tumpang tindih.',
+    },
+    F_LINK_BUKTI,
+    F_CATATAN,
+  ],
   diklat: [
     F_NAMA_KEGIATAN('Nama Diklat', 'Contoh: Diklat Kurikulum Merdeka Angkatan 3'),
     F_INSTITUSI('Nama Institusi Penyelenggara Diklat'),
@@ -106,7 +120,7 @@ export const INDIKATOR_FIELDS = {
   rapor_rata_rata: [
     {
       key: 'ratio',
-      label: 'Hasil TKA/ANBK Murid > 85',
+      label: 'Hasil TKA Murid > 85',
       type: 'ratio',
       required: true,
       pembilangLabel: 'Murid > 85',
@@ -119,7 +133,7 @@ export const INDIKATOR_FIELDS = {
   siswa_lanjutan_unggulan: [
     F_NAMA_KEGIATAN('Nama Universitas atau Sekolah Unggulan', 'Contoh: Universitas Airlangga'),
     { key: 'namaPeserta', label: 'Nama Murid', type: 'text', required: true, placeholder: 'Nama lengkap murid', help: 'Bukti kelulusan tahun berjalan' },
-    F_LINK_BUKTI,
+    { ...F_LINK_BUKTI, label: 'Link bukti kelulusan dan akreditasi A', help: 'Wajib satu tautan publik (Anyone with link) berisi bukti kelulusan tahun berjalan dan bukti akreditasi A universitas atau sekolah tujuan (institusi, bukan program studi). Kedua bukti diperiksa admin.' },
     F_CATATAN,
   ],
   giat_inovatif: [
@@ -202,6 +216,8 @@ export function validateRow(kode, row, { mode = 'submit' } = {}) {
         errors.ratio = 'Harus bilangan bulat.';
       } else if (p < 0 || s < 0) {
         errors.ratio = 'Angka tidak boleh negatif.';
+      } else if (p > 1000000 || s > 1000000) {
+        errors.ratio = 'Angka maksimal 1000000.';
       } else if (s === 0 && p > 0) {
         errors.ratio = 'Jika penyebut 0, pembilang harus 0.';
       } else if (p > s) {

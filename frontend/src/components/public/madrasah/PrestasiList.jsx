@@ -17,13 +17,14 @@ const indikatorIcon = {
   siswa_lanjutan_unggulan: UsersThree,
   giat_inovatif: Lightbulb,
   rasio_penerimaan: Buildings,
+  guru_bersertifikasi: GraduationCap,
 };
 
 /**
  * PrestasiList — daftar prestasi terverifikasi TANPA link bukti
  * Hanya menampilkan: nama, institusi, tingkat (badge), tahun/siswa — sesuai PRD US9
  * Props: { prestasi: Array<{id, indikatorKode, indikatorNama, nama, institusi, tingkat, tahun, siswa}> }
- * Revisi 2026-09-14: label rasio = "Nilai Rata-rata TKA/ANBK", istilah "Murid".
+ * Revisi 2026-09-14: label rasio = "Nilai Rata-rata TKA", istilah "Murid".
  */
 export default function PrestasiList({ prestasi = [] }) {
   if (prestasi.length === 0) {
@@ -77,9 +78,10 @@ export default function PrestasiList({ prestasi = [] }) {
 
               <div className="grid gap-3">
                 {list.map((p) => {
-                  const isRasio = p.indikatorKode === 'rapor_rata_rata' || p.indikatorKode === 'rasio_penerimaan';
+                  const isRasio = ['rapor_rata_rata', 'rasio_penerimaan', 'guru_bersertifikasi'].includes(p.indikatorKode);
+                  const ratioLabel = p.indikatorKode === 'guru_bersertifikasi' ? 'guru bersertifikasi' : p.indikatorKode === 'rapor_rata_rata' ? 'murid >85' : 'pendaftar diterima';
                   const isLulus = p.indikatorKode === 'lulus_jenjang_lanjutan';
-                  const pct = isRasio && p.pembilang != null && p.penyebut ? Math.round((p.pembilang / p.penyebut) * 100) : null;
+                  const pct = isRasio && p.pembilang != null && p.penyebut != null ? (p.penyebut > 0 ? Math.round((p.pembilang / p.penyebut) * 100) : 0) : null;
                   return (
                   <div key={p.id} className="rounded-[12px] border-2 border-zinc-200 bg-white p-4 hover:border-zinc-300 transition">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -87,10 +89,10 @@ export default function PrestasiList({ prestasi = [] }) {
                         {isRasio ? (
                           <>
                             <div className="font-display font-black text-[14px] leading-tight text-charcoal">
-                              {p.pembilang} dari {p.penyebut} {p.indikatorKode === 'rapor_rata_rata' ? 'murid >85' : 'pendaftar diterima'} {pct != null ? `= ${pct}%` : ''}
+                              {p.pembilang} dari {p.penyebut} {ratioLabel} {pct != null ? `= ${pct}%` : ''}
                             </div>
                             <div className="text-[12px] font-bold text-pencil mt-1 flex items-center gap-1.5">
-                              <ChartBar size={12} weight="regular" color="#777777" /> {p.indikatorKode === 'rapor_rata_rata' ? 'Nilai Rata-rata TKA/ANBK' : 'Rasio Penerimaan Murid Baru'}
+                              <ChartBar size={12} weight="regular" color="#777777" /> {p.indikatorNama}
                             </div>
                           </>
                         ) : isLulus ? (

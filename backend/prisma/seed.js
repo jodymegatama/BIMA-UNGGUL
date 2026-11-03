@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { GURU_BERSERTIFIKASI } from '../src/services/indikatorService.js';
 
 const prisma = new PrismaClient();
 
@@ -52,9 +53,9 @@ async function seedInitialAdmin() {
 }
 
 async function main() {
-  console.log('🌱 Starting seed for 9 Indikator Mutu...');
+  console.log('🌱 Starting seed for 10 Indikator Mutu...');
 
-  // Data 9 Indikator sesuai PRD Section 11 — revisi 2026-09-14 (spesifikasi baru: nama + istilah "Murid")
+  // Data 10 Indikator sesuai PRD Section 11 — revisi 2026-09-14 (spesifikasi baru: nama + istilah "Murid")
   const indikators = [
     {
       kode: '1',
@@ -95,7 +96,7 @@ async function main() {
     {
       kode: '7',
       slug: 'siswa_lanjutan_unggulan',
-      nama: 'Murid Lanjutan Unggulan',
+      nama: 'Murid Lanjutan Unggulan Terakreditasi A',
       tipeFormula: 'per_capaian',
     },
     {
@@ -110,6 +111,7 @@ async function main() {
       nama: 'Rasio Penerimaan Murid Baru',
       tipeFormula: 'persentase',
     },
+    GURU_BERSERTIFIKASI,
   ];
 
   // Upsert setiap indikator

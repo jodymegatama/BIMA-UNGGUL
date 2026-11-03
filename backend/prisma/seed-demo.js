@@ -114,7 +114,7 @@ async function main() {
     { kode: '4', slug: 'prestasi_siswa', nama: 'Prestasi Siswa', tipeFormula: 'per_tingkat_wilayah' },
     { kode: '5', slug: 'lulus_jenjang_lanjutan', nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan', tipeFormula: 'per_jenjang' },
     { kode: '6', slug: 'rapor_rata_rata', nama: 'Nilai Rata-rata Murid > 85', tipeFormula: 'persentase' },
-    { kode: '7', slug: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan', tipeFormula: 'per_capaian' },
+    { kode: '7', slug: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan Terakreditasi A', tipeFormula: 'per_capaian' },
     { kode: '8', slug: 'giat_inovatif', nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah', tipeFormula: 'per_capaian' },
     { kode: '9', slug: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', tipeFormula: 'persentase' },
   ];

@@ -21,7 +21,7 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
     admin = await prisma.user.create({ data: { name: ns, email: `${ns}@example.test`, password: 'fixture', role: 'admin', status: 'aktif' } });
     userIds.push(admin.id);
     indikators = await prisma.indikator.findMany({ orderBy: { id: 'asc' } });
-    expect(indikators).toHaveLength(9);
+    expect(indikators).toHaveLength(10);
     periods = [];
     for (const status of ['aktif', 'finalisasi', 'arsip']) {
       const periode = await prisma.periodePenilaian.create({ data: {
@@ -65,7 +65,7 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
     }
   });
 
-  it('sembilan indikator RA memakai bobot yang sama dengan MI pada setiap status periode', async () => {
+  it('sepuluh indikator RA memakai bobot yang sama dengan MI pada setiap status periode', async () => {
     const mi = await createMadrasah({ namaMadrasah: `${ns}-MI`, jenjang: 'MI', statusKepemilikan: 'Negeri', jumlahSiswa: 100, alamat: 'Alamat fixture' }, { userId: admin.id, ip: 'fixture-grp4' });
     madrasahIds.push(mi.id);
     for (const periode of periods) {
@@ -80,8 +80,8 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
         }
       }
       const expected = await calculateSkorMadrasah(mi.id, periode.id);
-      expect(expected.indikatorCount).toBe(9);
-      expect(expected.totalScore).toBe(80);
+      expect(expected.indikatorCount).toBe(10);
+      expect(expected.totalScore).toBe(85);
       for (const m of ra) expect(await calculateSkorMadrasah(m.id, periode.id)).toEqual(expected);
       const ranking = await calculateRanking('RA Negeri', periode.id);
       const rankedPair = ranking.filter((r) => ra.some((m) => m.id === r.madrasah.id));
@@ -98,7 +98,7 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
     expect(list.data).toHaveLength(4);
     expect(new Set(list.data.map((m) => m.statusKepemilikan)).size).toBe(2);
     const queue = await getValidasiQueue({ kelompok: 'RA Negeri', periodeId: String(periods[0].id) });
-    expect(queue.total).toBe(18);
+    expect(queue.total).toBe(20);
     expect(queue.data.every((s) => s.madrasah.kelompok === 'RA')).toBe(true);
     await expect(listMadrasah({ kelompok: 'TK' })).rejects.toMatchObject({ status: 400 });
     await expect(getValidasiQueue({ kelompok: 'TK' })).rejects.toMatchObject({ status: 400 });
@@ -110,7 +110,7 @@ describe.skipIf(!dbGate())('Empat kelompok: RA, periode lama, migrasi dan ekspor
     await wb.xlsx.load(await buildExcelBuffer(filter));
     const rows = [];
     wb.getWorksheet('Leaderboard').eachRow((row) => rows.push(row.values));
-    for (const m of ra) expect(rows.some((r) => r.includes(m.namaMadrasah) && r.includes('RA') && r.includes(80))).toBe(true);
+    for (const m of ra) expect(rows.some((r) => r.includes(m.namaMadrasah) && r.includes('RA') && r.includes(85))).toBe(true);
     expect((await buildPdfBuffer(filter)).subarray(0, 4).toString()).toBe('%PDF');
   });
 

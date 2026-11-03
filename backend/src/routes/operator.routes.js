@@ -20,7 +20,7 @@ router.use(authMiddleware, roleMiddleware(['operator']));
 
 router.get('/madrasah', getMadrasah);
 router.patch('/madrasah', updateMadrasah);
-// Ref PRD §13 — status & data 9 indikator milik madrasah operator + daftar submission item
+// Ref PRD §13 — status & data 10 indikator milik madrasah operator + daftar submission item
 router.get('/indikator', getIndikatorStatus);
 router.get('/submission-item', listSubmissionItems);
 // Write endpoints — PRD §13 / US2 US3 US4 US7b

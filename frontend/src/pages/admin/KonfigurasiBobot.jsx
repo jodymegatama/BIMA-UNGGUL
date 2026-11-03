@@ -45,7 +45,7 @@ export default function KonfigurasiBobot() {
       const url = `/api/admin/bobot?periodeId=${pid}`;
       const res = await sharedFlight.run(getKey(url), () => apiFetch(url, { auth: true }));
       const arr = Array.isArray(res) ? res : (res.data || []);
-      // Backend merge left-join: selalu 9 entri {indikatorId, slug, nama, tipeFormula, ...bobot|null}
+      // Backend merge left-join: selalu 10 entri {indikatorId, slug, nama, tipeFormula, ...bobot|null}
       const map = {};
       for (const b of arr) {
         const slug = b.slug || b.indikator?.slug;

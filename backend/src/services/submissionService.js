@@ -31,6 +31,12 @@ const STATUS_PEGAWAI = ['asn', 'non_asn'];
  * type     : string | url | enum | int
  */
 export const FIELD_RULES = {
+  guru_bersertifikasi: {
+    pembilang: { required: true, type: 'int', min: 0, max: 1000000 },
+    penyebut: { required: true, type: 'int', min: 0, max: 1000000 },
+    linkBukti: { required: true, type: 'url' },
+    catatan: { required: false, type: 'string', maxLen: 2000 },
+  },
   diklat: {
     namaKegiatan: { required: true, type: 'string', maxLen: 255 },
     institusi: { required: true, type: 'string', maxLen: 255 },
