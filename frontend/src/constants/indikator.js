@@ -13,7 +13,7 @@ export const INDIKATORS = [
   { kode: 'prestasi_siswa', nama: 'Prestasi Siswa', short: 'Prestasi Siswa' },
   { kode: 'lulus_jenjang_lanjutan', nama: 'Jumlah Pendidik dan Tenaga Kependidikan Lulus Jenjang Lanjutan', short: 'Lulus Jenjang' },
   { kode: 'rapor_rata_rata', nama: 'Nilai Rata-rata Murid > 85', short: 'Nilai > 85' },
-  { kode: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan', short: 'Lanjutan Unggulan' },
+  { kode: 'siswa_lanjutan_unggulan', nama: 'Murid Lanjutan Unggulan Terakreditasi A', short: 'Lanjutan Unggulan A' },
   { kode: 'giat_inovatif', nama: 'Giat Inovatif dalam Pengembangan Mutu Madrasah', short: 'Giat Inovatif' },
   { kode: 'rasio_penerimaan', nama: 'Rasio Penerimaan Murid Baru', short: 'Rasio' },
   { kode: 'guru_bersertifikasi', nama: 'Jumlah Guru Bersertifikasi', short: 'Sertifikasi' },
@@ -133,7 +133,7 @@ export const INDIKATOR_FIELDS = {
   siswa_lanjutan_unggulan: [
     F_NAMA_KEGIATAN('Nama Universitas atau Sekolah Unggulan', 'Contoh: Universitas Airlangga'),
     { key: 'namaPeserta', label: 'Nama Murid', type: 'text', required: true, placeholder: 'Nama lengkap murid', help: 'Bukti kelulusan tahun berjalan' },
-    F_LINK_BUKTI,
+    { ...F_LINK_BUKTI, label: 'Link bukti kelulusan dan akreditasi A', help: 'Wajib satu tautan publik (Anyone with link) berisi bukti kelulusan tahun berjalan dan bukti akreditasi A universitas atau sekolah tujuan (institusi, bukan program studi). Kedua bukti diperiksa admin.' },
     F_CATATAN,
   ],
   giat_inovatif: [

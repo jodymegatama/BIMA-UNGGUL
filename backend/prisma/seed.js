@@ -96,7 +96,7 @@ async function main() {
     {
       kode: '7',
       slug: 'siswa_lanjutan_unggulan',
-      nama: 'Murid Lanjutan Unggulan',
+      nama: 'Murid Lanjutan Unggulan Terakreditasi A',
       tipeFormula: 'per_capaian',
     },
     {

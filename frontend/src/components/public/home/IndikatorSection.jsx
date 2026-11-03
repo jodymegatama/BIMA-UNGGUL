@@ -204,14 +204,14 @@ export default function IndikatorSection() {
             <LampiranWajib fields={['Hasil TKA Murid > 85 (0 dari 0 = 0%)']} />
           </article>
 
-          {/* 7 Murid Lanjutan Unggulan */}
+          {/* 7 Murid Lanjutan Unggulan Terakreditasi A */}
           <article className="group rounded-[16px] border-2 border-zinc-200 bg-white p-5 hover:shadow-card transition-all lg:col-span-1">
             <div className="w-11 h-11 rounded-[12px] bg-[#ffe4e6] border-2 border-[#fecdd3] flex items-center justify-center group-hover:rotate-3 transition-transform">
               <PaperPlaneTilt size={20} weight="fill" color="#e11d48" />
             </div>
-            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan</h3>
+            <h3 className="font-display font-black text-[16px] text-charcoal mt-4 leading-tight">Murid Lanjutan Unggulan Terakreditasi A</h3>
             <p className="text-[13px] leading-[1.5] text-pencil font-medium mt-1.5">
-              Bukti kelulusan tahun berjalan wajib dilampirkan: nama universitas atau sekolah unggulan tujuan dan nama murid yang diterima.
+              Murid diterima di universitas atau sekolah unggulan tujuan yang terakreditasi A. Lampirkan satu tautan publik berisi bukti kelulusan tahun berjalan dan bukti akreditasi A institusi tujuan. Kedua bukti diperiksa admin.
             </p>
             <div className="mt-4 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-zinc-50 border-2 border-zinc-200 text-[11px] font-black text-charcoal">
               <Calculator size={14} weight="fill" color="#525252" />
@@ -221,6 +221,7 @@ export default function IndikatorSection() {
               fields={[
                 'Nama Universitas atau Sekolah Unggulan',
                 'Nama Murid',
+                'Link bukti kelulusan dan akreditasi A',
               ]}
             />
           </article>

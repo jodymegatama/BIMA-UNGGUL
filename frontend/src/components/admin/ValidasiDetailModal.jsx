@@ -74,6 +74,12 @@ export default function ValidasiDetailModal({ item, onClose, onApprove, onReject
             {item.alasan && <div className="rounded-[10px] bg-red-50 border border-red-200 p-3 text-[12px]"><span className="font-black text-red-900">Alasan penolakan sebelumnya:</span> <span className="font-medium text-red-800">{item.alasan}</span></div>}
           </div>
 
+          {item.indikatorKode === 'siswa_lanjutan_unggulan' && (
+            <p className="text-[12px] leading-5 font-medium text-pencil">
+              Link bukti kelulusan dan akreditasi A: periksa bukti kelulusan tahun berjalan dan bukti akreditasi A universitas atau sekolah tujuan (institusi, bukan program studi) pada tautan publik berikut.
+            </p>
+          )}
+
           {/* linkBukti nullable di DB (draft boleh tanpa bukti — migration
               20261002163000). Submit tetap mewajibkannya, jadi baris di antrean
               validasi selalu punya bukti; guard ini supaya modal tidak

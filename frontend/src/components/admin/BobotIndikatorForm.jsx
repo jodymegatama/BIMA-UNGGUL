@@ -7,7 +7,7 @@ const labelMap = {
   prestasi_siswa: 'Prestasi Siswa',
   lulus_jenjang_lanjutan: 'Lulus Jenjang',
   rapor_rata_rata: 'Nilai > 85',
-  siswa_lanjutan_unggulan: 'Lanjutan Unggulan',
+  siswa_lanjutan_unggulan: 'Lanjutan Unggulan A',
   giat_inovatif: 'Giat Inovatif',
   rasio_penerimaan: 'Rasio',
   guru_bersertifikasi: 'Sertifikasi',

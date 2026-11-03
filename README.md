@@ -11,7 +11,7 @@ Alur: **Input Operator → Validasi Admin → Skor Otomatis → Leaderboard Publ
 ## Fitur Utama
 
 - **3 Zona Role**: Publik (read-only), Operator Madrasah, Admin Pendma
-- **10 Indikator Mutu** berbobot (konfigurasi per periode): diklat, penghargaan individu/institusi, prestasi siswa, lulus jenjang lanjutan, rapor >85, siswa lanjutan unggulan, giat inovatif, rasio penerimaan, guru bersertifikasi
+- **10 Indikator Mutu** berbobot (konfigurasi per periode): diklat, penghargaan individu/institusi, prestasi siswa, lulus jenjang lanjutan, rapor >85, murid lanjutan unggulan terakreditasi A, giat inovatif, rasio penerimaan, guru bersertifikasi
 - **4 Kelompok Pemeringkatan**: RA, MI, MTS, MA — negeri dan swasta digabung per jenjang, dengan tie-breaker deterministik
 - **Skor Live** — `Σ(capaian disetujui × bobot)` realtime tanpa cache, leaderboard update otomatis setelah approve/revoke/ubah bobot
 - **Validasi Berjenjang** — approve / reject (alasan wajib) / revoke, antrian dengan filter status/madrasah/indikator/periode
@@ -194,3 +194,9 @@ Guru bersertifikasi adalah guru aktif pemilik sertifikat pendidik; penyebut menc
 Untuk database yang sudah ada, jalankan `npm run db:add-guru-bersertifikasi -w backend`. Skrip hanya menambahkan master kode 10 (`guru_bersertifikasi`) dan bobot awal 0 pada periode terbuka/belum dimulai. Aman dijalankan ulang; bobot yang telah diatur admin dan periode tertutup/finalisasi/arsip tidak diubah. Tidak perlu migrasi struktur tabel. Instalasi baru menggunakan seed biasa. Periode baru yang belum memiliki konfigurasi bobot memberikan skor 0 hingga admin mengaturnya. Daftar master global dapat menampilkan indikator baru pada histori dengan skor 0.
 
 Input memakai `pembilang`, `penyebut`, `linkBukti` wajib, dan `catatan` opsional. Kedua angka berupa bilangan bulat 0–1.000.000 dan pembilang tidak boleh melebihi penyebut. Draft boleh parsial; hanya pengajuan disetujui dan tidak dihapus yang masuk skor.
+
+### Bukti Murid Lanjutan Unggulan Terakreditasi A
+
+Indikator `siswa_lanjutan_unggulan` memakai satu tautan publik berisi bukti kelulusan tahun berjalan dan bukti akreditasi A universitas atau sekolah tujuan (institusi, bukan program studi). Admin memeriksa kedua bukti secara manual. Capaian lama tetap dipertahankan tanpa kewajiban melengkapi ulang bukti; rumus tetap jumlah Approved × bobot.
+
+Untuk database yang sudah ada, jalankan `npm run prisma:deploy -w backend` untuk menerapkan migrasi `20261103090000_rename_lanjutan_unggulan_akreditasi_a`. Migrasi hanya memperbarui nama master berdasarkan slug; ID, relasi, bobot, dan capaian tidak diubah. Instalasi baru menggunakan seed dengan nama baru.
