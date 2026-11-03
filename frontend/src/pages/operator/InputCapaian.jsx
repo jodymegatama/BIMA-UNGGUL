@@ -98,7 +98,7 @@ export default function InputCapaian() {
     return loadDraftsInFlight.current;
   }
 
-  // Fetch 9 indikator aktif — GET /api/operator/indikator (tanpa periode, pakai aktif terbaru)
+  // Fetch 10 indikator aktif — GET /api/operator/indikator (tanpa periode, pakai aktif terbaru)
   useEffect(() => {
     let ignore = false;
     async function fetchIndikator() {

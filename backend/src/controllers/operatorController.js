@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma.js';
+import { sortIndikators } from '../services/indikatorService.js';
 import { resolveAktifPeriode } from '../services/periodService.js';
 import * as submissionService from '../services/submissionService.js';
 
@@ -103,7 +104,7 @@ export const updateMadrasah = async (req, res) => {
 
 /**
  * GET /api/operator/indikator
- * 9 indikator master + status pengisian milik madrasah operator untuk periode efektif.
+ * 10 indikator master + status pengisian milik madrasah operator untuk periode efektif.
  * Ref PRD §13: GET /api/operator/indikator → IndikatorStatus[]
  * Response: { periode, indikators: [{id,kode,slug,nama,tipeFormula,status{draft,menunggu,disetujui,ditolak},total}], stats }
  */
@@ -137,7 +138,7 @@ export const getIndikatorStatus = async (req, res) => {
     }
 
     const stats = { draft: 0, menunggu: 0, disetujui: 0, ditolak: 0 };
-    const data = indikators.map((ind) => {
+    const data = sortIndikators(indikators).map((ind) => {
       const s = statByInd[ind.id] || { draft: 0, menunggu: 0, disetujui: 0, ditolak: 0 };
       stats.draft += s.draft;
       stats.menunggu += s.menunggu;

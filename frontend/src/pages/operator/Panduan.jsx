@@ -89,7 +89,7 @@ const STEPS = [
     body: (
       <>
         <p>
-          Di halaman <b>Input Capaian</b> tersedia <b>9 tab indikator</b>. Untuk tiap indikator:
+          Di halaman <b>Input Capaian</b> tersedia <b>{INDIKATORS.length} tab indikator</b>. Untuk tiap indikator:
         </p>
         <ul className="mt-2 space-y-1 list-disc pl-5">
           <li>Klik <b>Tambah Baris Baru</b>, lalu isi semua field wajib (bertanda *).</li>
@@ -97,7 +97,7 @@ const STEPS = [
           <li>Klik <b>Simpan Draft</b> untuk menyimpan sementara, atau langsung <b>Kirim untuk Validasi</b>.</li>
         </ul>
         <p className="mt-2">
-          Rincian field setiap indikator ada di bagian <a href="#ringkasan-indikator" className="font-black text-spark hover:underline">Ringkasan 9 Indikator</a> di bawah.
+          Rincian field setiap indikator ada di bagian <a href="#ringkasan-indikator" className="font-black text-spark hover:underline">Ringkasan 10 Indikator</a> di bawah.
         </p>
       </>
     ),
@@ -306,13 +306,13 @@ export default function Panduan() {
         </div>
       </div>
 
-      {/* Ringkasan 9 indikator */}
+      {/* Ringkasan 10 indikator */}
       <div id="ringkasan-indikator" className="rounded-[16px] border-2 border-zinc-200 bg-white p-5 shadow-card scroll-mt-4">
         <h2 className="font-display font-black text-[14px] text-charcoal flex items-center gap-2">
           <span className="w-8 h-8 rounded-full bg-white border-2 border-zinc-200 flex items-center justify-center">
             <Table size={16} weight="regular" color="#777777" />
           </span>
-          Ringkasan 9 Indikator &amp; Field Lampiran
+          Ringkasan 10 Indikator &amp; Field Lampiran
         </h2>
         <p className="text-[12px] font-medium text-pencil mt-1.5">
           Klik indikator untuk melihat field yang harus diisi. Tanda <span className="text-red-500 font-black">*</span> berarti wajib diisi.

@@ -10,6 +10,7 @@ const labelMap = {
   siswa_lanjutan_unggulan: 'Lanjutan Unggulan',
   giat_inovatif: 'Giat Inovatif',
   rasio_penerimaan: 'Rasio',
+  guru_bersertifikasi: 'Sertifikasi',
 };
 
 export default function BobotIndikatorForm({ data, onChange, locked }) {

@@ -5,7 +5,7 @@ import { formatSkor } from '../../../lib/format';
 import useTheme from '../../../hooks/useTheme';
 
 /**
- * IndikatorChart — radar 9 indikator (ApexCharts). Fallback bar jika radar tidak cocok di mobile, tapi radar default.
+ * IndikatorChart — radar 10 indikator (ApexCharts). Fallback bar jika radar tidak cocok di mobile, tapi radar default.
  * Warna eager #58cc02 (fill), spark #1cb0f6 untuk stroke alternatif? Kita pakai eager solid + story wash.
  */
 export default function IndikatorChart({ data = [] }) {

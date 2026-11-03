@@ -11,8 +11,8 @@ import { INDIKATOR_FIELDS } from '../../constants/indikator';
 function RatioPreview({ pembilang, penyebut }) {
   const p = Number(pembilang);
   const s = Number(penyebut);
-  if (!Number.isFinite(p) || !Number.isFinite(s) || !s || penyebut === '' || pembilang === '') return null;
-  const pct = ((p / s) * 100).toFixed(1).replace(/\.0$/, '');
+  if (!Number.isFinite(p) || !Number.isFinite(s) || penyebut == null || pembilang == null || penyebut === '' || pembilang === '' || p < 0 || s < 0 || p > s) return null;
+  const pct = (s > 0 ? (p / s) * 100 : 0).toFixed(1).replace(/\.0$/, '');
   return (
     <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-story border-2 border-[#b8eb8a] text-[11px] font-black text-eager-dark">
       {p} dari {s} = {pct}%
@@ -49,7 +49,7 @@ export default function CapaianRow({ row, indikatorKode, onChange, onRemove, sho
               <input
                 name={`row-${row.id}-ratio-penyebut`}
                 type="number"
-                min={1}
+                min={0}
                 autoComplete="off"
                 value={row.penyebut ?? ''}
                 onChange={(e) => onChange(row.id, 'penyebut', e.target.value)}

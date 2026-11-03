@@ -12,7 +12,7 @@ import { formatSkor } from '../../lib/format';
 
 /**
  * MadrasahDetail — /madrasah/:slug (PRD US9)
- * - Header profil, radar 9 indikator, tabel 9 baris, prestasi terverifikasi (tanpa link bukti)
+ * - Header profil, radar 10 indikator, tabel 10 baris, prestasi terverifikasi (tanpa link bukti)
  * - Real API: GET /api/madrasah/:slug (tanpa Authorization)
  * - SECURITY: linkBukti tidak pernah dirender — backend sudah filter di select, frontend juga strip
  */

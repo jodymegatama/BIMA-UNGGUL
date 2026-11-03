@@ -1,5 +1,27 @@
 import { describe, it, expect } from 'vitest';
-import { validateRow } from './indikator.js';
+import { validateRow, INDIKATORS, emptyRowFor, buildPayload } from './indikator.js';
+
+describe('guru bersertifikasi', () => {
+  const kode = 'guru_bersertifikasi';
+  const row = { pembilang: '8', penyebut: '10', linkBukti: 'https://example.com/bukti', catatan: '' };
+  it('menampilkan indikator ke-10 dan membangun payload rasio', () => {
+    expect(INDIKATORS).toHaveLength(10);
+    expect(INDIKATORS.at(-1).kode).toBe(kode);
+    expect(emptyRowFor(kode)).toEqual({ pembilang: '', penyebut: '', linkBukti: '', catatan: '' });
+    expect(buildPayload(kode, { ...row, namaKegiatan: 'tidak boleh terkirim' })).toEqual({ pembilang: '8', penyebut: '10', linkBukti: row.linkBukti });
+  });
+  it('menerima rasio, 0/0, dan draft parsial', () => {
+    expect(validateRow(kode, row)).toEqual({});
+    expect(validateRow(kode, { ...row, pembilang: '0', penyebut: '0' })).toEqual({});
+    expect(validateRow(kode, { ...emptyRowFor(kode), pembilang: '8' }, { mode: 'draft' })).toEqual({});
+  });
+  it.each([{ pembilang: '-1' }, { pembilang: '11' }, { pembilang: '1.5' }, { penyebut: '1000001' }])('menolak rasio tidak valid %j', (changes) => {
+    expect(validateRow(kode, { ...row, ...changes }).ratio).toBeTruthy();
+  });
+  it('mewajibkan bukti saat submit', () => {
+    expect(validateRow(kode, { ...row, linkBukti: '' }).linkBukti).toBeTruthy();
+  });
+});
 
 describe('validateRow — mode draft vs submit (regresi QB-3)', () => {
   // Draft parsial hanya mengisi satu kolom wajib; kolom linkBukti sengaja dikosongkan.

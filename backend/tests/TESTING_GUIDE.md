@@ -206,7 +206,7 @@ lagi — tempatnya di Vitest suite.
 
 Script aman (tooling, bukan test): `scripts/smoke-*.mjs`, `scripts/create-dummy-accounts.mjs`, `scripts/clean-dummy.mjs` (purge hanya data dummy/test, KEEP admin + operator asli).
 
-## Kontrak & QA manual — revisi 9 indikator (2026-09-14)
+## Kontrak & QA manual — revisi 10 indikator (2026-09-14)
 
 `unit.services.test.js` memuat guard kontrak `FIELD_RULES`: tepat 9 slug, `linkBukti` wajib (type url)
 di semua indikator, `catatan` opsional, **tidak ada field `tahun`** di kontrak API
@@ -222,4 +222,8 @@ Antrian Validasi + modal detail. Admin memverifikasi isi link bukti; jika bukan 
 | QB-1 | Operator submit capaian dengan bukti tahun lama → Admin buka detail | Chip "Tahun {tahun}" tampil; reject + alasan → status Ditolak, operator perbaiki via US4 |
 | QB-2 | Operator input ratio `0 dari 0` (indikator 6/9) | Tersimpan, preview `0%`, skor indikator 0 — tidak error validasi |
 | QB-3 | Draft parsial tanpa link bukti → klik Kirim | Draft boleh; submit ditolak `linkBukti wajib diisi` |
-| QB-4 | Semua indikator: submit tanpa link bukti | Ditolak (linkBukti wajib di 9 indikator) |
+| QB-4 | Semua indikator: submit tanpa link bukti | Ditolak (linkBukti wajib di 10 indikator) |
+
+### QA indikator 10 — Guru Bersertifikasi
+
+Jalankan `npm run db:add-guru-bersertifikasi -w backend` sebelum suite integrasi yang menggunakan 10 master. Verifikasi skrip dua kali: tidak ada duplikat, bobot admin tidak ditimpa, dan periode tertutup tidak berubah. Uji 8/10 dengan bobot 10 = 8; beberapa baris 2/4 + 6/6 = 8/10; 0/0 = 0; draft parsial; bukti wajib; angka negatif/pecahan/lebih dari 1.000.000/pembilang > penyebut ditolak. Jalankan alur draft → menunggu → disetujui → skor, serta tolak/edit/kirim ulang dan cutoff.

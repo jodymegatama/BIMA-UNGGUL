@@ -36,10 +36,10 @@ describe('HttpError', () => {
 });
 
 /**
- * Kontrak 9 indikator (revisi 2026-09-14).
+ * Kontrak 10 indikator (revisi 2026-09-14).
  * Guard paritas: rename/label tidak boleh mengubah daftar slug, kewajiban bukti, atau aturan ratio.
  */
-const SLUGS_9 = [
+const SLUGS_10 = [
   'diklat',
   'penghargaan_individu',
   'penghargaan_institusi',
@@ -49,27 +49,28 @@ const SLUGS_9 = [
   'siswa_lanjutan_unggulan',
   'giat_inovatif',
   'rasio_penerimaan',
+  'guru_bersertifikasi',
 ];
 
-describe('FIELD_RULES — kontrak 9 indikator', () => {
-  it('memuat tepat 9 indikator dengan slug yang sama seperti master', () => {
-    expect(Object.keys(FIELD_RULES).sort()).toEqual([...SLUGS_9].sort());
+describe('FIELD_RULES — kontrak 10 indikator', () => {
+  it('memuat tepat 10 indikator dengan slug yang sama seperti master', () => {
+    expect(Object.keys(FIELD_RULES).sort()).toEqual([...SLUGS_10].sort());
   });
 
   it('setiap indikator WAJIB melampirkan linkBukti (type url)', () => {
-    for (const slug of SLUGS_9) {
+    for (const slug of SLUGS_10) {
       expect(FIELD_RULES[slug].linkBukti, slug).toEqual({ required: true, type: 'url' });
     }
   });
 
   it('catatan tetap opsional di semua indikator (D5)', () => {
-    for (const slug of SLUGS_9) {
+    for (const slug of SLUGS_10) {
       expect(FIELD_RULES[slug].catatan.required, slug).toBe(false);
     }
   });
 
   it('tidak ada field "tahun" di kontrak API — tahun bukti otomatis dari periode (D1 opsi A)', () => {
-    for (const slug of SLUGS_9) {
+    for (const slug of SLUGS_10) {
       expect(Object.keys(FIELD_RULES[slug]), slug).not.toContain('tahun');
     }
   });
@@ -77,6 +78,25 @@ describe('FIELD_RULES — kontrak 9 indikator', () => {
   it('penyebut ratio boleh 0 → "0 dari 0 = 0%" (D2)', () => {
     expect(FIELD_RULES.rapor_rata_rata.penyebut.min).toBe(0);
     expect(FIELD_RULES.rasio_penerimaan.penyebut.min).toBe(0);
+  });
+});
+
+describe('validateItem — guru bersertifikasi', () => {
+  const base = { pembilang: 8, penyebut: 10, linkBukti: 'https://example.com/bukti' };
+  it('menerima rasio normal, 0/0, dan draft parsial', () => {
+    expect(validateItem('guru_bersertifikasi', base)).toEqual([]);
+    expect(validateItem('guru_bersertifikasi', { ...base, pembilang: 0, penyebut: 0 })).toEqual([]);
+    expect(validateItem('guru_bersertifikasi', { pembilang: 8 }, 'draft')).toEqual([]);
+  });
+  it.each([
+    [{ pembilang: -1 }, 'pembilang'],
+    [{ penyebut: -1 }, 'penyebut'],
+    [{ pembilang: 1.5 }, 'pembilang'],
+    [{ pembilang: 11 }, 'pembilang'],
+    [{ penyebut: 1000001 }, 'penyebut'],
+    [{ linkBukti: '' }, 'linkBukti'],
+  ])('menolak payload tidak valid %j', (changes, field) => {
+    expect(validateItem('guru_bersertifikasi', { ...base, ...changes }).map((e) => e.field)).toContain(field);
   });
 });
 

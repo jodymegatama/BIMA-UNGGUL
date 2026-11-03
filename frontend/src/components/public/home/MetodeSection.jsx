@@ -54,7 +54,7 @@ export default function MetodeSection() {
                 </div>
                 <div className="p-4 text-center">
                   <div className="text-[12px] font-black text-charcoal">persentase</div>
-                  <div className="text-[11px] font-bold text-pencil mt-1">Rapor dan rasio penerimaan</div>
+                  <div className="text-[11px] font-bold text-pencil mt-1">Rapor, rasio penerimaan, dan sertifikasi guru</div>
                 </div>
               </div>
             </div>

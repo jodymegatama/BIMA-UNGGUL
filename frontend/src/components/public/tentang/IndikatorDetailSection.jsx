@@ -15,10 +15,10 @@ import {
 import { INDIKATORS } from '../../../constants/indikator';
 
 /**
- * IndikatorDetailSection — 9 indikator versi LENGKAP (PRD §11)
+ * IndikatorDetailSection — 10 indikator versi LENGKAP (PRD §11)
  * Reuse card style dari Home IndikatorSection, ditambah: daftar field input + cara hitung per tipe formula
  * Revisi 2026-09-14: nama/label/deskripsi mengikuti spesifikasi baru (istilah "Murid", bukti tahun berjalan,
- * basis nilai TKA/ANBK untuk indikator 6). Badge tingkat/jenjang tanpa angka pengali — bobot riil per periode.
+ * basis nilai TKA untuk indikator 6). Badge tingkat/jenjang tanpa angka pengali — bobot riil per periode.
  * Revisi 2026-09-25 (SEO + info bukti): deskripsi disinkronkan dengan section beranda — menjelaskan
  * bukti wajib tahun berjalan + chip nama field lampiran persis dari spesifikasi input Operator.
  */
@@ -144,9 +144,9 @@ const DETAILS = [
     iconColor: 'white',
     nama: 'Nilai Rata-rata Murid Lebih dari 85',
     kode: 'rapor_rata_rata',
-    desc: 'Bukti hasil TKA atau ANBK tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X dari Y = Z persen).',
+    desc: 'Bukti hasil TKA tahun berjalan wajib dilampirkan, berupa perhitungan murid dengan nilai lebih dari 85 terhadap total murid (format X dari Y = Z persen).',
     fields: [
-      'Hasil TKA/ANBK Murid > 85 (0 dari 0 = 0%)',
+      'Hasil TKA Murid > 85 (0 dari 0 = 0%)',
       'Link Bukti Fisik (tahun berjalan)',
       'Catatan Tambahan',
     ],
@@ -200,6 +200,19 @@ const DETAILS = [
       'Catatan Tambahan',
     ],
     hitung: 'Persentase × Bobot',
+    badge: 'persentase x bobot',
+    badgeTone: 'bg-[#e0e7ff] border-[#c7d2fe] text-[#4f46e5]',
+  },
+  {
+    no: '10',
+    icon: UsersThree,
+    iconBg: 'bg-[#e0e7ff] border-[#c7d2fe]',
+    iconColor: '#4f46e5',
+    nama: 'Jumlah Guru Bersertifikasi',
+    kode: 'guru_bersertifikasi',
+    desc: 'Persentase guru aktif pemilik sertifikat pendidik dari seluruh guru aktif ASN dan non-ASN. Lampirkan bukti sertifikasi dan rekap jumlah guru aktif tahun berjalan. Beberapa baris dihitung dari total pembilang dibagi total penyebut, bukan rata-rata persentase.',
+    fields: ['Jumlah guru bersertifikasi', 'Jumlah total guru (0 dari 0 = 0%)', 'Link Bukti Fisik (sertifikasi dan rekap guru aktif)', 'Catatan Tambahan (opsional)'],
+    hitung: '(Total guru bersertifikasi ÷ total guru) × Bobot. Contoh: 8/10 × bobot 10 = 8 poin.',
     badge: 'persentase x bobot',
     badgeTone: 'bg-[#e0e7ff] border-[#c7d2fe] text-[#4f46e5]',
   },

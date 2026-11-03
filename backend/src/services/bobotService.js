@@ -8,6 +8,7 @@ import { HttpError } from '../utils/httpError.js';
 import { recordAuditLog } from './auditService.js';
 
 import { deriveStatus } from './periodService.js';
+import { GURU_BERSERTIFIKASI, sortIndikators } from './indikatorService.js';
 
 export async function listBobot({ periodeId }) {
   if (!periodeId) throw new HttpError(400, 'MISSING_PERIODE', 'periodeId wajib');
@@ -18,14 +19,14 @@ export async function listBobot({ periodeId }) {
 
   const periode = { ...periodeRaw, status: deriveStatus(periodeRaw) };
 
-  // Merge left-join: SELALU kembalikan 9 indikator master, dimerge dengan bobot eksisting
+  // Merge left-join: SELALU kembalikan 10 indikator master, dimerge dengan bobot eksisting
   // sehingga frontend mendapat id + tipeFormula otoritatif walau belum ada config bobot.
   const [indikators, rows] = await Promise.all([
     prisma.indikator.findMany({ orderBy: { kode: 'asc' } }),
     prisma.bobotIndikator.findMany({ where: { periodeId: pid } }),
   ]);
   const byIndikator = new Map(rows.map((r) => [r.indikatorId, r]));
-  const data = indikators.map((ind) => {
+  const data = sortIndikators(indikators).map((ind) => {
     const b = byIndikator.get(ind.id) || null;
     return {
       indikatorId: ind.id,
@@ -33,7 +34,7 @@ export async function listBobot({ periodeId }) {
       slug: ind.slug,
       nama: ind.nama,
       tipeFormula: ind.tipeFormula,
-      nilaiBobot: b?.nilaiBobot ?? null,
+      nilaiBobot: b?.nilaiBobot ?? (ind.slug === GURU_BERSERTIFIKASI.slug ? 0 : null),
       bobotTingkatWilayah: b?.bobotTingkatWilayah ?? null,
       bobotJenjang: b?.bobotJenjang ?? null,
       terkunci: b?.terkunci ?? false,
@@ -119,7 +120,7 @@ export async function updateBobot({ periodeId, bobots }, { userId, ip }) {
     }
 
     // Guard total-nol: setelah update, minimal satu indikator harus punya bobot
-    // efektif > 0. Tanpa ini admin bisa meng-nolkan seluruh 9 indikator, dan
+    // efektif > 0. Tanpa ini admin bisa meng-nolkan seluruh 10 indikator, dan
     // karena skor dihitung live saat dibaca, semua madrasah langsung jadi skor 0
     // tanpa error — leaderboard publik tetap tampil seolah normal.
     const after = await tx.bobotIndikator.findMany({ where: { periodeId: pid } });
